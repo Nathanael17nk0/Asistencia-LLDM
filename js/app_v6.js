@@ -339,9 +339,25 @@ async function handleLogin(e) {
 
         // Check Admin Hardcoded
         if (cleanPhone === '0000' && cleanPass === 'admin') {
-            const adminUser = { id: 'admin-1', full_name: 'Administrador', role: 'admin' };
+            const adminUser = {
+                id: 'admin-1',
+                full_name: 'Administrador',
+                role: 'admin',
+                phone: '0000',
+                createdAt: new Date().toISOString(),
+                colonia: 'Sede',
+                age_label: 'N/A'
+            };
             localStorage.setItem('nexus_account', JSON.stringify(adminUser));
             localStorage.setItem('nexus_session', 'active');
+
+            // Force Save to Users List too (to avoid confusion)
+            const allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+            if (!allUsers.find(u => u.phone === '0000')) {
+                allUsers.push(adminUser);
+                localStorage.setItem('nexus_users', JSON.stringify(allUsers));
+            }
+
             alert("✅ MODO ADMIN ACTIVADO");
             window.location.reload();
             return;
