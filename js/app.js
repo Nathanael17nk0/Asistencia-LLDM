@@ -302,9 +302,19 @@ if (registerForm) {
 
                     // HANDLE DUPLICATE USER (ZOMBIE)
                     if (dbErr.message && (dbErr.message.includes('duplicate key') || dbErr.code === '23505')) {
-                        alert("⚠️ ESTE NÚMERO YA EXISTE\n\nTe vamos a redirigir al Login...");
-                        localStorage.setItem('nexus_session', 'active'); // Force Session
-                        window.location.reload(); // Will load Dashboard or Login
+                        alert("⚠️ ESTE NÚMERO YA ESTÁ REGISTRADO\n\nEntrando como usuarios local...");
+
+                        // 1. Force Save Account (Again, to be sure)
+                        localStorage.setItem('nexus_account', JSON.stringify(newUser));
+                        localStorage.setItem('nexus_session', 'active');
+
+                        // 2. Direct Entry (Skip Reload/Init check)
+                        hideAllSections();
+                        if (typeof showDashboard === 'function') {
+                            showDashboard(newUser);
+                        } else {
+                            window.location.reload(); // Fallback
+                        }
                         return;
                     }
 
@@ -3252,4 +3262,12 @@ document.addEventListener('DOMContentLoaded', () => {
     } else {
         console.error("initApp not found!");
     }
+});
+
+// --- VERSION INDICATOR (v6.3) ---
+window.addEventListener('load', () => {
+    const v = document.createElement('div');
+    v.innerText = "v6.3 (Direct Entry)";
+    v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
+    document.body.appendChild(v);
 });
