@@ -52,16 +52,21 @@ async function initApp() {
     }
 
     // 2. CLOUD SYNC (Critical for Member List)
-    if (window.DB) {
+    // Wait for Supabase Client
+    let attempts = 0;
+    while (!window.sbClient && attempts < 10) {
+        console.log("⏳ Waiting for Supabase...");
+        await new Promise(r => setTimeout(r, 500));
+        attempts++;
+    }
+
+    if (window.DB && window.sbClient) {
         try {
             console.log("☁️ Syncing metadata from Cloud...");
-            // DEBUG ALERT
-            // alert("Debug: Iniciando Sincronización..."); 
 
-            const [users, attendance] = await Promise.all([
-                window.DB.fetchAllUsers(),
-                window.DB.fetchTodayAttendance()
-            ]);
+            // Force Fetch
+            const users = await window.DB.fetchAllUsers();
+            const attendance = await window.DB.fetchTodayAttendance();
 
             // alert(`Debug: Datos recibidos. ${users?.length || 0} usuarios.`);
 
@@ -3276,10 +3281,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.4) ---
+// --- VERSION INDICATOR (v6.5) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.4 (Smart Init)";
+    v.innerText = "v6.5 (Cloud Restore)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
