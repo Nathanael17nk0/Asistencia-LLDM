@@ -1,0 +1,147 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Test Nube (R/W)</title>
+    <!-- Use CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            background: #111;
+            color: #fff;
+            font-family: monospace;
+            padding: 20px;
+            font-size: 1.2rem;
+        }
+
+        h1 {
+            color: #f1c40f;
+        }
+
+        button {
+            padding: 15px;
+            background: #2980b9;
+            color: white;
+            border: none;
+            font-size: 1rem;
+            cursor: pointer;
+            display: block;
+            width: 100%;
+            margin: 10px 0;
+        }
+
+        .log {
+            background: #000;
+            border: 1px solid #444;
+            padding: 10px;
+            min-height: 200px;
+            white-space: pre-wrap;
+            margin-top: 10px;
+        }
+
+        .ok {
+            color: #2ecc71;
+        }
+
+        .err {
+            color: #e74c3c;
+            font-weight: bold;
+        }
+
+        .warn {
+            color: #f39c12;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>☁️ Test de Nube (Escritura/Lectura)</h1>
+    <p>Este test verificará si tu Base de Datos permite guardar y leer datos realmente.</p>
+
+    <button onclick="runTest()">▶️ EJECUTAR PRUEBA</button>
+    <button onclick="deleteConfig()" style="background:#c0392b;">🗑️ Reset Config (Borrar Todo)</button>
+    <div id="output" class="log">Esperando...</div>
+
+    <script>
+        // CONFIG
+        const URL = "https://pmdqpkucejctdodmkoym.supabase.co";
+        const KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtZHFwa3VjZWpjdGRvZG1rb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NjM2MzMsImV4cCI6MjA4NjAzOTYzM30.KYOCRTl3y0kIQsCc5QK7uPcsxYfhus_sSuUVzv1mvNU";
+
+        const logEl = document.getElementById('output');
+        function log(msg, cls = '') {
+            const div = document.createElement('div');
+            div.className = cls;
+            div.textContent = `> ${msg}`;
+            logEl.appendChild(div);
+        }
+
+        async function runTest() {
+            logEl.innerHTML = "";
+            log("Iniciando conexión...", "warn");
+
+            if (!window.supabase) return log("❌ Error: Librería Supabase no cargada.", "err");
+
+            const client = supabase.createClient(URL, KEY);
+            const testKey = 'test_rw_' + Math.floor(Math.random() * 1000);
+            const testPayload = { message: "Hola Mundo", timestamp: new Date().toISOString() };
+
+            // 1. INTENTO DE ESCRITURA
+            log(`1. Escribiendo clave: ${testKey}...`, "warn");
+
+            const row = { key: testKey, value: testPayload, updated_at: new Date().toISOString() };
+
+            // Try explicit INSERT first (if key is unique)
+            const { error: writeErr } = await client
+                .from('attendance_config')
+                .upsert(row, { onConflict: 'key' });
+
+            if (writeErr) {
+                log(`❌ FALLÓ ESCRITURA: ${writeErr.message} (Code: ${writeErr.code})`, 'err');
+                if (writeErr.code === '42P10') log("⚠️ La tabla no existe o la columna 'key' no es única.", 'warn');
+                return;
+            }
+            log("✅ ESCRITURA OK (Supabase dice que guardó).", 'ok');
+
+            // 2. INTENTO DE LECTURA INMEDIATA
+            log(`2. Leyendo clave: ${testKey}...`, "warn");
+            const { data, error: readErr } = await client
+                .from('attendance_config')
+                .select('value')
+                .eq('key', testKey)
+                .limit(1); // Standard robust read
+
+            if (readErr) {
+                log(`❌ FALLÓ LECTURA: ${readErr.message}`, 'err');
+                return;
+            }
+
+            if (!data || data.length === 0) {
+                log(`❌ LECTURA VACÍA: Guardamos el dato pero NO lo pudimos leer de vuelta.`, 'err');
+                log(`   Causas probables:\n   - RLS (Permisos) bloquea la lectura.\n   - La escritura falló silenciosamente.`, 'warn');
+                return;
+            }
+
+            const val = data[0].value;
+            if (val && val.message === "Hola Mundo") {
+                log(`✅ PRUEBA COMPLETADA CON ÉXITO.\n   Datos recuperados: ${JSON.stringify(val)}`, 'ok');
+            } else {
+                log(`⚠️ Datos incorrectos recuperados: ${JSON.stringify(data)}`, 'err');
+            }
+
+            // Clean up
+            await client.from('attendance_config').delete().eq('key', testKey);
+        }
+
+        async function deleteConfig() {
+            if (!confirm("¿Seguro que quieres borrar la configuración (Horario)? Esto es irreversible.")) return;
+            const client = supabase.createClient(URL, KEY);
+            const { error } = await client.from('attendance_config').delete().neq('key', 'nothing'); // Delete all
+            if (error) log("❌ Error al borrar: " + error.message, "err");
+            else log("✅ Tabla vaciada.", "ok");
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>REPARADOR ZOMBIE 🧟</title>
+    <style>
+        body {
+            background: #111;
+            color: #fff;
+            font-family: monospace;
+            padding: 20px;
+        }
+
+        button {
+            padding: 15px;
+            font-size: 18px;
+            cursor: pointer;
+            margin: 10px 0;
+            width: 100%;
+            border: none;
+        }
+
+        .btn-check {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .btn-kill {
+            background: #ef4444;
+            color: white;
+            font-weight: bold;
+        }
+
+        #log {
+            background: #222;
+            padding: 10px;
+            border: 1px solid #444;
+            min-height: 200px;
+            white-space: pre-wrap;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🛠️ REPARADOR DE ASISTENCIAS "ZOMBIE"</h1>
+    <p>Esta herramienta conecta DIRECTAMENTE a la nube, ignorando la App y sus errores.</p>
+
+    <button class="btn-check" onclick="checkLogs()">1. VER ASISTENCIAS EN NUBE</button>
+    <button class="btn-kill" onclick="killZombies()">2. BORRAR TODAS LAS ASISTENCIAS (RESET TOTAL)</button>
+
+    <div id="log">Esperando acción...</div>
+
+    <!-- INLINE CONFIG TO BYPASS CACHE -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = "https://pmdqpkucejctdodmkoym.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtZHFwa3VjZWpjdGRvZG1rb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NjM2MzMsImV4cCI6MjA4NjAzOTYzM30.KYOCRTl3y0kIQsCc5QK7uPcsxYfhus_sSuUVzv1mvNU";
+
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        const logDiv = document.getElementById('log');
+
+        function log(msg) {
+            logDiv.innerText += "\n" + msg;
+            console.log(msg);
+        }
+
+        async function checkLogs() {
+            log("--- CONSULTANDO NUBE ---");
+            const { data, error } = await sb.from('attendance_log').select('*');
+            if (error) return log("❌ ERROR: " + error.message);
+
+            log(`✅ Encontradas: ${data.length} asistencias.`);
+            if (data.length > 0) {
+                log("MUESTRA (Primeras 3):");
+                log(JSON.stringify(data.slice(0, 3), null, 2));
+
+                // CHECK COLUMN NAMES
+                const first = data[0];
+                if (first.user_phone) log("ℹ️ Columna 'user_phone' DETECTADA (Correcto).");
+                else if (first.userId) log("⚠️ Columna 'userId' DETECTADA (Formato Viejo).");
+                else log("⚠️ No veo user_phone ni userId. ¿Qué columnas hay?");
+            }
+        }
+
+        async function killZombies() {
+            if (!confirm("¿CONFIRMAS BORRAR TODO EL HISTORIAL DE LA NUBE?\n\nEsto solucionará el problema de los registros que reaparecen.")) return;
+
+            log("--- INICIANDO PURGA ---");
+
+            // Delete with filter that matches everything (ID > 0)
+            const { error, count } = await sb.from('attendance_log').delete().neq('id', 0).select('*', { count: 'exact' });
+
+            if (error) {
+                log("❌ ERROR BORRANDO: " + error.message);
+
+                // Fallback: Delete One by One if RLS blocks bulk delete
+                const { data: all } = await sb.from('attendance_log').select('id');
+                if (all && all.length > 0) {
+                    log(`⚠️ Borrado masivo falló. Intentando borrar ${all.length} registros UNO POR UNO...`);
+                    let deleted = 0;
+                    for (const row of all) {
+                        const { error: e2 } = await sb.from('attendance_log').delete().eq('id', row.id);
+                        if (!e2) deleted++;
+                    }
+                    log(`✅ ${deleted} registros borrados individualmente.`);
+                }
+
+            } else {
+                log(`✅ ÉXITO: Se borraron ${count} registros.`);
+                log("🧹 La nube esta LIMPIA.");
+            }
+
+            // Clear LocalStorage too (Simulated instruction)
+            log("⚠️ AHORA: Vuelve a la App y dale a 'Recargar' para que se limpie la memoria local.");
+        }
+    </script>
+</body>
+
+</html>

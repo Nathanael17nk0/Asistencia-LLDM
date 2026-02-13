@@ -1,0 +1,176 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Diagnóstico Supabase</title>
+    <style>
+        body {
+            background: #1a1a1a;
+            color: #eee;
+            font-family: monospace;
+            padding: 20px;
+            text-align: center;
+        }
+
+        button {
+            width: 100%;
+            padding: 15px;
+            margin: 10px 0;
+            background: #333;
+            color: white;
+            border: 1px solid #555;
+            font-size: 1rem;
+            cursor: pointer;
+        }
+
+        .log {
+            background: #000;
+            border: 1px solid #333;
+            padding: 10px;
+            margin-top: 10px;
+            min-height: 200px;
+            white-space: pre-wrap;
+            font-size: 0.8rem;
+            text-align: left;
+            overflow-y: scroll;
+            height: 300px;
+        }
+
+        .success {
+            color: #2ecc71;
+        }
+
+        .error {
+            color: #e74c3c;
+        }
+    </style>
+    <!-- Use CDN -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+</head>
+
+<body>
+    <h2>🕵️ Diagnóstico Móvil</h2>
+
+    <button onclick="runTest1()">1. Verificar Librería (CDN)</button>
+    <button onclick="runTest2()">2. Ping Supabase (Network)</button>
+    <button onclick="runTest3()">3. Leer Usuarios (Read)</button>
+    <button onclick="runTest4()">4. Escribir Usuario (Write)</button>
+    <button onclick="runTest5()">5. Leer Horario (Schedule)</button>
+
+    <div id="console" class="log">Esperando prueba...</div>
+
+    <script>
+        const SUPABASE_URL = "https://pmdqpkucejctdodmkoym.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtZHFwa3VjZWpjdGRvZG1rb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NjM2MzMsImV4cCI6MjA4NjAzOTYzM30.KYOCRTl3y0kIQsCc5QK7uPcsxYfhus_sSuUVzv1mvNU";
+
+        const logEl = document.getElementById('console');
+        let client = null;
+
+        function log(msg, type = '') {
+            const div = document.createElement('div');
+            div.textContent = `> ${msg}`;
+            if (type === 'error') div.style.color = '#e74c3c';
+            if (type === 'success') div.style.color = '#2ecc71';
+            logEl.appendChild(div);
+            logEl.scrollTop = logEl.scrollHeight;
+        }
+
+        function runTest1() {
+            log("--- TEST 1: CDN ---");
+            if (window.supabase) {
+                log("✅ window.supabase existe.", "success");
+            } else {
+                log("❌ window.supabase NO existe. El CDN falló o fue bloqueado.", "error");
+            }
+        }
+
+        function runTest2() {
+            log("--- TEST 2: INIT ---");
+            try {
+                if (!window.supabase) return log("❌ Ejecuta Test 1 primero.", "error");
+                client = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                log("✅ Cliente creado.", "success");
+                log("URL: " + SUPABASE_URL);
+            } catch (e) {
+                log("❌ Error al crear cliente: " + e.message, "error");
+            }
+        }
+
+        async function runTest3() {
+            log("--- TEST 3: READ ---");
+            if (!client) return log("❌ Cliente no existe.", "error");
+
+            try {
+                const { count, error } = await client
+                    .from('attendance_users')
+                    .select('*', { count: 'exact', head: true });
+
+                if (error) {
+                    log("❌ Error Read: " + error.message, "error");
+                    log("Full: " + JSON.stringify(error));
+                } else {
+                    log(`✅ Read OK. Count: ${count}`, "success");
+                }
+            } catch (e) {
+                log("❌ Excepción Read: " + e.message, "error");
+            }
+        }
+
+        async function runTest4() {
+            log("--- TEST 4: WRITE ---");
+            if (!client) return log("❌ Cliente no existe.", "error");
+
+            const id = "test-" + Math.floor(Math.random() * 1000);
+            try {
+                const { error } = await client
+                    .from('attendance_users')
+                    .upsert({
+                        id: id,
+                        phone: id,
+                        full_name: "Diagnostico Tool",
+                        role: "debug"
+                    });
+
+                if (error) {
+                    log("❌ Error Write: " + error.message, "error");
+                    log("Full: " + JSON.stringify(error));
+                } else {
+                    log(`✅ Write OK. ID: ${id}`, "success");
+                }
+            } catch (e) {
+                log("❌ Excepción Write: " + e.message, "error");
+            }
+        }
+
+        async function runTest5() {
+            log("--- TEST 5: SCHEDULE ---");
+            if (!client) return log("❌ Cliente no existe.", "error");
+
+            try {
+                const { data, error } = await client
+                    .from('attendance_config')
+                    .select('value')
+                    .eq('key', 'weekly_schedule')
+                    .single();
+
+                if (error) {
+                    log("❌ Error Schedule: " + error.message, "error");
+                } else {
+                    if (data && data.value) {
+                        const keys = Object.keys(data.value).length;
+                        log(`✅ Schedule OK. Días: ${keys}`, "success");
+                        log("Muestra: " + JSON.stringify(data.value).substring(0, 50) + "...");
+                    } else {
+                        log("⚠️ Data vacía.", "error");
+                    }
+                }
+            } catch (e) {
+                log("❌ Excepción Schedule: " + e.message, "error");
+            }
+        }
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,102 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>DIAGNÓSTICO V4 (FINAL) 🕵️</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #222;
+            color: #eee;
+        }
+
+        .box {
+            border: 1px solid #555;
+            padding: 10px;
+            margin-bottom: 20px;
+            background: #333;
+        }
+
+        h3 {
+            margin-top: 0;
+            color: #4ade80;
+        }
+
+        pre {
+            background: #111;
+            padding: 10px;
+            overflow: auto;
+            max-height: 400px;
+            color: #88c0d0;
+        }
+
+        button {
+            padding: 10px 20px;
+            font-size: 16px;
+            cursor: pointer;
+            background: #2563eb;
+            color: white;
+            border: none;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🕵️ DIAGNÓSTICO FINAL (V4)</h1>
+    <p>Buscando filas duplicadas en la configuración...</p>
+
+    <button onclick="runDiagnostics()">EJECUTAR DIAGNÓSTICO</button>
+
+    <div class="box">
+        <h3>1. HORARIO (Weekly Schedule)</h3>
+        <p>Estado: <span id="status-schedule">Pendiente...</span></p>
+        <pre id="json-schedule">...</pre>
+    </div>
+
+    <!-- INLINE CONFIG -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        const SUPABASE_URL = "https://pmdqpkucejctdodmkoym.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtZHFwa3VjZWpjdGRvZG1rb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NjM2MzMsImV4cCI6MjA4NjAzOTYzM30.KYOCRTl3y0kIQsCc5QK7uPcsxYfhus_sSuUVzv1mvNU";
+        const sb = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+
+        async function runDiagnostics() {
+            // 1. CHECK SCHEDULE (ALL ROWS)
+            document.getElementById('status-schedule').innerText = "⏳ Descargando...";
+            
+            // SELECT ALL COLUMNS (wildcard) to avoid "column does not exist" error
+            const { data: configData, error: configError } = await sb
+                .from('attendance_config')
+                .select('*') 
+                .eq('key', 'weekly_schedule');
+
+            if (configError) {
+                document.getElementById('status-schedule').innerText = "❌ ERROR: " + configError.message;
+            } else if (!configData || configData.length === 0) {
+                document.getElementById('status-schedule').innerText = "⚠️ VACÍO (No existe 'weekly_schedule' en la nube)";
+            } else {
+                document.getElementById('status-schedule').innerText = `✅ ENCONTRADOS: ${configData.length} registros`;
+                
+                let html = "";
+                configData.forEach((row, idx) => {
+                    // Try to guess a label since we don't know exact columns aside from 'value'
+                    const rowLabel = row.created_at || row.updated_at || `Fila #${idx+1}`;
+                    const valStr = JSON.stringify(row.value).substring(0, 100) + "...";
+                    html += `[${rowLabel}] => ${valStr}\n`;
+                });
+                
+                // Show Full Data of the LAST one (assuming it's the newest)
+                if(configData.length > 0) {
+                    const newest = configData[configData.length-1];
+                    html += "\n\n--- DATA COMPLETA (Último Registro) ---\n" + JSON.stringify(newest.value, null, 2);
+                }
+                
+                document.getElementById('json-schedule').innerText = html;
+            }
+        }
+    </script>
+</body>
+
+</html>

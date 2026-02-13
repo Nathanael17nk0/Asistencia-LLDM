@@ -1,0 +1,644 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+    <title>LLDM Asistencia v4</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
+        rel="stylesheet">
+    <link rel="stylesheet" href="css/styles.css?v=4">
+    <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
+    <!-- SheetJS for Excel Export -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <style>
+        /* --- v4 CRITICAL FIXES --- */
+
+        /* 1. LOGIN LOGO FIX */
+        .centered-login {
+            display: flex;
+            flex-direction: column !important;
+            align-items: center;
+            justify-content: center;
+            min-height: 100vh;
+        }
+
+        .logo-area {
+            display: block !important;
+            text-align: center;
+            width: 100%;
+            margin-bottom: 20px;
+        }
+
+        .logo-icon {
+            font-size: 6rem;
+            /* Increased size v5 */
+            color: #c5a059;
+            text-shadow: 0 0 20px rgba(197, 160, 89, 0.5);
+            /* Glow effect */
+        }
+
+        /* 2. INPUT ICONS FIX */
+        .input-group {
+            position: relative;
+            display: flex;
+            align-items: center;
+        }
+
+        .input-group i {
+            position: absolute;
+            left: 15px;
+            z-index: 10;
+            color: #c5a059;
+            font-size: 1.2rem;
+        }
+
+        .input-group input {
+            padding-left: 45px !important;
+            width: 100%;
+            height: 50px;
+        }
+
+        /* 3. ROBUST ADMIN PANEL SCROLL (Sticky Header) */
+        #admin-panel {
+            /* Reset Flex */
+            display: block !important;
+            overflow-y: auto !important;
+            /* Native Page Scroll */
+            -webkit-overflow-scrolling: touch;
+
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100vh;
+            height: 100dvh;
+            z-index: 2001;
+            background: rgba(255, 255, 255, 0.98);
+            padding-bottom: 100px;
+            /* Space at very bottom */
+        }
+
+        .admin-fixed-header {
+            position: sticky;
+            top: 0;
+            z-index: 2010;
+            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: white;
+            /* Ensure opaque */
+        }
+
+        .input-row {
+            display: flex;
+            gap: 10px;
+            width: 100%;
+        }
+
+        .input-row .input-group {
+            flex: 1;
+        }
+
+        @media (max-width: 700px) {
+            .input-row {
+                flex-direction: column !important;
+                gap: 15px !important;
+            }
+        }
+    </style>
+</head>
+
+<body>
+    <!-- VERSION BANNER v4 -->
+    <div
+        style="background:#8e44ad; color:white; text-align:center; padding:12px; font-weight:bold; position:fixed; top:0; left:0; width:100%; z-index:99999; box-shadow:0 2px 5px rgba(0,0,0,0.2);">
+        VERSIÓN 4 - FINAL (Logo + Scroll + Botón)
+    </div>
+
+    <div class="background-globes">
+        <div class="globe globe-1"></div>
+        <div class="globe globe-2"></div>
+        <div class="globe globe-3"></div>
+    </div>
+
+    <div class="app-container" style="margin-top:50px;"> <!-- Push down for banner -->
+
+        <!-- Register Section -->
+        <section id="register-section" class="active-section centered-login">
+            <div class="logo-area main-logo">
+                <i class="ri-fire-fill logo-icon"></i>
+            </div>
+
+            <div class="glass-card login-card floating-entry">
+                <div class="card-header">
+                    <h1>LLDM</h1>
+                    <p>REGISTRO DE PERSONAL</p>
+                </div>
+                <form id="register-form">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <i class="ri-user-line"></i>
+                            <input type="text" id="reg-nombre" placeholder="Nombre" required>
+                        </div>
+                    </div>
+                    <div class="input-row">
+                        <div class="input-group">
+                            <i class="ri-user-3-line"></i>
+                            <input type="text" id="reg-paterno" placeholder="Apellido Paterno" required>
+                        </div>
+                        <div class="input-group">
+                            <i class="ri-user-3-line"></i>
+                            <input type="text" id="reg-materno" placeholder="Apellido Materno" required>
+                        </div>
+                    </div>
+
+                    <div class="input-row">
+                        <div class="input-group">
+                            <i class="ri-calendar-line"></i>
+                            <input type="date" id="reg-dob" required title="Fecha de Nacimiento">
+                        </div>
+                        <div class="input-group disabled-group">
+                            <i class="ri-hourglass-line"></i>
+                            <input type="text" id="reg-edad" placeholder="Edad" readonly>
+                        </div>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="ri-map-pin-line"></i>
+                        <input type="text" id="reg-colonia" placeholder="Colonia/Barrio" required>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="ri-smartphone-line"></i>
+                        <input type="tel" id="reg-celular" placeholder="Número Celular" required>
+                    </div>
+
+                    <div class="input-group">
+                        <i class="ri-lock-2-line"></i>
+                        <input type="password" id="reg-password" placeholder="Crear Contraseña" required>
+                        <i class="ri-eye-line password-toggle" id="toggle-reg-pass"
+                            style="left: auto; right: 15px;"></i>
+                    </div>
+
+                    <button type="submit" class="cyber-btn">
+                        <span class="btn-content">REGISTRARME <i class="ri-arrow-right-line"></i></span>
+                    </button>
+
+                    <p class="switch-link">¿Ya tienes cuenta? <a href="#" id="show-login-link"
+                            onclick="document.getElementById('register-section').classList.add('hidden-section'); document.getElementById('register-section').style.display='none'; document.getElementById('login-section').classList.remove('hidden-section'); document.getElementById('login-section').style.display='flex'; return false;">Iniciar
+                            Sesión</a>
+                    </p>
+                </form>
+            </div>
+        </section>
+
+        <!-- Login Section -->
+        <section id="login-section" class="hidden-section centered-login" style="display:none;">
+            <div class="logo-area main-logo">
+                <i class="ri-fire-fill logo-icon"></i>
+            </div>
+
+            <div class="glass-card login-card floating-entry">
+                <div class="card-header">
+                    <h1>LLDM</h1>
+                    <p>VERIFICACIÓN DE ASISTENCIA</p>
+                </div>
+                <form id="login-form" onsubmit="event.preventDefault(); return false;">
+                    <div class="input-group">
+                        <i class="ri-smartphone-line"></i>
+                        <input type="tel" id="login-phone" placeholder="Número Celular" required>
+                    </div>
+                    <div class="input-group">
+                        <i class="ri-lock-2-line"></i>
+                        <input type="password" id="login-password" placeholder="Contraseña" required>
+                    </div>
+                    <button type="button"
+                        onclick="if(window.handleLogin) { window.handleLogin(event); } else { alert('Cargando sistema...'); }"
+                        class="cyber-btn">
+                        <span class="btn-content">INGRESAR <i class="ri-arrow-right-line"></i></span>
+                        <span class="btn-glitch"></span>
+                    </button>
+                    <div id="login-error" class="error-msg hidden">Acceso Denegado</div>
+
+                    <p class="switch-link">¿Nuevo aquí? <a href="#" id="show-register-link"
+                            onclick="window.showRegister(); return false;">Crear Cuenta</a></p>
+                </form>
+            </div>
+        </section>
+
+        <!-- Dashboard Section -->
+        <section id="dashboard-section" class="hidden-section full-screen-dashboard" style="display:none;">
+            <!-- Floating User Info (Top Right) -->
+            <div class="user-float-card glass-card">
+                <div class="user-details">
+                    <h2 id="user-name">Usuario</h2>
+                    <span class="status-badge online">EN LÍNEA</span>
+                </div>
+                <div class="avatar-small">
+                    <img src="https://ui-avatars.com/api/?name=User&background=c5a059&color=fff" id="user-avatar"
+                        alt="User">
+                </div>
+                <button id="logout-btn" class="mini-icon-btn"><i class="ri-shut-down-line"></i></button>
+            </div>
+
+            <!-- Main Center Action -->
+            <div class="center-stage" style="padding-bottom: 50px;">
+                <!-- Theme of the Week -->
+                <div id="theme-display" class="theme-banner">
+                    <p class="theme-label">TEMA DE LA SEMANA:</p>
+                    <h3 id="current-theme-text">LA RESTAURACIÓN DE LA IGLESIA</h3>
+                </div>
+
+                <div class="fingerprint-container" id="check-in-btn">
+                    <div class="scan-line"></div>
+                    <i class="ri-fingerprint-2-line fingerprint-icon"></i>
+                    <div class="ring"></div>
+                    <div class="ring delay"></div>
+                </div>
+                <p class="instruction-text">PRESIONE PARA REGISTRAR ASISTENCIA</p>
+
+                <!-- NEW: View Roles Button for Users -->
+                <button id="user-view-schedule-btn" class="cyber-btn sm light-blue" style="margin-top:20px;"
+                    onclick="window.manuallyOpenSchedule()">
+                    <i class="ri-calendar-check-line"></i> LISTA DE ORACIONES
+                </button>
+
+                <!-- ADMIN BUTTON HTML (Visibility toggled by JS) -->
+                <div style="margin-top:15px; width:100%; display:flex; justify-content:center;">
+                    <button id="admin-toggle-btn" class="cyber-btn sm hidden"
+                        style="width:100%; max-width:250px; background: #2c3e50; border: 1px solid #34495e; padding:12px;"
+                        onclick="window.toggleAdminPanel()">
+                        PANEL DE ADMIN <i class="ri-settings-3-line"></i>
+                    </button>
+                </div>
+
+                <div id="admin-controls-container" class="hidden"></div>
+
+                <!-- Hidden Success Message Area -->
+                <div id="success-message" class="success-popup hidden">
+                    <i class="ri-checkbox-circle-fill"></i>
+                    <h3>ASISTENCIA REGISTRADA</h3>
+                    <p>Hora: <span id="time-stamp">--:--</span></p>
+                </div>
+            </div>
+
+            <!-- REPORT COMPONENT -->
+            <div id="reports-overlay" class="hidden"
+                style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.9); z-index:3000; display:none; align-items:center; justify-content:center;">
+                <div class="cyber-card"
+                    style="width:90%; max-width:500px; max-height:90vh; overflow-y:auto; position:relative;">
+                    <button onclick="toggleReportsModal()"
+                        style="position:absolute; top:10px; right:10px; background:transparent; border:none; color:white; font-size:1.5rem;">&times;</button>
+                    <h3 class="gradient-text" style="text-align:center;">GENERAR REPORTES</h3>
+
+                    <div style="margin-top:20px;">
+                        <label style="color:#aaa;">Rango de Fechas:</label>
+                        <div class="input-row" style="margin-top:5px;">
+                            <input type="date" id="report-start" class="simple-input" style="flex:1;">
+                            <input type="date" id="report-end" class="simple-input" style="flex:1;">
+                        </div>
+                        <div style="display:flex; gap:5px; margin-top:10px; justify-content:center;">
+                            <button onclick="setReportDate('today')" class="cyber-btn sm"
+                                style="font-size:0.7rem; padding:5px 10px;">HOY</button>
+                            <button onclick="setReportDate('week')" class="cyber-btn sm"
+                                style="font-size:0.7rem; padding:5px 10px;">ESTA SEMANA</button>
+                            <button onclick="setReportDate('month')" class="cyber-btn sm"
+                                style="font-size:0.7rem; padding:5px 10px;">ESTE MES</button>
+                        </div>
+                    </div>
+
+                    <div style="margin-top:20px; text-align:center;">
+                        <button onclick="generateReportPreview()" class="cyber-btn" style="width:100%;">GENERAR VISTA
+                            PREVIA</button>
+                    </div>
+
+                    <!-- PREVIEW AREA -->
+                    <div id="report-preview"
+                        style="margin-top:20px; padding:10px; background:rgba(255,255,255,0.05); border-radius:10px; min-height:100px;">
+                        <p style="color:#666; text-align:center;">Selecciona fechas y genera un reporte.</p>
+                    </div>
+
+                    <div style="margin-top:20px; text-align:center;">
+                        <button id="btn-export-excel" onclick="exportReportToExcel()" class="cyber-btn sm"
+                            style="background:#2ecc71 !important; width:100%; display:none;">
+                            <i class="ri-file-excel-2-line"></i> DESCARGAR EXCEL
+                        </button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Admin Panel Overlay (STRAIGHTFORWARD NATIVE SCROLL) -->
+            <div id="admin-panel" class="admin-only hidden" style="display:none;">
+
+                <!-- STICKY HEADER -->
+                <div class="admin-fixed-header">
+                    <div
+                        style="padding: 10px 15px; border-bottom: 1px solid #eee; background: linear-gradient(135deg, #4169E1 0%, #0047AB 100%); display:flex; flex-direction:column; gap:8px;">
+                        <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
+                            <h5 style="margin:0; color:white; font-size:1rem;">PANEL ADMIN</h5>
+                            <button id="close-admin-btn" class="cyber-btn sm danger" onclick="window.toggleAdminPanel()"
+                                style="font-size:0.7rem; padding: 2px 8px;">OCULTAR</button>
+                        </div>
+
+                        <div style="display:flex; gap:5px; width:100%;">
+                            <button id="admin-view-schedule-btn-force" class="cyber-btn sm"
+                                onclick="window.manuallyOpenSchedule();"
+                                style="flex:1; background:#f1c40f; color:black; font-weight:bold; border:2px solid orange; font-size:0.75rem;">
+                                <i class="ri-calendar-check-line"></i> ROLES
+                            </button>
+                            <button onclick="checkCloudData()" class="cyber-btn sm"
+                                style="flex:1; background:#8e44ad; font-size:0.75rem;">
+                                <i class="ri-cloud-line"></i> NUBE
+                            </button>
+                            <button onclick="toggleReportsModal()" class="cyber-btn sm"
+                                style="flex:1; font-size:0.75rem;">
+                                <i class="ri-file-chart-line"></i> REPORTES
+                            </button>
+                        </div>
+                        <button
+                            onclick="if(window.initApp) { this.innerHTML='⏳...'; window.initApp().then(()=>this.innerHTML='🔄 DATOS ACTUALIZADOS'); } else { alert('Error: initApp missing'); }"
+                            class="cyber-btn sm"
+                            style="width:100%; margin-top:5px; background:#e67e22; font-size:0.7rem; padding: 4px;">
+                            <i class="ri-refresh-line"></i> FORZAR DESCARGA DE DATOS
+                        </button>
+                    </div>
+
+                    <!-- Filter Section (Sticky Part 2) -->
+                    <div class="admin-section"
+                        style="padding: 10px 15px; background:white; border-bottom:1px solid #eee;">
+                        <div
+                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                            <h5 style="margin:0; font-weight:bold; font-size:0.9rem;"><i class="ri-list-check"></i>
+                                Asistencia Actual</h5>
+                            <div id="attendance-count"
+                                style="background:var(--primary); color:white; padding:2px 8px; border-radius:10px; font-size:0.8rem;">
+                                0/0</div>
+                        </div>
+                        <div style="display:flex; gap:5px;">
+                            <input type="text" id="admin-search-user" placeholder="Buscar..." class="simple-input"
+                                style="flex:1; padding:5px; font-size:0.8rem;">
+                            <select id="admin-service-filter" class="simple-input"
+                                style="width:100px; padding:5px; font-size:0.8rem;">
+                                <option value="all">Todos</option>
+                                <option value="5am">5am</option>
+                                <option value="9am">9am</option>
+                                <option value="10am_dom">10am</option>
+                                <option value="6pm_jue">6pm</option>
+                                <option value="6pm_dom">6pm</option>
+                                <option value="7pm">7pm</option>
+                            </select>
+                        </div>
+                    </div>
+                </div>
+
+                <!-- CONTENT FLOW -->
+                <div class="admin-content-flow">
+                    <!-- 1. Rules/OCR -->
+                    <div class="admin-section"
+                        style="padding: 10px 15px; border-bottom: 1px solid #eee; background:#fafafa;">
+                        <h6 style="margin:0 0 5px 0; font-weight:bold; color:#555;">Actualizar Roles (Foto)</h6>
+                        <div style="display:flex; gap:10px; align-items:center;">
+                            <input type="file" id="schedule-file-input" accept="image/*, .xlsx, .xls"
+                                style="display:none;">
+                            <button id="upload-schedule-btn" class="cyber-btn sm"
+                                style="font-size:0.75rem; padding: 4px 10px;"><i class="ri-upload-cloud-line"></i>
+                                Subir</button>
+                            <button id="clear-schedule-btn" class="cyber-btn sm gray"
+                                style="font-size:0.8rem; padding: 5px 10px;"><i class="ri-delete-bin-line"></i></button>
+                            <div id="ocr-status" class="hidden" style="font-size:0.7rem; color:#0066cc;"></div>
+                        </div>
+                    </div>
+
+                    <!-- 2. Theme -->
+                    <div class="admin-section" style="padding: 10px 15px; border-bottom: 1px solid #eee;">
+                        <div class="input-group" style="display:flex; gap:5px; margin-top:0;">
+                            <input type="text" id="admin-theme-input" placeholder="Tema Semanal..." class="simple-input"
+                                style="border:1px solid #ccc; flex:1; padding: 4px; font-size:0.8rem;">
+                            <button id="save-theme-btn" class="cyber-btn sm"
+                                style="font-size:0.7rem; padding: 4px 10px;">GUARDAR</button>
+                        </div>
+                    </div>
+
+                    <!-- 3. Manual Register -->
+                    <div class="admin-section"
+                        style="padding: 5px 15px; border-bottom: 1px solid #eee; background:#f9f9f9;">
+                        <button onclick="document.getElementById('admin-manual-form').classList.toggle('hidden')"
+                            class="cyber-btn sm secondary" style="width:100%; font-size:0.8rem; padding: 5px;">
+                            <i class="ri-user-add-line"></i> REGISTRO RÁPIDO (DESPLEGAR)
+                        </button>
+                        <div id="admin-manual-form" class="hidden" style="margin-top:10px;">
+                            <!-- MANUAL FORM FIELDS UPDATE -->
+                            <div style="display:flex; gap:5px; margin-bottom:5px;">
+                                <input type="text" id="admin-reg-nombre" placeholder="Nombre" class="simple-input"
+                                    style="flex:1;">
+                                <input type="text" id="admin-reg-paterno" placeholder="Ap. Paterno" class="simple-input"
+                                    style="flex:1;">
+                            </div>
+                            <div style="display:flex; gap:5px; margin-bottom:5px;">
+                                <input type="text" id="admin-reg-materno" placeholder="Ap. Materno" class="simple-input"
+                                    style="flex:1;">
+                                <input type="tel" id="admin-reg-celular" placeholder="Celular (ID)" class="simple-input"
+                                    style="flex:1;">
+                            </div>
+
+                            <!-- NEW FIELDS -->
+                            <div style="display:flex; gap:5px; margin-bottom:5px;">
+                                <div style="flex:1;">
+                                    <label style="font-size:0.6rem; color:#888;">Nacimiento:</label>
+                                    <input type="date" id="admin-reg-dob" class="simple-input" style="width:100%;"
+                                        onchange="calculateAgeAdmin()">
+                                </div>
+                                <div style="width:60px;">
+                                    <label style="font-size:0.6rem; color:#888;">Edad:</label>
+                                    <input type="text" id="admin-reg-edad" placeholder="--" readonly
+                                        class="simple-input" style="width:100%; background:#eee; text-align:center;">
+                                </div>
+                            </div>
+
+                            <div style="display:flex; gap:5px; margin-bottom:5px;">
+                                <input type="text" id="admin-reg-colonia" placeholder="Colonia / Barrio"
+                                    class="simple-input" style="flex:2;">
+                                <input type="text" id="admin-reg-pass" placeholder="Pass (Opcional)"
+                                    class="simple-input" style="flex:1;">
+                                <input type="hidden" id="editing-user-id">
+                            </div>
+
+                            <button id="manual-register-btn" class="cyber-btn sm"
+                                style="width:100%; margin-top:5px;">REGISTRAR HERMANO</button>
+                        </div>
+                    </div>
+
+                    <!-- 4. LIST -->
+                    <div id="admin-user-list" style="border:1px solid #eee; min-height:300px; padding:5px;">
+                        <!-- Users injected here -->
+                    </div>
+
+                    <!-- 5. LOCATION (Bottom) -->
+                    <div class="admin-section"
+                        style="padding: 15px; margin-top:20px; border-top: 1px solid #eee; background:#fafafa;">
+                        <h5 style="margin-bottom:5px; font-weight:bold;"><i class="ri-map-pin-user-line"></i> Ubicación
+                            Iglesia</h5>
+                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                            <span id="location-status-admin" style="font-size:0.7rem; font-family:monospace;">--</span>
+                            <button id="set-location-btn" class="cyber-btn sm" style="font-size:0.7rem;">FIJAR
+                                AQUÍ</button>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Schedule/Image Overlay -->
+            <div id="schedule-overlay" class="glass-overlay hidden" style="z-index:3000; overflow-y:auto;">
+                <button id="close-schedule"
+                    style="position:absolute; top:20px; right:20px; font-size:2rem; background:none; border:none; color:white;">&times;</button>
+
+                <div style="padding:20px; color:white; text-align:center;">
+                    <h2 class="gradient-text">ROLES DE SERVICIO</h2>
+
+                    <!-- Weekly Table Container -->
+                    <div id="weekly-table-container" class="hidden" style="margin-top:20px; overflow-x:auto;">
+                        <table
+                            style="width:100%; border-collapse:collapse; min-width:600px; background:rgba(255,255,255,0.1); border-radius:10px;">
+                            <thead>
+                                <tr style="background:var(--primary-gold); color:black;">
+                                    <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">DÍA</th>
+                                    <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">5:00 AM</th>
+                                    <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">9:00 AM</th>
+                                    <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">7:00 PM</th>
+                                    <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">ESPECIAL</th>
+                                </tr>
+                            </thead>
+                            <tbody id="weekly-tbody">
+                                <!-- JS fills this -->
+                            </tbody>
+                        </table>
+                        <button id="back-to-today" class="cyber-btn sm" style="margin-top:20px;">VER HOY</button>
+                    </div>
+
+                    <div class="schedule-grid">
+                        <!-- Cards for Today -->
+                        <div class="schedule-card" data-slot="5am">
+                            <h4>ORACIÓN 5:00 AM</h4>
+                            <p class="assigned-name">--</p>
+                            <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
+                        </div>
+                        <div class="schedule-card" data-slot="9am">
+                            <h4>ORACIÓN 9:00 AM</h4>
+                            <p class="assigned-name">--</p>
+                            <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
+                        </div>
+                        <div class="schedule-card" data-slot="7pm">
+                            <h4>ORACIÓN 7:00 PM</h4>
+                            <p class="assigned-name">--</p>
+                            <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
+                        </div>
+                        <div class="schedule-card" data-slot="special">
+                            <h4>CONSAGRACIÓN ESPECIAL</h4>
+                            <p class="assigned-name">--</p>
+                            <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
+                        </div>
+                    </div>
+
+                    <button id="view-weekly-btn" class="cyber-btn" style="margin-top:30px; border: 1px solid white;">VER
+                        SEMANA COMPLETA</button>
+                </div>
+            </div>
+
+            <!-- HISTORY MODAL (New) -->
+            <div id="history-modal" class="hidden"
+                style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:4000; display:none; align-items:center; justify-content:center;">
+                <div class="cyber-card" style="width:90%; max-width:400px; max-height:80vh; overflow-y:auto;">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h3 class="gradient-text" style="margin:0;">HISTORIAL</h3>
+                        <button
+                            onclick="document.getElementById('history-modal').classList.add('hidden'); document.getElementById('history-modal').style.display='none';"
+                            style="background:none; border:none; color:var(--text-muted); font-size:1.5rem;">&times;</button>
+                    </div>
+                    <div id="history-content" style="font-size:0.9rem;">
+                        <!-- Content Injected Here -->
+                    </div>
+                </div>
+            </div>
+
+    </div>
+
+    <!-- Scripts -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+
+    <!-- INLINE SUPABASE CONFIG & DEBUG -->
+    <script>
+        const SUPABASE_URL = "https://pmdqpkucejctdodmkoym.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtZHFwa3VjZWpjdGRvZG1rb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NjM2MzMsImV4cCI6MjA4NjAzOTYzM30.KYOCRTl3y0kIQsCc5QK7uPcsxYfhus_sSuUVzv1mvNU";
+
+        // Visual Status Bar
+        const statusDiv = document.createElement('div');
+        statusDiv.id = 'sys-status';
+        statusDiv.style.cssText = "position:fixed; top:50px; left:0; width:100%; padding:5px; text-align:center; color:white; font-size:12px; z-index:9999; font-family:monospace; pointer-events:none;";
+        statusDiv.style.background = "rgba(255, 0, 0, 0.8)"; // Default Red
+        statusDiv.innerHTML = "⏳ CONECTANDO A LA NUBE...";
+        document.body.appendChild(statusDiv);
+
+        function updateStatus(msg, color) {
+            const el = document.getElementById('sys-status');
+            if (el) {
+                el.innerHTML = msg;
+                el.style.background = color;
+                // Auto hide if green
+                if (color.includes('green') || color.includes('#2ecc71')) {
+                    setTimeout(() => el.style.display = 'none', 5000);
+                }
+            }
+        }
+
+        function initSupabaseDirect() {
+            if (window.sbClient) return;
+
+            if (window.supabase) {
+                try {
+                    window.sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                    console.log("✅ Supabase INIT (Inline)");
+                    updateStatus("✅ NUBE CONECTADA", "#2ecc71"); // Green
+                } catch (e) {
+                    console.error("Supabase Init Error:", e);
+                    updateStatus("❌ ERROR CONFIG NUBE: " + e.message, "red");
+                }
+            } else {
+                updateStatus("⚠️ LIBRERÍA SUPABASE NO CARGADA", "orange");
+                setTimeout(initSupabaseDirect, 500);
+            }
+        }
+
+        // Run immediately and on load
+        initSupabaseDirect();
+        window.addEventListener('load', initSupabaseDirect);
+    </script>
+
+    <!-- Service & App -->
+    <script src="js/supabase-service.js"></script>
+    <script src="js/app.js?v=8.0_final"></script>
+
+    <div style="position:fixed; bottom:5px; right:5px; font-size:0.7rem; color:#ccc; opacity:0.5;">v4.0 Final</div>
+
+    <script>
+        setTimeout(() => {
+            const login = document.getElementById('login-section');
+            const dash = document.getElementById('dashboard-section');
+            const reg = document.getElementById('register-section');
+            const isAnyVisible = [login, dash, reg].some(el => el && !el.classList.contains('hidden-section'));
+
+            if (!isAnyVisible) {
+                console.warn("Forcing Login View");
+                if (login) {
+                    login.classList.remove('hidden-section');
+                    login.style.display = 'flex';
+                }
+            }
+        }, 2000);
+    </script>
+</body>
+
+</html>

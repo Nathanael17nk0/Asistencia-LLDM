@@ -1,0 +1,161 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>DEBUG DATOS - LLDM</title>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #eee;
+        }
+
+        .card {
+            background: white;
+            padding: 15px;
+            border-radius: 8px;
+            margin-bottom: 20px;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+        }
+
+        h2 {
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        pre {
+            background: #333;
+            color: #0f0;
+            padding: 10px;
+            overflow-x: auto;
+            max-height: 300px;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #007bff;
+            color: white;
+            border: none;
+            font-size: 1rem;
+            margin-right: 10px;
+        }
+
+        .btn-danger {
+            background: #dc3545;
+        }
+
+        .btn-success {
+            background: #28a745;
+        }
+    </style>
+</head>
+
+<body>
+    <h1>🛠️ HERRAMIENTA DE DIAGNÓSTICO DE DATOS</h1>
+
+    <div class="card">
+        <h2>1. DATOS LOCALES (Tu Navegador)</h2>
+        <p><b>Usuarios en Memoria (nexus_users):</b> <span id="local-count">Calculating...</span></p>
+        <p><b>Asistencias en Memoria (nexus_attendance_log):</b> <span id="log-count">Calculating...</span></p>
+        <button onclick="clearLocal()" class="btn-danger">🗑️ BORRAR LOCAL (Reset)</button>
+        <button onclick="checkLocal()" class="btn-success">🔄 REFRESCAR</button>
+    </div>
+
+    <div class="card">
+        <h2>2. CONEXIÓN A NUBE (Supabase)</h2>
+        <p>Estado: <span id="cloud-status" style="font-weight:bold; color:orange;">⌛ Conectando...</span></p>
+        <button onclick="fetchCloudData()" class="btn-success">☁️ CONSULTAR NUBE AHORA</button>
+        <div id="cloud-results" style="margin-top:20px;"></div>
+    </div>
+
+    <script>
+        const SUPABASE_URL = "https://pmdqpkucejctdodmkoym.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtZHFwa3VjZWpjdGRvZG1rb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NjM2MzMsImV4cCI6MjA4NjAzOTYzM30.KYOCRTl3y0kIQsCc5QK7uPcsxYfhus_sSuUVzv1mvNU";
+
+        let client;
+        try {
+            client = supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+        } catch (e) {
+            alert("Error cargando librería Supabase: " + e.message);
+        }
+
+        function checkLocal() {
+            const usersRaw = localStorage.getItem('nexus_users') || '[]';
+            const logRaw = localStorage.getItem('nexus_attendance_log') || '[]';
+
+            const users = JSON.parse(usersRaw);
+            const log = JSON.parse(logRaw);
+
+            document.getElementById('local-count').innerHTML = `<b>${users.length}</b> registros found. <br><small>(${usersRaw.length} bytes)</small>`;
+            document.getElementById('log-count').innerHTML = `<b>${log.length}</b> logs found. <br><small>(${logRaw.length} bytes)</small>`;
+        }
+
+        function clearLocal() {
+            if (confirm("¿ESTÁS SEGURO? Esto borrará la copia local.")) {
+                localStorage.removeItem('nexus_users');
+                localStorage.removeItem('nexus_attendance_log');
+                alert("🗑️ Datos locales eliminados.");
+                checkLocal();
+            }
+        }
+
+        async function fetchCloudData() {
+            const statusFn = document.getElementById('cloud-status');
+            const resDiv = document.getElementById('cloud-results');
+
+            statusFn.innerText = "⏳ Consultando...";
+            resDiv.innerHTML = "Cargando...";
+
+            try {
+                // 1. Fetch Users (registrations)
+                let { data: users, error: err1 } = await client.from('registrations').select('*');
+
+                if (err1) {
+                    // Try 'config' table fallback if registrations doesn't exist? No, user said registrations.
+                    throw new Error("Error fetching registrations: " + err1.message);
+                }
+
+                // 2. Fetch Logs
+                let { data: logs, error: err2 } = await client.from('attendance_log').select('*').order('timestamp', { ascending: false }).limit(20);
+
+                if (err2) throw new Error("Error fetching logs: " + err2.message);
+
+                statusFn.innerText = "✅ ONLINE PROBADO";
+                statusFn.style.color = "green";
+
+                let html = `<h3>📊 Resultados de la Nube:</h3>`;
+                html += `<p><b>Total Hermanos Registrados:</b> ${users ? users.length : 0}</p>`;
+
+                if (users && users.length > 0) {
+                    html += `<p>Ejemplos (Primeros 3):</p><pre>${JSON.stringify(users.slice(0, 3), null, 2)}</pre>`;
+                } else {
+                    html += `<p style="color:red">⚠️ LA TABLA DE REGISTROS ESTÁ VACÍA EN LA NUBE logicamente.</p>`;
+                }
+
+                html += `<hr>`;
+                html += `<p><b>Últimas 20 Asistencias:</b></p>`;
+                if (logs && logs.length > 0) {
+                    html += `<pre>${JSON.stringify(logs, null, 2)}</pre>`;
+                } else {
+                    html += `<p>No hay asistencias recientes.</p>`;
+                }
+
+                resDiv.innerHTML = html;
+
+            } catch (e) {
+                statusFn.innerText = "❌ ERROR CONEXIÓN";
+                statusFn.style.color = "red";
+                resDiv.innerHTML = `<div style="background:#fdd; padding:10px; border:1px solid red;">ERROR: ${e.message}</div>`;
+            }
+        }
+
+        // Init
+        checkLocal();
+    </script>
+</body>
+
+</html>

@@ -1,0 +1,132 @@
+<!DOCTYPE html>
+<html lang="es">
+
+<head>
+    <meta charset="UTF-8">
+    <title>DEBUG IDs</title>
+    <style>
+        body {
+            font-family: monospace;
+            padding: 20px;
+            background: #333;
+            color: #fff;
+        }
+
+        .box {
+            border: 1px solid #666;
+            padding: 10px;
+            margin-bottom: 20px;
+            background: #222;
+            max-height: 300px;
+            overflow: auto;
+        }
+
+        h3 {
+            color: #f59e0b;
+            margin-top: 0;
+        }
+
+        .green {
+            color: #10b981;
+        }
+
+        .red {
+            color: #ef4444;
+        }
+
+        button {
+            padding: 10px 20px;
+            cursor: pointer;
+            background: #3b82f6;
+            color: white;
+            border: none;
+            font-size: 16px;
+        }
+    </style>
+</head>
+
+<body>
+
+    <h1>🕵️ DEBUG DE IDENTIFICADORES</h1>
+    <button onclick="analyze()">ANALIZAR DATOS AHORA</button>
+    <button onclick="clearLogs()" style="background:#ef4444">LIMPIAR ASISTENCIAS CORRUPTAS</button>
+
+    <div id="output"></div>
+
+    <script src="js/supabase-config.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <script>
+        async function analyze() {
+            const out = document.getElementById('output');
+            out.innerHTML = "Analizando...";
+
+            const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+            const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+
+            let html = "";
+            let badUsers = 0;
+            let badLogs = 0;
+
+            // 1. ANALYZE USERS
+            html += `<div class="box"><h3>👥 USUARIOS (${users.length})</h3>`;
+            html += "<table><tr><th>Name</th><th>Phone</th><th>ID</th><th>SafeID</th></tr>";
+            users.forEach(u => {
+                const uid = u.id || u.phone;
+                const isBad = !uid || uid === 'undefined' || uid === 'null';
+                if (isBad) badUsers++;
+                html += `<tr class="${isBad ? 'red' : ''}">
+                    <td>${u.full_name || u.name}</td>
+                    <td>${u.phone}</td>
+                    <td>${u.id}</td>
+                    <td><b>${String(uid)}</b></td>
+                </tr>`;
+            });
+            html += "</table></div>";
+
+            // 2. ANALYZE LOGS
+            html += `<div class="box"><h3>📝 ASISTENCIAS (${log.length})</h3>`;
+            html += "<table><tr><th>Name</th><th>UserID (in Log)</th><th>Timestamp</th><th>Match?</th></tr>";
+
+            // Build Map for simulation
+            const debugMap = new Set();
+            log.forEach(l => {
+                const key = String(l.userId);
+                debugMap.add(key);
+                const isBad = !l.userId || l.userId === 'undefined';
+                if (isBad) badLogs++;
+                html += `<tr class="${isBad ? 'red' : ''}">
+                    <td>${l.name}</td>
+                    <td>"${l.userId}"</td>
+                    <td>${l.timestamp}</td>
+                    <td>${isBad ? '⚠️ CORRUPT' : 'OK'}</td>
+                </tr>`;
+            });
+            html += "</table></div>";
+
+            // 3. SIMULATE MATCHING
+            html += `<div class="box"><h3>🔄 SIMULACIÓN DE MATCH</h3>`;
+            html += `<p>Map Keys present: ${Array.from(debugMap).join(', ')}</p>`;
+            let matches = 0;
+            users.forEach(u => {
+                const uid = String(u.id || u.phone);
+                if (debugMap.has(uid)) {
+                    html += `<div class="green">MATCH: ${u.full_name} (ID: ${uid})</div>`;
+                    matches++;
+                }
+            });
+            html += `<p>Total Matches: ${matches}</p>`;
+            html += "</div>";
+
+            out.innerHTML = html;
+        }
+
+        function clearLogs() {
+            if (confirm("¿Borrar historial local y recargar?")) {
+                localStorage.removeItem('nexus_attendance_log');
+                alert("Borrado. Recarga la página principal.");
+            }
+        }
+    </script>
+</body>
+
+</html>
