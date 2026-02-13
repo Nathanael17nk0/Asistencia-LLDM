@@ -191,7 +191,11 @@ function showDashboard(user) {
         const instructions = document.querySelector('.instruction-text');
         if (instructions) instructions.classList.remove('hidden');
     }
-    startLocationWatch();
+    if (user.role !== 'admin') {
+        startLocationWatch();
+    } else {
+        console.log("📍 Location Watch Skipped for Admin");
+    }
 }
 
 function showRegister() {
@@ -358,8 +362,20 @@ async function handleLogin(e) {
                 localStorage.setItem('nexus_users', JSON.stringify(allUsers));
             }
 
+            STATE.user = adminUser; // Set global state immediately
             alert("✅ MODO ADMIN ACTIVADO");
-            window.location.reload();
+
+            // DIRECT ENTRY (No Reload)
+            console.log("🚀 Admin Direct Entry...");
+            hideAllSections();
+            showDashboard(adminUser); // This handles UI switching
+
+            // Trigger Admin Panel Show after UI update
+            setTimeout(() => {
+                const adminPanel = document.getElementById('admin-panel');
+                if (adminPanel) adminPanel.classList.remove('hidden');
+            }, 500);
+
             return;
         }
 
