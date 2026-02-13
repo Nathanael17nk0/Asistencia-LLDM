@@ -292,24 +292,37 @@ if (registerForm) {
                 try {
                     await window.DB.registerUser({
                         ...newUser,
-                        colonia: '', // Default fields
+                        colonia: '',
                         dob: '',
                         age_label: ''
                     });
                     console.log("✅ Self-Registration Synced to Cloud");
                 } catch (dbErr) {
                     console.error("⚠️ Cloud Register Error:", dbErr);
+
+                    // HANDLE DUPLICATE USER (ZOMBIE)
+                    if (dbErr.message && (dbErr.message.includes('duplicate key') || dbErr.code === '23505')) {
+                        alert("⚠️ ESTE NÚMERO YA EXISTE\n\nTe vamos a redirigir al Login...");
+                        localStorage.setItem('nexus_session', 'active'); // Force Session
+                        window.location.reload(); // Will load Dashboard or Login
+                        return;
+                    }
+
                     alert("Aviso: Tu cuenta se creó localmente, pero hubo error en nube: " + dbErr.message);
                 }
             }
 
             alert(`REGISTRO EXITOSO\nBienvenido, ${nombre}.\n\nTus credenciales se han guardado.`);
-
-            // Direct Entry
-            // showDashboard(newUser); 
-            window.location.reload(); // Force reload to ensure clean state and initApp logic runs
+            window.location.reload();
 
         } catch (err) {
+            // BACKUP CATCH (For critical failures)
+            if (err.message && (err.message.includes('duplicate key') || err.message.code === '23505')) {
+                alert("⚠️ CUENTA EXISTENTE\n\nRedirigiendo...");
+                localStorage.setItem('nexus_session', 'active');
+                window.location.reload();
+                return;
+            }
             alert("ERROR AL GUARDAR: " + err.message);
         }
     });
