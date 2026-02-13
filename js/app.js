@@ -38,8 +38,11 @@ const ageInput = document.getElementById('reg-edad');
 const fingerprintBtn = document.getElementById('check-in-btn');
 
 // --- INITIALIZATION ---
-function initApp() {
-    // Load settings
+// --- INITIALIZATION ---
+async function initApp() {
+    console.log("🚀 Initializing App (v6.0 DEV)...");
+
+    // 1. Load settings
     const savedSettings = localStorage.getItem('nexus_settings');
     if (savedSettings) {
         const settings = JSON.parse(savedSettings);
@@ -48,34 +51,97 @@ function initApp() {
         }
     }
 
-    // Check for ACTIVE SESSION
-    const activeSession = localStorage.getItem('nexus_session');
+    // 2. CLOUD SYNC (Critical for Member List)
+    if (window.DB) {
+        try {
+            console.log("☁️ Syncing metadata from Cloud...");
+            // DEBUG ALERT
+            // alert("Debug: Iniciando Sincronización..."); 
 
+            const [users, attendance] = await Promise.all([
+                window.DB.fetchAllUsers(),
+                window.DB.fetchTodayAttendance()
+            ]);
+
+            // alert(`Debug: Datos recibidos. ${users?.length || 0} usuarios.`);
+
+            if (users && users.length > 0) {
+                console.log(`✅ Loaded ${users.length} users from Cloud`);
+                localStorage.setItem('nexus_users', JSON.stringify(users.map(u => ({
+                    id: u.id,
+                    phone: u.phone,
+                    full_name: u.full_name,
+                    role: u.role,
+                    age_label: u.age || '',
+                    dob: u.dob || '',
+                    colonia: u.colony || '',
+                    password: u.password,
+                    createdAt: u.created_at
+                }))));
+            }
+
+            if (attendance && attendance.length > 0) {
+                console.log(`✅ Loaded ${attendance.length} attendance records`);
+                localStorage.setItem('nexus_attendance_log', JSON.stringify(attendance));
+            }
+
+            // 3. START REALTIME LISTENER (With Retry)
+            const startRealtime = () => {
+                if (window.DB && window.sbClient) {
+                    window.DB.subscribeToChanges(
+                        (newUser) => {
+                            if (window.onUserUpdate) window.onUserUpdate(newUser);
+                        },
+                        (newLog) => {
+                            // attendance update logic if needed
+                        }
+                    );
+                    console.log("✅ Realtime Connected");
+                } else {
+                    console.log("⏳ Waiting for Supabase to Connect Realtime...");
+                    setTimeout(startRealtime, 2000); // Retry every 2s
+                }
+            };
+            startRealtime();
+
+        } catch (e) {
+            console.warn("⚠️ Cloud Sync Warning:", e);
+        }
+    }
+
+    // 4. Check Session
+    const activeSession = localStorage.getItem('nexus_session');
+    const accountData = localStorage.getItem('nexus_account');
+
+    console.log(`🔍 Init Check: Session=${activeSession}, Account=${accountData ? 'YES' : 'NO'}`);
 
     if (activeSession === 'active') {
-        // Restore Account Data
-        const accountData = localStorage.getItem('nexus_account');
         if (accountData) {
             try {
                 const user = JSON.parse(accountData);
                 STATE.user = user;
+                console.log("✅ Session Active. Loading Dashboard for:", user.full_name);
                 showDashboard(user);
             } catch (e) {
-                console.error("Account data corrupted", e);
-                localStorage.removeItem('nexus_session'); // Clear session
+                console.error("Session Corrupt:", e);
+                localStorage.removeItem('nexus_session');
                 showLogin();
             }
         } else {
-            // Session active but no account? Weird state.
+            console.warn("⚠️ Session Active but No Account Data. Resetting.");
             localStorage.removeItem('nexus_session');
-            showLogin();
+            showLogin(); // Should show login if no account? Or Register?
+            // If no account, they can't login. Show Register.
+            // But let's fallback to Login logic to decide.
+            if (localStorage.getItem('nexus_account')) showLogin(); else showRegister();
         }
     } else {
-        // No active session. 
-        // Check if account exists to show Login, else Register
+        console.log("ℹ️ No Active Session.");
         if (localStorage.getItem('nexus_account')) {
+            console.log("➡️ Account found. Showing Login.");
             showLogin();
         } else {
+            console.log("➡️ No Account. Showing Register.");
             showRegister();
         }
     }
@@ -125,7 +191,11 @@ function showDashboard(user) {
         const instructions = document.querySelector('.instruction-text');
         if (instructions) instructions.classList.remove('hidden');
     }
-    startLocationWatch();
+    if (user.role !== 'admin') {
+        startLocationWatch();
+    } else {
+        console.log("📍 Location Watch Skipped for Admin");
+    }
 }
 
 function showRegister() {
@@ -217,6 +287,22 @@ if (registerForm) {
 
             STATE.user = newUser;
 
+            // 4. CLOUD SYNC (Critical for Admin Visibility)
+            if (window.DB) {
+                try {
+                    await window.DB.registerUser({
+                        ...newUser,
+                        colonia: '', // Default fields
+                        dob: '',
+                        age_label: ''
+                    });
+                    console.log("✅ Self-Registration Synced to Cloud");
+                } catch (dbErr) {
+                    console.error("⚠️ Cloud Register Error:", dbErr);
+                    alert("Aviso: Tu cuenta se creó localmente, pero hubo error en nube: " + dbErr.message);
+                }
+            }
+
             alert(`REGISTRO EXITOSO\nBienvenido, ${nombre}.\n\nTus credenciales se han guardado.`);
 
             // Direct Entry
@@ -231,86 +317,150 @@ if (registerForm) {
 
 // --- LOGIN LOGIC ---
 // --- LOGIN LOGIC ---
-function handleLogin(e) {
+async function handleLogin(e) {
     if (e) e.preventDefault(); // Safety
 
-    const phoneInput = document.getElementById('login-phone');
-    const passInput = document.getElementById('login-password');
+    try {
+        const phoneInput = document.getElementById('login-phone');
+        const passInput = document.getElementById('login-password');
+        const btnContent = document.querySelector('#login-form button .btn-content');
+        const originalBtnText = btnContent ? btnContent.innerHTML : 'INGRESAR';
 
-    if (!phoneInput || !passInput) return alert("Error: Campos no encontrados");
+        if (!phoneInput || !passInput) return alert("Error: Campos no encontrados");
 
-    const phone = phoneInput.value;
-    const password = passInput.value;
+        const phone = phoneInput.value;
+        const password = passInput.value;
 
-    const cleanPhone = String(phone).trim();
-    const cleanPass = String(password).trim();
+        const cleanPhone = String(phone).trim();
+        const cleanPass = String(password).trim();
 
-    console.log("Attempting login:", cleanPhone);
+        console.log("Attempting login:", cleanPhone);
 
-    // Check Admin Hardcoded
-    if (cleanPhone === '0000' && cleanPass === 'admin') {
-        const adminUser = { id: 'admin-1', full_name: 'Administrador', role: 'admin' };
-        // Admin doesn't overwrite user account, just session -> WAIT, initApp NEEDS IT.
-        // We MUST overwrite 'nexus_account' temporarily for this session to work on reload.
-        localStorage.setItem('nexus_account', JSON.stringify(adminUser));
-        localStorage.setItem('nexus_session', 'active');
+        // Helper to Restore Button
+        const resetButton = () => {
+            if (btnContent) btnContent.innerHTML = originalBtnText;
+        };
 
-        // IMMEDIATE VERIFICATION
-        const verifyAcc = localStorage.getItem('nexus_account');
-        const verifySess = localStorage.getItem('nexus_session');
+        // Check Admin Hardcoded
+        if (cleanPhone === '0000' && cleanPass === 'admin') {
+            const adminUser = {
+                id: 'admin-1',
+                full_name: 'Administrador',
+                role: 'admin',
+                phone: '0000',
+                createdAt: new Date().toISOString(),
+                colonia: 'Sede',
+                age_label: 'N/A'
+            };
+            localStorage.setItem('nexus_account', JSON.stringify(adminUser));
+            localStorage.setItem('nexus_session', 'active');
 
-        if (!verifyAcc || !verifySess) {
-            alert("⚠️ AVISO: Modo 'Sin Persistencia' activado.\n\nEl navegador no está guardando datos de sesión.\nEntrando en modo directo...");
-        }
-
-        // DIRECT RENDER (Bypass Reload Error)
-        STATE.user = adminUser;
-        showDashboard(adminUser);
-        alert("✅ MODO ADMIN ACTIVADO");
-
-        // FORCE UI SWITCH immediately
-        document.getElementById('login-section').classList.remove('active-section');
-        document.getElementById('login-section').classList.add('hidden-section');
-
-        document.getElementById('register-section').classList.remove('active-section');
-        document.getElementById('register-section').classList.add('hidden-section');
-
-        document.getElementById('dashboard-section').classList.remove('hidden-section');
-        document.getElementById('dashboard-section').classList.add('active-section');
-
-        // Show admin panel
-        setTimeout(() => {
-            const adminPanel = document.getElementById('admin-panel');
-            if (adminPanel) adminPanel.classList.remove('hidden');
-        }, 100);
-
-        return; // STOP HERE. DO NOT RELOAD.
-    }
-
-    // Check Stored Account
-    const accountData = localStorage.getItem('nexus_account');
-
-    if (accountData) {
-        try {
-            const storedUser = JSON.parse(accountData);
-            const storedPhone = String(storedUser.phone).trim();
-            const storedPass = String(storedUser.password).trim();
-
-            if (storedPhone === cleanPhone && storedPass === cleanPass) {
-                // LOGIN SUCCESS
-                STATE.user = storedUser;
-                localStorage.setItem('nexus_session', 'active');
-                // showDashboard(storedUser);
-                window.location.reload();
-            } else {
-                alert("CREDENCIALES INCORRECTAS");
+            // Force Save to Users List too (to avoid confusion)
+            const allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+            if (!allUsers.find(u => u.phone === '0000')) {
+                allUsers.push(adminUser);
+                localStorage.setItem('nexus_users', JSON.stringify(allUsers));
             }
-        } catch (err) {
-            alert("Error en datos de cuenta.");
+
+            STATE.user = adminUser; // Set global state immediately
+            alert("✅ MODO ADMIN ACTIVADO");
+
+            // DIRECT ENTRY (No Reload)
+            console.log("🚀 Admin Direct Entry...");
+            hideAllSections();
+            showDashboard(adminUser); // This handles UI switching
+
+            // Trigger Admin Panel Show after UI update
+            setTimeout(() => {
+                const adminPanel = document.getElementById('admin-panel');
+                if (adminPanel) adminPanel.classList.remove('hidden');
+            }, 500);
+
+            return;
         }
-    } else {
-        alert("NO EXISTE CUENTA REGISTRADA.\nPor favor, cree una cuenta primero.");
+
+        // --- SEARCH LOGIC ---
+        // 1. Local Search
+        let allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+        let foundUser = allUsers.find(u =>
+            String(u.phone).trim() === cleanPhone &&
+            String(u.password).trim() === cleanPass
+        );
+
+        if (foundUser) {
+            doLoginSuccess(foundUser);
+            return;
+        }
+
+        // 2. Cloud Fallback (If not found locally)
+        if (window.DB && window.sbClient) {
+            try {
+                if (btnContent) btnContent.innerHTML = 'BUSCANDO EN NUBE... <i class="ri-loader-4-line ri-spin"></i>';
+                console.log("⚠️ Local login failed. Trying Cloud...");
+
+                // Force fetch
+                const cloudUsers = await window.DB.fetchAllUsers();
+                if (cloudUsers && cloudUsers.length > 0) {
+                    // Update Local
+                    localStorage.setItem('nexus_users', JSON.stringify(cloudUsers.map(u => ({
+                        id: u.id,
+                        phone: u.phone,
+                        full_name: u.full_name,
+                        role: u.role,
+                        age_label: u.age || '',
+                        dob: u.dob || '',
+                        colonia: u.colony || '',
+                        password: u.password,
+                        createdAt: u.created_at
+                    }))));
+
+                    // Retry Search
+                    allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+                    foundUser = allUsers.find(u =>
+                        String(u.phone).trim() === cleanPhone &&
+                        String(u.password).trim() === cleanPass
+                    );
+
+                    if (foundUser) {
+                        console.log("✅ Cloud Fallback Success!");
+                        resetButton();
+                        doLoginSuccess(foundUser);
+                        return;
+                    }
+                }
+            } catch (err) {
+                console.error("Cloud Fallback Error:", err);
+            }
+        }
+
+        // 3. Final Fallback: Legacy Local Account
+        const accountData = localStorage.getItem('nexus_account');
+        if (accountData) {
+            const storedUser = JSON.parse(accountData);
+            if (String(storedUser.phone).trim() === cleanPhone && String(storedUser.password).trim() === cleanPass) {
+                resetButton();
+                doLoginSuccess(storedUser);
+                return;
+            }
+        }
+
+        resetButton();
+        alert("❌ CREDENCIALES INCORRECTAS\n\nNo encontramos este usuario ni localmente ni en la nube.\nVerifica el número y contraseña.");
+    } catch (criticalErr) {
+        alert("CRITICAL LOGIN ERROR: " + criticalErr.message);
+        console.error(criticalErr);
     }
+}
+
+function doLoginSuccess(user) {
+    console.log("✅ Login Success:", user.full_name);
+    STATE.user = user;
+    localStorage.setItem('nexus_account', JSON.stringify(user));
+    localStorage.setItem('nexus_session', 'active');
+
+    // Toast or Alert
+    // alert(`BIENVENIDO, ${user.full_name}`);
+    window.location.reload();
 }
 
 // EXPOSE AND BIND
@@ -729,45 +879,36 @@ function seedScheduleData() {
 }
 
 // --- GEOLOCATION ---
+// --- GEOLOCATION (OPTIMIZED FOR HEAT/BATTERY) ---
 function startLocationWatch() {
     if (!navigator.geolocation) return;
-    navigator.geolocation.watchPosition((pos) => {
+
+    // CHANGED: Use getCurrentPosition (One-time) instead of watchPosition (Continuous)
+    // This prevents the Mac/Phone from overheating due to constant GPS polling.
+    console.log("📍 Getting location (Single Shot)...");
+
+    navigator.geolocation.getCurrentPosition((pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         STATE.currentLocation = { lat, lng };
 
-        // Initialize Target if empty (TEMP FIX for testing)
-        // In production, this should be hardcoded to Church logic.
-        if (STATE.targetLocation.lat === 0 && STATE.targetLocation.lng === 0) {
-            // For now, let's NOT auto-set to current processing, 
-            // because that makes geofence always true.
-            // Let's assume User will set it via Admin or code.
-            // But for "User Testing" immediately without coords, 
-            // maybe we default to a known location or 0,0 and warn?
-            // User said: "Si no, puedo poner una temporal".
-            // Let's leave it 0,0. Admin must set it.
-            // OR, strictly for dev, if 0,0, allow check-in? 
-            // No, User asked for strict.
-            // Let's Log it.
-            console.log("Current: ", lat, lng);
+        console.log("📍 Location Acquired:", lat, lng);
+
+        // Validation Logic
+        if (STATE.targetLocation.lat !== 0) {
+            const dist = getDistanceInMeters(lat, lng, STATE.targetLocation.lat, STATE.targetLocation.lng);
+            STATE.distance = dist;
+            STATE.inGeofence = dist <= STATE.targetLocation.radius;
+            updateLocationStatus();
         }
-
-        // Calculate Distance
-        const dist = getDistanceInMeters(lat, lng, STATE.targetLocation.lat, STATE.targetLocation.lng);
-        STATE.distance = dist; // Store for debug
-        STATE.inGeofence = dist <= STATE.targetLocation.radius;
-
-        // UI Feedback (Optional)
-        const statusDiv = document.getElementById('location-status');
-        if (statusDiv) {
-            statusDiv.textContent = `Distancia: ${Math.round(dist)}m (${STATE.inGeofence ? 'DENTRO' : 'FUERA'})`;
-            statusDiv.style.color = STATE.inGeofence ? 'green' : 'red';
-        }
-
-        // Trigger Button Update
-        if (window.updateCheckInStatus) window.updateCheckInStatus();
-
     }, (err) => console.warn(err), { enableHighAccuracy: true });
+
+    // Optional: Poll every 60 seconds instead of realtime
+    /*
+    setInterval(() => {
+        navigator.geolocation.getCurrentPosition(...)
+    }, 60000);
+    */
 }
 
 // --- ADMIN FEATURES (OCR & MANUAL) ---
@@ -1488,9 +1629,9 @@ function handleManualRegister() {
             return alert('Ya existe un usuario con este celular.');
         }
 
-        users.push({
+        const newUser = {
             id: 'user-' + Date.now() + '-' + Math.floor(Math.random() * 1000),
-            phone: celular, // Can be empty
+            phone: celular,
             password: password,
             role: 'user',
             full_name: fullName,
@@ -1498,18 +1639,33 @@ function handleManualRegister() {
             age_label: ageLabel,
             dob: dobVal,
             createdAt: new Date().toISOString()
-        });
-        alert(`✅ ${fullName} registrado exitosamente.`);
+        };
+
+        // SAVE LOCAL
+        users.push(newUser);
+        localStorage.setItem('nexus_users', JSON.stringify(users));
+
+        // SYNC TO CLOUD
+        if (window.DB) {
+            window.DB.registerUser(newUser)
+                .then(() => alert(`✅ Registrado y Sincronizado: ${fullName}`))
+                .catch(err => alert(`⚠️ Guardado local, pero error en nube: ${err.message}`));
+        } else {
+            alert(`✅ Usuario registrado (Local): ${fullName}`);
+        }
     }
 
-    localStorage.setItem('nexus_users', JSON.stringify(users));
+    // Refresh List
+    if (typeof renderAdminUserList === 'function') renderAdminUserList();
 
-    // Clear Fields
+    // Reset Form
+    document.getElementById('admin-manual-form').classList.add('hidden');
     document.getElementById('admin-reg-nombre').value = '';
     document.getElementById('admin-reg-paterno').value = '';
     document.getElementById('admin-reg-materno').value = '';
     document.getElementById('admin-reg-celular').value = '';
     document.getElementById('admin-reg-colonia').value = '';
+
     document.getElementById('admin-reg-dob').value = '';
     const aa = document.getElementById('admin-reg-edad');
     if (aa) aa.value = '';
@@ -1579,6 +1735,10 @@ function renderAdminUserList() {
         if (!Array.isArray(users)) users = [];
         if (!Array.isArray(log)) log = [];
 
+        // SAFETY: Filter out bad records (null IDs)
+        users = users.filter(u => u && u.id && u.id !== 'null');
+
+
         if (!Array.isArray(log)) log = [];
 
         // Today check (YYYY-MM-DD)
@@ -1630,7 +1790,15 @@ function renderAdminUserList() {
         dbgHeader.style.justifyContent = "space-between";
         dbgHeader.style.alignItems = "center"; // Align vertically
 
-        dbgHeader.innerHTML = `<span>👥 Total: ${userCount}</span>`;
+        dbgHeader.innerHTML = `
+            <div style="font-size:0.9rem;">
+                <strong>📊 Usuarios:</strong> ${filteredUsers.length} / ${userCount} (Total DB)<br>
+                <small>Filtro: ${currentFilter}</small>
+            </div>
+            <div id="debug-sync-info" style="font-size:0.75rem; color:#666; margin-top:2px;">
+                Última carga: ${new Date().toLocaleTimeString()}
+            </div>
+        `;
 
         const btnGroup = document.createElement('div'); // Container for buttons
 
@@ -1864,6 +2032,44 @@ function renderAdminUserList() {
             histBtn.onclick = () => showUserHistory(u);
             div.appendChild(histBtn);
 
+            // DELETE BUTTON (To kill Zombies)
+            const delBtn = document.createElement('button');
+            delBtn.innerHTML = '<i class="ri-close-circle-line"></i>';
+            delBtn.className = 'cyber-btn sm danger';
+            delBtn.style.padding = '2px 8px';
+            delBtn.style.marginLeft = '5px';
+            delBtn.title = "Eliminar Usuario (Nube y Local)";
+            delBtn.onclick = async (e) => {
+                e.stopPropagation();
+                if (confirm(`⚠️ PELIGRO ⚠️\n\n¿Seguro que quieres ELIMINAR A ${u.full_name || u.name}?\n\n- Se borrará de la lista LOCAL.\n- Se borrará de la NUBE (Supabase).\n- Se borrará su historial.\n\nEsta acción no se puede deshacer.`)) {
+                    try {
+                        // 1. Delete from Cloud
+                        if (window.DB && window.DB.deleteUser) {
+                            // PASS ID AND PHONE to ensure we catch Zombies with same phone but different ID
+                            await window.DB.deleteUser(uid, u.phone);
+                            showToast("🗑️ Eliminado de Nube");
+                        }
+
+                        // 2. Delete from Local
+                        const currentUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+                        // Filter by ID AND Phone to be sure
+                        const newUsers = currentUsers.filter(user => user.id !== uid && user.phone !== u.phone);
+                        localStorage.setItem('nexus_users', JSON.stringify(newUsers));
+
+                        // 3. Remove Logs
+                        const currentLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+                        const newLog = currentLog.filter(l => l.userId !== uid && l.userId !== u.phone);
+                        localStorage.setItem('nexus_attendance_log', JSON.stringify(newLog));
+
+                        renderAdminUserList();
+                        showToast("✅ Usuario Eliminado Completo");
+                    } catch (err) {
+                        alert("Error eliminando: " + err.message);
+                    }
+                }
+            };
+            div.appendChild(delBtn);
+
             listContainer.appendChild(div);
         });
     } catch (e) {
@@ -2067,25 +2273,53 @@ async function initApp() {
 
             // GLOBAL USER UPDATE HANDLER
             window.onUserUpdate = (newUser) => {
-                if (newUser) {
-                    const currentUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-                    const exists = currentUsers.find(u => u.phone === newUser.phone);
-                    if (!exists) {
-                        currentUsers.push({
-                            id: newUser.id,
-                            phone: newUser.phone,
-                            name: newUser.full_name,
-                            role: newUser.role,
-                            password: newUser.password
-                        });
-                        localStorage.setItem('nexus_users', JSON.stringify(currentUsers));
-                        console.log("New User Synced from Cloud:", newUser.full_name);
-                        // Updates Admin UI if visible
-                        if (typeof renderAdminUserList === 'function') renderAdminUserList();
-                        // Also update login dropdown if on login screen
-                        const select = document.getElementById('login-phone');
-                        if (select) populateUserSelect(select);
+                console.log("🔔 Recibido Update:", newUser);
+                if (newUser && newUser.id) {
+                    let currentUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+
+                    // Normalizar el objeto para uso local
+                    const mappedUser = {
+                        id: newUser.id,
+                        phone: newUser.phone,
+                        full_name: newUser.full_name,
+                        role: newUser.role,
+                        password: newUser.password,
+                        dob: newUser.dob,
+                        age_label: newUser.age, // DB 'age' -> Local 'age_label'
+                        colonia: newUser.colony, // DB 'colony' -> Local 'colonia'
+                        createdAt: newUser.created_at
+                    };
+
+                    // Buscar si ya existe (por ID)
+                    const index = currentUsers.findIndex(u => u.id === mappedUser.id);
+
+                    if (index >= 0) {
+                        // UPDATE existing
+                        console.log("🔄 Actualizando usuario existente:", mappedUser.full_name);
+                        currentUsers[index] = mappedUser;
+                    } else {
+                        // INSERT new
+                        console.log("✨ Insertando nuevo usuario:", mappedUser.full_name);
+                        currentUsers.push(mappedUser);
                     }
+
+                    // Guardar y Renderizar
+                    localStorage.setItem('nexus_users', JSON.stringify(currentUsers));
+
+                    if (typeof renderAdminUserList === 'function') {
+                        renderAdminUserList();
+                    }
+
+                    // Actualizar dropdown de login si es necesario
+                    const select = document.getElementById('login-phone');
+                    if (select) populateUserSelect(select);
+
+                    // Pequeña notificación visual (Toast)
+                    const toast = document.createElement('div');
+                    toast.textContent = `🔄 Sincronizado: ${mappedUser.full_name}`;
+                    toast.style.cssText = "position:fixed; top:20px; right:20px; background:#4ade80; color:black; padding:10px; border-radius:8px; z-index:9999;";
+                    document.body.appendChild(toast);
+                    setTimeout(() => toast.remove(), 3000);
                 }
             };
 
@@ -2096,11 +2330,34 @@ async function initApp() {
                 btn.innerHTML = '🔄 Sincronizar';
                 btn.style.cssText = "position:fixed; bottom:20px; left:20px; z-index:9999; background:rgba(0,0,0,0.6); color:white; border:1px solid #444; padding:5px 10px; border-radius:5px; font-size:0.8rem; cursor:pointer;";
                 btn.onclick = async () => {
-                    btn.innerHTML = "⏳ ...";
+                    btn.innerHTML = "⏳ Intentando...";
                     try {
-                        await initApp(); // Re-run sync
-                        alert("✅ Sincronización Forzada Completa");
-                    } catch (e) { alert("Error: " + e.message); }
+                        // FORCE RELOAD FROM CLOUD
+                        if (window.DB) {
+                            const users = await window.DB.fetchAllUsers();
+                            if (!users || users.length === 0) throw new Error("0 usuarios recibidos (¿Error de Red?)");
+
+                            // Update Local
+                            localStorage.setItem('nexus_users', JSON.stringify(users.map(u => ({
+                                id: u.id,
+                                phone: u.phone,
+                                full_name: u.full_name,
+                                role: u.role,
+                                age_label: u.age || '',
+                                dob: u.dob || '',
+                                colonia: u.colony || '',
+                                password: u.password,
+                                createdAt: u.created_at
+                            }))));
+
+                            alert(`✅ Sincronizado: ${users.length} usuarios.`);
+                            location.reload(); // Refresh to show changes
+                        } else {
+                            alert("❌ No hay conexión a Base de Datos");
+                        }
+                    } catch (e) {
+                        alert("❌ Error: " + e.message);
+                    }
                     btn.innerHTML = "🔄 Sincronizar";
                 };
                 document.body.appendChild(btn);
