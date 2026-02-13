@@ -499,8 +499,15 @@ function doLoginSuccess(user) {
     localStorage.setItem('nexus_session', 'active');
 
     // Toast or Alert
-    // alert(`BIENVENIDO, ${user.full_name}`);
-    window.location.reload();
+    // 3. DIRECT ENTRY (No Reload to prevent state loss)
+    console.log("🚀 Direct Entry to Dashboard...");
+    hideAllSections();
+    if (typeof showDashboard === 'function') {
+        showDashboard(user);
+    } else {
+        console.warn("showDashboard missing, reloading...");
+        window.location.reload();
+    }
 }
 
 // EXPOSE AND BIND
@@ -3308,10 +3315,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.7) ---
+// --- VERSION INDICATOR (v6.8) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.7 (Manual Fix)";
+    v.innerText = "v6.8 (FINAL Login)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
