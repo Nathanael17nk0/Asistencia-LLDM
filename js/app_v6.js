@@ -137,11 +137,23 @@ async function initApp() {
         }
     } else {
         console.log("ℹ️ No Active Session.");
-        if (localStorage.getItem('nexus_account')) {
-            console.log("➡️ Account found. Showing Login.");
+        // SMART CHECK: If we have ANY users stored, show Login first.
+        const localUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+        const hasAccount = localStorage.getItem('nexus_account');
+
+        if (hasAccount || localUsers.length > 0) {
+            console.log("➡️ Users found. Showing Login.");
             showLogin();
+            // Pre-fill phone if account exists
+            if (hasAccount) {
+                try {
+                    const u = JSON.parse(hasAccount);
+                    const phoneInput = document.getElementById('login-phone');
+                    if (phoneInput && u.phone) phoneInput.value = u.phone;
+                } catch (e) { }
+            }
         } else {
-            console.log("➡️ No Account. Showing Register.");
+            console.log("➡️ No Users found. Showing Register.");
             showRegister();
         }
     }
@@ -3264,10 +3276,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.3) ---
+// --- VERSION INDICATOR (v6.4) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.3 (Direct Entry)";
+    v.innerText = "v6.4 (Smart Init)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
