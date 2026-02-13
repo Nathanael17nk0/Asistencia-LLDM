@@ -2767,6 +2767,33 @@ document.addEventListener('DOMContentLoaded', () => {
         });
     }
 
+    // --- DEBUG BUTTON (To diagnose Cloud Sync) ---
+    const debugBtn = document.createElement('button');
+    debugBtn.innerHTML = '☁️ Checar Nube';
+    debugBtn.className = 'cyber-btn sm secondary';
+    debugBtn.style.cssText = "margin-top:10px; width:100%; background:#2c3e50;";
+    debugBtn.onclick = async (e) => {
+        e.preventDefault();
+        debugBtn.innerText = "⏳ Buscando...";
+        try {
+            const users = await window.DB.fetchAllUsers();
+            alert(`🔍 DIAGNÓSTICO NUBE:\n\nUsuarios Encontrados: ${users.length}\n\nSi es 0, hay un error de permisos.`);
+            debugBtn.innerText = `✅ Encontrados: ${users.length}`;
+
+            // If users found, force reload to let initApp handle it
+            if (users.length > 0) {
+                if (confirm("¡Datos encontrados! ¿Recargar para entrar?")) window.location.reload();
+            }
+        } catch (err) {
+            alert("❌ ERROR CONEXIÓN: " + err.message);
+            debugBtn.innerText = "❌ Error";
+        }
+    };
+    // Append to Register Form container (bottom)
+    if (registerForm) registerForm.parentElement.appendChild(debugBtn);
+
+    // --- END DEBUG ---
+
     // Init Logic
     try {
         seedScheduleData();
@@ -3281,10 +3308,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.5) ---
+// --- VERSION INDICATOR (v6.6) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.5 (Cloud Restore)";
+    v.innerText = "v6.6 (Debug Mode)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
