@@ -2144,92 +2144,7 @@ async function initApp() {
         }
     })();
 }
-// End initApp    }
-    }
-
-// MIGRATION: Ensure all users have IDs
-const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-let modified = false;
-users.forEach((u, index) => {
-    if (!u.id) {
-        u.id = 'user-' + Date.now() + '-' + index; // Unique ID
-        modified = true;
-    }
-});
-if (modified) {
-    localStorage.setItem('nexus_users', JSON.stringify(users));
-}
-
-// Load settings
-const savedSettings = localStorage.getItem('nexus_settings');
-if (savedSettings) {
-    const settings = JSON.parse(savedSettings);
-    if (settings.targetLocation) {
-        STATE.user = user;
-        STATE.targetLocation = settings.targetLocation;
-    }
-}
-
-// Check for ACTIVE SESSION
-const activeSession = localStorage.getItem('nexus_session');
-if (activeSession === 'active') {
-    const accountData = localStorage.getItem('nexus_account');
-    if (accountData) {
-        try {
-            const user = JSON.parse(accountData);
-            STATE.user = user;
-
-            // If ADMIN, Start Realtime Listener
-            if (user.role === 'admin' && window.DB) {
-                window.DB.subscribeToChanges((newEntry, isDelete) => {
-                    console.log("Realtime Update Recibido!");
-                    // If delete, we might need to re-fetch or find and remove.
-                    // Ideally: Re-sync today's log or just append if insert.
-                    if (isDelete) {
-                        // Quick hack: Reload all today's logs
-                        // Or notify user "Data Changed"
-                        showToast("♻️ Datos actualizados remotamente", "warning");
-                        setTimeout(() => window.location.reload(), 1000); // Brute force sync
-                    } else if (newEntry) {
-                        // Append to local log
-                        const localLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-                        // Check dupe
-                        const exists = localLog.find(l => l.timestamp === newEntry.timestamp && l.userId === newEntry.user_phone);
-                        if (!exists) {
-                            localLog.push({
-                                userId: newEntry.user_phone,
-                                name: newEntry.user_name,
-                                timestamp: newEntry.timestamp,
-                                method: newEntry.method,
-                                serviceSlot: newEntry.service_slot,
-                                serviceName: newEntry.service_name
-                            });
-                            localStorage.setItem('nexus_attendance_log', JSON.stringify(localLog));
-                            showToast(`📡 Nueva Asistencia: ${newEntry.user_name}`);
-                            if (typeof renderAdminUserList === 'function') renderAdminUserList();
-                        }
-                    }
-                });
-            }
-
-            showDashboard(user);
-        } catch (e) {
-            console.error("Account data corrupted", e);
-            localStorage.removeItem('nexus_session');
-            showLogin();
-        }
-    } else {
-        localStorage.removeItem('nexus_session');
-        showLogin();
-    }
-} else {
-    if (localStorage.getItem('nexus_account')) {
-        showLogin();
-    } else {
-        showRegister();
-    }
-}
-}
+// [Orphaned Session Logic Removed v6.23]
 
 // BIND EVENTS ON DOM CONTENT LOADED
 document.addEventListener('DOMContentLoaded', () => {
@@ -3012,10 +2927,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.22) ---
+// --- VERSION INDICATOR (v6.23) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.22 (Auto-Login Fix)";
+    v.innerText = "v6.23 (Code Cleaned)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
