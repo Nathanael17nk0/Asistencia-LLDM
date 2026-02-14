@@ -2084,6 +2084,16 @@ async function initApp() {
                 // Update Users
                 if (users && users.length > 0) {
                     localStorage.setItem('nexus_users', JSON.stringify(users));
+
+                    // UX FIX: If we are on Register screen (default) and we found users, switch to Login!
+                    // This handles the "Fresh Load" case where we didn't know we had users yet.
+                    if (!userLoggedIn) {
+                        const currentSection = document.querySelector('.active-section');
+                        if (currentSection && currentSection.id === 'register-section') {
+                            console.log("🔄 Users found in Cloud -> Switching to Login");
+                            showLogin();
+                        }
+                    }
                 }
 
                 // Update Attendance
@@ -3002,10 +3012,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.21) ---
+// --- VERSION INDICATOR (v6.22) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.21 (Rescue+Clean)";
+    v.innerText = "v6.22 (Auto-Login Fix)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
