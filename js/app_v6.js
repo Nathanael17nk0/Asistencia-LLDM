@@ -2081,6 +2081,17 @@ async function initApp() {
                 const cloudTheme = await window.DB.fetchConfig('weekly_theme');
                 const cloudLoc = await window.DB.fetchConfig('church_location');
 
+                // Update Location (FIX v6.24)
+                if (cloudLoc && cloudLoc.lat && cloudLoc.lng) {
+                    console.log("📍 Location synced from Cloud:", cloudLoc);
+                    STATE.targetLocation = cloudLoc;
+
+                    // Persist to local settings
+                    const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+                    settings.targetLocation = cloudLoc;
+                    localStorage.setItem('nexus_settings', JSON.stringify(settings));
+                }
+
                 // Update Users
                 if (users && users.length > 0) {
                     localStorage.setItem('nexus_users', JSON.stringify(users));
@@ -2216,9 +2227,19 @@ document.addEventListener('DOMContentLoaded', () => {
                         btnContainer.style.borderColor = '#ccc';
                     }
                     if (instruction) {
-                        if (!isOpen) instruction.textContent = "FUERA DE HORARIO DE CULTO";
-                        else if (!STATE.inGeofence) instruction.textContent = "BUSCANDO UBICACIÓN DEL TEMPLO...";
-                        instruction.style.color = "var(--text-muted)";
+                        if (!isOpen) {
+                            instruction.textContent = "FUERA DE HORARIO DE ORACIÓN";
+                            instruction.style.color = "var(--text-muted)";
+                        } else {
+                            // Check if we have a valid target
+                            if (STATE.targetLocation.lat === 0) {
+                                instruction.textContent = "BUSCANDO UBICACIÓN DEL TEMPLO...";
+                                instruction.style.color = "var(--warning)";
+                            } else if (!STATE.inGeofence) {
+                                instruction.textContent = "ACÉRCATE AL TEMPLO PARA REGISTRAR";
+                                instruction.style.color = "var(--danger)";
+                            }
+                        }
                     }
                 }
             };
@@ -2927,10 +2948,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.23) ---
+// --- VERSION INDICATOR (v6.25) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.23 (Code Cleaned)";
+    v.innerText = "v6.25 (Text Update)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
