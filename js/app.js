@@ -1847,15 +1847,8 @@ function renderAdminUserList() {
             </div>
         `;
 
-        /* 
-        // CLEAN UI: Removed Debug Buttons (v6.13)
-        const btnGroup = document.createElement('div'); // Container for buttons
-        ... removed ...
-        btnGroup.appendChild(btnDbg);
-        btnGroup.appendChild(btnPurge);
-        dbgHeader.appendChild(btnGroup);
-        */
-        dbgHeader.appendChild(btnGroup);
+        // CLEAN UI: Debug buttons removed (v6.13)
+        // dbgHeader legacy cleanup
 
         listContainer.appendChild(dbgHeader);
         // --- DEBUG HEADER END ---
@@ -3247,10 +3240,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.13) ---
+// --- VERSION INDICATOR (v6.14) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.13 (Super Clean)";
+    v.innerText = "v6.14 (Fixed)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
