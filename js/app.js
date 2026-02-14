@@ -1847,60 +1847,14 @@ function renderAdminUserList() {
             </div>
         `;
 
+        /* 
+        // CLEAN UI: Removed Debug Buttons (v6.13)
         const btnGroup = document.createElement('div'); // Container for buttons
-
-        const btnDbg = document.createElement('button');
-        btnDbg.textContent = "🕵️ VER DATOS";
-        btnDbg.style.fontSize = "11px";
-        btnDbg.style.marginRight = "8px";
-        btnDbg.style.padding = "4px 8px";
-        btnDbg.style.cursor = "pointer";
-        btnDbg.onclick = () => {
-            const allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-            const allLogs = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-            // Count Today's Logs
-            const todayISO = new Date().toISOString().split('T')[0];
-            const todayLogs = allLogs.filter(l => l.timestamp.startsWith(todayISO));
-
-            alert(`📊 REPORTE DE DATOS:\n` +
-                `------------------\n` +
-                `👥 Usuarios Totales: ${allUsers.length}\n` +
-                `📝 Logs Totales: ${allLogs.length}\n` +
-                `📅 Logs De HOY: ${todayLogs.length}\n\n` +
-                `NOTA: Si hay muchos "Logs de Hoy" para pocos usuarios, hay duplicados.`);
-        };
-
-        const btnPurge = document.createElement('button');
-        btnPurge.textContent = "🗑️ BORRAR TODO";
-        btnPurge.style.fontSize = "11px";
-        btnPurge.style.padding = "4px 8px";
-        btnPurge.style.background = "#ef4444";
-        btnPurge.style.color = "white";
-        btnPurge.style.border = "none";
-        btnPurge.style.borderRadius = "4px";
-        btnPurge.style.cursor = "pointer";
-        btnPurge.onclick = () => {
-            if (confirm("⚠️ ¿ESTÁS SEGURO?\n\nEsto borrará TODAS las asistencias (Local y Nube) para limpiar errores y empezar limpios.")) {
-                localStorage.setItem('nexus_attendance_log', '[]');
-
-                // Try Cloud Delete
-                if (window.DB && window.sbClient) {
-                    window.sbClient.from('attendance_log').delete().neq('id', 0).then(() => {
-                        alert("✅ Nube y Local limpios. Recargando...");
-                        location.reload();
-                    }).catch(err => {
-                        alert("⚠️ Error borrando nube (quizás permisos): " + err.message + "\n\nPero el Local se borró.");
-                        location.reload();
-                    });
-                } else {
-                    alert("✅ Local limpio (Sin conexión a nube). Recargando...");
-                    location.reload();
-                }
-            }
-        };
-
+        ... removed ...
         btnGroup.appendChild(btnDbg);
         btnGroup.appendChild(btnPurge);
+        dbgHeader.appendChild(btnGroup);
+        */
         dbgHeader.appendChild(btnGroup);
 
         listContainer.appendChild(dbgHeader);
@@ -2370,170 +2324,148 @@ async function initApp() {
                 }
             };
 
-            // Force Sync Button Injection (for Debugging/Manual Sync)
+            // Force Sync Button REMOVED (v6.13)
+            /*
             if (!document.getElementById('force-sync-btn')) {
-                const btn = document.createElement('button');
-                btn.id = 'force-sync-btn';
-                btn.innerHTML = '🔄 Sincronizar';
-                btn.style.cssText = "position:fixed; bottom:20px; left:20px; z-index:9999; background:rgba(0,0,0,0.6); color:white; border:1px solid #444; padding:5px 10px; border-radius:5px; font-size:0.8rem; cursor:pointer;";
-                btn.onclick = async () => {
-                    btn.innerHTML = "⏳ Intentando...";
-                    try {
-                        // FORCE RELOAD FROM CLOUD
-                        if (window.DB) {
-                            const users = await window.DB.fetchAllUsers();
-                            if (!users || users.length === 0) throw new Error("0 usuarios recibidos (¿Error de Red?)");
-
-                            // Update Local
-                            localStorage.setItem('nexus_users', JSON.stringify(users.map(u => ({
-                                id: u.id,
-                                phone: u.phone,
-                                full_name: u.full_name,
-                                role: u.role,
-                                age_label: u.age || '',
-                                dob: u.dob || '',
-                                colonia: u.colony || '',
-                                password: u.password,
-                                createdAt: u.created_at
-                            }))));
-
-                            alert(`✅ Sincronizado: ${users.length} usuarios.`);
-                            location.reload(); // Refresh to show changes
-                        } else {
-                            alert("❌ No hay conexión a Base de Datos");
-                        }
-                    } catch (e) {
-                        alert("❌ Error: " + e.message);
-                    }
-                    btn.innerHTML = "🔄 Sincronizar";
-                };
-                document.body.appendChild(btn);
+                 ... removed ...
+            }
+            */
+            location.reload(); // Refresh to show changes
+        } else {
+            alert("❌ No hay conexión a Base de Datos");
+        }
+    } catch (e) {
+        alert("❌ Error: " + e.message);
+    }
+    btn.innerHTML = "🔄 Sincronizar";
+};
+document.body.appendChild(btn);
             }
 
-            // Diagnostic Button (Inspect Data)
-            if (!document.getElementById('diag-btn')) {
-                const btn = document.createElement('button');
-                btn.id = 'diag-btn';
-                btn.innerHTML = '🔍 Check Data';
-                btn.style.cssText = "position:fixed; bottom:20px; left:140px; z-index:9999; background:rgba(0,0,0,0.6); color:yellow; border:1px solid #444; padding:5px 10px; border-radius:5px; font-size:0.8rem; cursor:pointer;";
-                btn.onclick = () => {
-                    const schedule = JSON.parse(localStorage.getItem('nexus_schedule_db') || '{}');
-                    const keys = Object.keys(schedule).sort();
-                    const count = keys.length;
-                    const today = new Date().toISOString().split('T')[0];
+// Diagnostic Button (Inspect Data)
+if (!document.getElementById('diag-btn')) {
+    const btn = document.createElement('button');
+    btn.id = 'diag-btn';
+    btn.innerHTML = '🔍 Check Data';
+    btn.style.cssText = "position:fixed; bottom:20px; left:140px; z-index:9999; background:rgba(0,0,0,0.6); color:yellow; border:1px solid #444; padding:5px 10px; border-radius:5px; font-size:0.8rem; cursor:pointer;";
+    btn.onclick = () => {
+        const schedule = JSON.parse(localStorage.getItem('nexus_schedule_db') || '{}');
+        const keys = Object.keys(schedule).sort();
+        const count = keys.length;
+        const today = new Date().toISOString().split('T')[0];
 
-                    // Check today
-                    const hasToday = keys.includes(today);
-                    const sample = keys.slice(0, 5).join('\n');
+        // Check today
+        const hasToday = keys.includes(today);
+        const sample = keys.slice(0, 5).join('\n');
 
-                    alert(`🔍 DATOS LOCALES:\n\n- Fechas en Memoria: ${count}\n- Tiene Hoy (${today})?: ${hasToday ? 'SÍ' : 'NO'}\n\nPrimeras 5 Fechas:\n${sample}`);
-                };
-                document.body.appendChild(btn);
-            }
+        alert(`🔍 DATOS LOCALES:\n\n- Fechas en Memoria: ${count}\n- Tiene Hoy (${today})?: ${hasToday ? 'SÍ' : 'NO'}\n\nPrimeras 5 Fechas:\n${sample}`);
+    };
+    document.body.appendChild(btn);
+}
 
-            // Initial Fetch of Configs
-            const cloudTheme = await window.DB.fetchConfig('weekly_theme');
-            if (cloudTheme) {
-                localStorage.setItem('nexus_theme', cloudTheme.text);
-                if (typeof loadTheme === 'function') loadTheme();
-            }
+// Initial Fetch of Configs
+const cloudTheme = await window.DB.fetchConfig('weekly_theme');
+if (cloudTheme) {
+    localStorage.setItem('nexus_theme', cloudTheme.text);
+    if (typeof loadTheme === 'function') loadTheme();
+}
 
-            const cloudLoc = await window.DB.fetchConfig('church_location');
-            if (cloudLoc) {
-                const currentSettings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
-                currentSettings.targetLocation = cloudLoc;
-                localStorage.setItem('nexus_settings', JSON.stringify(currentSettings));
-                STATE.targetLocation = cloudLoc;
-                updateLocationStatus();
-            }
+const cloudLoc = await window.DB.fetchConfig('church_location');
+if (cloudLoc) {
+    const currentSettings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+    currentSettings.targetLocation = cloudLoc;
+    localStorage.setItem('nexus_settings', JSON.stringify(currentSettings));
+    STATE.targetLocation = cloudLoc;
+    updateLocationStatus();
+}
 
         } catch (e) {
-            console.warn("Cloud Sync Failed (Offline?)", e);
-        }
+    console.warn("Cloud Sync Failed (Offline?)", e);
+}
     }
 
-    // MIGRATION: Ensure all users have IDs
-    const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-    let modified = false;
-    users.forEach((u, index) => {
-        if (!u.id) {
-            u.id = 'user-' + Date.now() + '-' + index; // Unique ID
-            modified = true;
-        }
-    });
-    if (modified) {
-        localStorage.setItem('nexus_users', JSON.stringify(users));
+// MIGRATION: Ensure all users have IDs
+const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+let modified = false;
+users.forEach((u, index) => {
+    if (!u.id) {
+        u.id = 'user-' + Date.now() + '-' + index; // Unique ID
+        modified = true;
     }
+});
+if (modified) {
+    localStorage.setItem('nexus_users', JSON.stringify(users));
+}
 
-    // Load settings
-    const savedSettings = localStorage.getItem('nexus_settings');
-    if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        if (settings.targetLocation) {
+// Load settings
+const savedSettings = localStorage.getItem('nexus_settings');
+if (savedSettings) {
+    const settings = JSON.parse(savedSettings);
+    if (settings.targetLocation) {
+        STATE.user = user;
+        STATE.targetLocation = settings.targetLocation;
+    }
+}
+
+// Check for ACTIVE SESSION
+const activeSession = localStorage.getItem('nexus_session');
+if (activeSession === 'active') {
+    const accountData = localStorage.getItem('nexus_account');
+    if (accountData) {
+        try {
+            const user = JSON.parse(accountData);
             STATE.user = user;
-            STATE.targetLocation = settings.targetLocation;
-        }
-    }
 
-    // Check for ACTIVE SESSION
-    const activeSession = localStorage.getItem('nexus_session');
-    if (activeSession === 'active') {
-        const accountData = localStorage.getItem('nexus_account');
-        if (accountData) {
-            try {
-                const user = JSON.parse(accountData);
-                STATE.user = user;
-
-                // If ADMIN, Start Realtime Listener
-                if (user.role === 'admin' && window.DB) {
-                    window.DB.subscribeToChanges((newEntry, isDelete) => {
-                        console.log("Realtime Update Recibido!");
-                        // If delete, we might need to re-fetch or find and remove.
-                        // Ideally: Re-sync today's log or just append if insert.
-                        if (isDelete) {
-                            // Quick hack: Reload all today's logs
-                            // Or notify user "Data Changed"
-                            showToast("♻️ Datos actualizados remotamente", "warning");
-                            setTimeout(() => window.location.reload(), 1000); // Brute force sync
-                        } else if (newEntry) {
-                            // Append to local log
-                            const localLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-                            // Check dupe
-                            const exists = localLog.find(l => l.timestamp === newEntry.timestamp && l.userId === newEntry.user_phone);
-                            if (!exists) {
-                                localLog.push({
-                                    userId: newEntry.user_phone,
-                                    name: newEntry.user_name,
-                                    timestamp: newEntry.timestamp,
-                                    method: newEntry.method,
-                                    serviceSlot: newEntry.service_slot,
-                                    serviceName: newEntry.service_name
-                                });
-                                localStorage.setItem('nexus_attendance_log', JSON.stringify(localLog));
-                                showToast(`📡 Nueva Asistencia: ${newEntry.user_name}`);
-                                if (typeof renderAdminUserList === 'function') renderAdminUserList();
-                            }
+            // If ADMIN, Start Realtime Listener
+            if (user.role === 'admin' && window.DB) {
+                window.DB.subscribeToChanges((newEntry, isDelete) => {
+                    console.log("Realtime Update Recibido!");
+                    // If delete, we might need to re-fetch or find and remove.
+                    // Ideally: Re-sync today's log or just append if insert.
+                    if (isDelete) {
+                        // Quick hack: Reload all today's logs
+                        // Or notify user "Data Changed"
+                        showToast("♻️ Datos actualizados remotamente", "warning");
+                        setTimeout(() => window.location.reload(), 1000); // Brute force sync
+                    } else if (newEntry) {
+                        // Append to local log
+                        const localLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+                        // Check dupe
+                        const exists = localLog.find(l => l.timestamp === newEntry.timestamp && l.userId === newEntry.user_phone);
+                        if (!exists) {
+                            localLog.push({
+                                userId: newEntry.user_phone,
+                                name: newEntry.user_name,
+                                timestamp: newEntry.timestamp,
+                                method: newEntry.method,
+                                serviceSlot: newEntry.service_slot,
+                                serviceName: newEntry.service_name
+                            });
+                            localStorage.setItem('nexus_attendance_log', JSON.stringify(localLog));
+                            showToast(`📡 Nueva Asistencia: ${newEntry.user_name}`);
+                            if (typeof renderAdminUserList === 'function') renderAdminUserList();
                         }
-                    });
-                }
-
-                showDashboard(user);
-            } catch (e) {
-                console.error("Account data corrupted", e);
-                localStorage.removeItem('nexus_session');
-                showLogin();
+                    }
+                });
             }
-        } else {
+
+            showDashboard(user);
+        } catch (e) {
+            console.error("Account data corrupted", e);
             localStorage.removeItem('nexus_session');
             showLogin();
         }
     } else {
-        if (localStorage.getItem('nexus_account')) {
-            showLogin();
-        } else {
-            showRegister();
-        }
+        localStorage.removeItem('nexus_session');
+        showLogin();
     }
+} else {
+    if (localStorage.getItem('nexus_account')) {
+        showLogin();
+    } else {
+        showRegister();
+    }
+}
 }
 
 // BIND EVENTS ON DOM CONTENT LOADED
@@ -3315,10 +3247,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.12) ---
+// --- VERSION INDICATOR (v6.13) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.12 (Compact)";
+    v.innerText = "v6.13 (Super Clean)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
