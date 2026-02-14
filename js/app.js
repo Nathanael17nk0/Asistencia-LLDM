@@ -38,122 +38,6 @@ const ageInput = document.getElementById('reg-edad');
 const fingerprintBtn = document.getElementById('check-in-btn');
 
 // --- INITIALIZATION ---
-// --- INITIALIZATION ---
-async function initApp() {
-    console.log("🚀 Initializing App (v6.0 DEV)...");
-
-    // 1. Load settings
-    const savedSettings = localStorage.getItem('nexus_settings');
-    if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        if (settings.targetLocation) {
-            STATE.targetLocation = settings.targetLocation;
-        }
-    }
-
-    // 2. CLOUD SYNC (Critical for Member List)
-    // Wait for Supabase Client
-    let attempts = 0;
-    while (!window.sbClient && attempts < 10) {
-        console.log("⏳ Waiting for Supabase...");
-        await new Promise(r => setTimeout(r, 500));
-        attempts++;
-    }
-
-    if (window.DB && window.sbClient) {
-        try {
-            console.log("☁️ Syncing metadata from Cloud...");
-
-            // Force Fetch
-            const users = await window.DB.fetchAllUsers();
-            const attendance = await window.DB.fetchTodayAttendance();
-
-            // alert(`Debug: Datos recibidos. ${users?.length || 0} usuarios.`);
-
-            if (users && users.length > 0) {
-                console.log(`✅ Loaded ${users.length} users from Cloud`);
-                localStorage.setItem('nexus_users', JSON.stringify(users.map(u => ({
-                    id: u.id,
-                    phone: u.phone,
-                    full_name: u.full_name,
-                    role: u.role,
-                    age_label: u.age || '',
-                    dob: u.dob || '',
-                    colonia: u.colony || '',
-                    password: u.password,
-                    createdAt: u.created_at
-                }))));
-            }
-
-            if (attendance && attendance.length > 0) {
-                console.log(`✅ Loaded ${attendance.length} attendance records`);
-                localStorage.setItem('nexus_attendance_log', JSON.stringify(attendance));
-            }
-
-            // 3. START REALTIME LISTENER (With Retry)
-            const startRealtime = () => {
-                if (window.DB && window.sbClient) {
-                    window.DB.subscribeToChanges(
-                        (newUser) => {
-                            if (window.onUserUpdate) window.onUserUpdate(newUser);
-                        },
-                        (newLog) => {
-                            // attendance update logic if needed
-                        }
-                    );
-                    console.log("✅ Realtime Connected");
-                } else {
-                    console.log("⏳ Waiting for Supabase to Connect Realtime...");
-                    setTimeout(startRealtime, 2000); // Retry every 2s
-                }
-            };
-            startRealtime();
-
-        } catch (e) {
-            console.warn("⚠️ Cloud Sync Warning:", e);
-        }
-    }
-
-    // 4. Check Session
-    // 4. Check Session (PERSISTENT / STICKY)
-    const activeSession = localStorage.getItem('nexus_session');
-    const accountData = localStorage.getItem('nexus_account');
-
-    console.log(`🔍 Init Check: Session=${activeSession}, Account=${accountData ? 'YES' : 'NO'}`);
-
-    // LOGIC: If account exists, we force login (unless session data is corrupt).
-    // This satisfies "Active until I click Logout".
-    if (accountData) {
-        try {
-            const user = JSON.parse(accountData);
-            STATE.user = user;
-
-            // Restore session flag if missing (Self-Healing)
-            if (activeSession !== 'active') {
-                console.log("⚠️ Restoring Session for:", user.full_name);
-                localStorage.setItem('nexus_session', 'active');
-            }
-
-            console.log("✅ Auto-Login Successful:", user.full_name);
-            showDashboard(user);
-        } catch (e) {
-            console.error("Session Corrupt:", e);
-            localStorage.removeItem('nexus_session');
-            localStorage.removeItem('nexus_account'); // Clear bad data
-            showLogin();
-        }
-    } else {
-        console.log("ℹ️ No Account. Showing Login/Register.");
-
-        // SMART CHECK: If we have local users but no active account, show login.
-        const localUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-        if (localUsers.length > 0) {
-            showLogin();
-        } else {
-            showRegister();
-        }
-    }
-}
 
 // --- NAVIGATION HELPERS ---
 function hideAllSections() {
@@ -3118,10 +3002,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.20) ---
+// --- VERSION INDICATOR (v6.21) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.20 (Final Rescue)";
+    v.innerText = "v6.21 (Rescue+Clean)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
