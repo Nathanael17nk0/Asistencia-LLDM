@@ -1947,25 +1947,25 @@ function renderAdminUserList() {
             div.className = 'user-list-item';
             div.style.display = 'flex';
             div.style.alignItems = 'center';
-            div.style.padding = '10px';
+            div.style.padding = '4px 8px'; // Reduced Padding
             div.style.borderBottom = '1px solid #eee';
             div.style.background = isPresent ? '#f0fff4' : '#fff';
 
-            // Avatar
+            // Avatar (Smaller)
             const initials = (u.full_name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
 
-            // Status Text
+            // Status Text (Smaller)
             const statusText = isPresent ?
-                `<span style="color:green; font-weight:bold; font-size:0.8rem;">✅ ${entry.serviceName || 'Asistió'}</span>` :
-                `<span style="color:#aaa; font-size:0.8rem;">Falta</span>`;
+                `<span style="color:green; font-weight:bold; font-size:0.75rem;">✅ ${entry.serviceName || 'Asistió'}</span>` :
+                `<span style="color:#bbb; font-size:0.75rem;">Falta</span>`;
 
             div.innerHTML = `
-                    <div style="width:35px; height:35px; background:${isPresent ? 'var(--success)' : '#ddd'}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:10px;">
+                    <div style="width:28px; height:28px; background:${isPresent ? 'var(--success)' : '#ddd'}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:8px; font-size:0.75rem;">
                         ${initials}
                     </div>
                     <div style="flex:1;">
-                        <h4 style="margin:0; font-size:0.95rem;">${u.full_name || u.name}</h4>
-                        <small style="color:#666;">ID: ${u.phone}</small>
+                        <h4 style="margin:0; font-size:0.85rem; line-height:1.2;">${u.full_name || u.name}</h4>
+                        <small style="color:#888; font-size:0.75rem;">ID: ${u.phone}</small>
                     </div>
                     <div style="text-align:right;">
                         ${statusText}
@@ -3315,10 +3315,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.11) ---
+// --- VERSION INDICATOR (v6.12) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.11 (Final)";
+    v.innerText = "v6.12 (Compact)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
