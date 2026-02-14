@@ -292,19 +292,11 @@
                                 style="flex:1; background:#f1c40f; color:black; font-weight:bold; border:2px solid orange;">
                                 <i class="ri-calendar-check-line"></i> VER ROLES
                             </button>
-                            <button onclick="checkCloudData()" class="cyber-btn sm" style="flex:1; background:#8e44ad;">
-                                <i class="ri-cloud-line"></i> STATUS NUBE
-                            </button>
+                            <!-- CLEAN UI: Removed Debug Buttons -->
                             <button onclick="toggleReportsModal()" class="cyber-btn sm" style="flex:1;">
                                 <i class="ri-file-chart-line"></i> REPORTES
                             </button>
                         </div>
-                        <!-- NEW SYNC BUTTON -->
-                        <button
-                            onclick="if(window.initApp) { this.innerHTML='⏳...'; window.initApp().then(()=>this.innerHTML='🔄 DATOS ACTUALIZADOS'); } else { alert('Error: initApp missing'); }"
-                            class="cyber-btn sm" style="width:100%; margin-top:10px; background:#e67e22;">
-                            <i class="ri-refresh-line"></i> FORZAR DESCARGA DE DATOS
-                        </button>
                     </div>
 
                     <!-- 1. OCR Section (Roles) -->
