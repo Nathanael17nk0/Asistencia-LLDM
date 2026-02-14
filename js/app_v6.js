@@ -115,52 +115,47 @@ async function initApp() {
     }
 
     // 4. Check Session
+    // 4. Check Session (PERSISTENT / STICKY)
     const activeSession = localStorage.getItem('nexus_session');
     const accountData = localStorage.getItem('nexus_account');
 
     console.log(`🔍 Init Check: Session=${activeSession}, Account=${accountData ? 'YES' : 'NO'}`);
 
-    if (activeSession === 'active') {
-        if (accountData) {
-            try {
-                const user = JSON.parse(accountData);
-                STATE.user = user;
-                console.log("✅ Session Active. Loading Dashboard for:", user.full_name);
-                showDashboard(user);
-            } catch (e) {
-                console.error("Session Corrupt:", e);
-                localStorage.removeItem('nexus_session');
-                showLogin();
+    // LOGIC: If account exists, we force login (unless session data is corrupt).
+    // This satisfies "Active until I click Logout".
+    if (accountData) {
+        try {
+            const user = JSON.parse(accountData);
+            STATE.user = user;
+
+            // Restore session flag if missing (Self-Healing)
+            if (activeSession !== 'active') {
+                console.log("⚠️ Restoring Session for:", user.full_name);
+                localStorage.setItem('nexus_session', 'active');
             }
-        } else {
-            console.warn("⚠️ Session Active but No Account Data. Resetting.");
+
+            console.log("✅ Auto-Login Successful:", user.full_name);
+            showDashboard(user);
+        } catch (e) {
+            console.error("Session Corrupt:", e);
             localStorage.removeItem('nexus_session');
-            showLogin(); // Should show login if no account? Or Register?
-            // If no account, they can't login. Show Register.
-            // But let's fallback to Login logic to decide.
-            if (localStorage.getItem('nexus_account')) showLogin(); else showRegister();
+            localStorage.removeItem('nexus_account'); // Clear bad data
+            showLogin();
         }
     } else {
-        console.log("ℹ️ No Active Session.");
-        // SMART CHECK: If we have ANY users stored, show Login first.
-        const localUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-        const hasAccount = localStorage.getItem('nexus_account');
+        console.log("ℹ️ No Account. Showing Login/Register.");
 
-        if (hasAccount || localUsers.length > 0) {
-            console.log("➡️ Users found. Showing Login.");
+        // SMART CHECK: If we have local users but no active account, show login.
+        const localUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+        if (localUsers.length > 0) {
             showLogin();
-            // Pre-fill phone if account exists
-            if (hasAccount) {
-                try {
-                    const u = JSON.parse(hasAccount);
-                    const phoneInput = document.getElementById('login-phone');
-                    if (phoneInput && u.phone) phoneInput.value = u.phone;
-                } catch (e) { }
-            }
         } else {
-            console.log("➡️ No Users found. Showing Register.");
             showRegister();
         }
+    }
+    console.log("➡️ No Users found. Showing Register.");
+    showRegister();
+}
     }
 }
 
@@ -522,8 +517,9 @@ const logoutBtn = document.getElementById('logout-btn');
 if (logoutBtn) {
     logoutBtn.addEventListener('click', () => {
         if (confirm("¿Cerrar sesión?")) {
-            // ONLY CLEAR SESSION, KEEP ACCOUNT
+            // FULL LOGOUT (Clear Session & Account)
             localStorage.removeItem('nexus_session');
+            localStorage.removeItem('nexus_account');
             location.reload();
         }
     });
@@ -2666,6 +2662,7 @@ document.addEventListener('DOMContentLoaded', () => {
         logoutBtn.addEventListener('click', () => {
             if (confirm("¿Cerrar sesión?")) {
                 localStorage.removeItem('nexus_session');
+                localStorage.removeItem('nexus_account'); // FIXED: prevent auto-login
                 location.reload();
             }
         });
@@ -3212,10 +3209,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.14) ---
+// --- VERSION INDICATOR (v6.16) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.14 (Fixed)";
+    v.innerText = "v6.16 (Sticky Login)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
