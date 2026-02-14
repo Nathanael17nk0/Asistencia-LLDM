@@ -2134,295 +2134,207 @@ function populateUserSelect() {
 async function initApp() {
     console.log("Initializing App...");
 
-    // SUPABASE SYNC (Pull users from Cloud)
-    if (window.DB) {
+    // 1. IMMEDIATE SESSION RESTORE (Sticky Login)
+    // We check this FIRST so user sees Dashboard immediately, without waiting for Cloud.
+    const activeSession = localStorage.getItem('nexus_session');
+    const accountData = localStorage.getItem('nexus_account');
+
+    console.log(`🔍 Init Check: Session=${activeSession}, Account=${accountData ? 'YES' : 'NO'}`);
+
+    let userLoggedIn = false;
+
+    if (accountData) {
         try {
-            const cloudUsers = await window.DB.fetchAllUsers();
-            if (cloudUsers && cloudUsers.length > 0) {
-                // Merge with local? Or Overwrite?
-                // For simplicity: Overwrite local 'nexus_users' with Cloud (Source of Truth)
-                // But keep 'nexus_account' untouched (session).
-                localStorage.setItem('nexus_users', JSON.stringify(cloudUsers));
-                console.log("Synced Users from Cloud:", cloudUsers.length);
+            const user = JSON.parse(accountData);
+            STATE.user = user;
+
+            // Self-Healing
+            if (activeSession !== 'active') {
+                localStorage.setItem('nexus_session', 'active');
             }
 
-            // Sync Today's Attendance too?
-            const cloudLogs = await window.DB.fetchTodayAttendance();
-            if (cloudLogs && cloudLogs.length > 0) {
-                // We should merge with local log or just rely on cloud?
-                // Current app uses 'nexus_attendance_log' for everything (history, admin list).
-                // Let's MERGE unique entries.
-                const localLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+            console.log("✅ Auto-Login Successful (Local):", user.full_name);
+            showDashboard(user);
+            userLoggedIn = true;
+        } catch (e) {
+            console.error("Session Corrupt:", e);
+            localStorage.removeItem('nexus_session');
+            localStorage.removeItem('nexus_account');
+        }
+    }
 
-                // Add cloud entries that don't exist locally
-                let changes = false;
-                cloudLogs.forEach(c => {
-                    const exists = localLog.find(l => l.userId === c.userId && l.timestamp === c.timestamp);
-                    if (!exists) {
-                        localLog.push(c);
-                        changes = true;
-                    }
-                });
+    // 2. CLOUD SYNC (Background)
+    // Only block if NOT logged in, so we can check if user exists in cloud for Login/Register decision.
+    // If logged in, we sync in background.
 
-                if (changes) {
-                    localStorage.setItem('nexus_attendance_log', JSON.stringify(localLog));
-                    console.log("Synced Attendance from Cloud");
+    if (!userLoggedIn) {
+        // Not logged in? We MUST wait to see if we have users to decide Login vs Register
+        // But we can check local users first to be fast.
+        const localUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+        if (localUsers.length > 0) {
+            showLogin();
+        } else {
+            // No local data, maybe fresh install. Wait a bit for cloud.
+            // But don't block forever.
+        }
+    }
+
+    // Now start the Sync Process (Async)
+    (async () => {
+        // Wait for Supabase Client (Non-blocking for Dashboard)
+        let attempts = 0;
+        while (!window.sbClient && attempts < 10) {
+            await new Promise(r => setTimeout(r, 500));
+            attempts++;
+        }
+
+        if (window.DB && window.sbClient) {
+            try {
+                console.log("☁️ Syncing metadata from Cloud...");
+                const users = await window.DB.fetchAllUsers();
+                const attendance = await window.DB.fetchTodayAttendance();
+                const cloudSchedule = await window.DB.fetchSchedule();
+                const cloudTheme = await window.DB.fetchConfig('weekly_theme');
+                const cloudLoc = await window.DB.fetchConfig('church_location');
+
+                // Update Users
+                if (users && users.length > 0) {
+                    localStorage.setItem('nexus_users', JSON.stringify(users));
                 }
-            }
 
-            // Sync Schedule
-            const cloudSchedule = await window.DB.fetchSchedule();
-            if (cloudSchedule) {
-                console.log("✅ Schedule Found in Cloud:", Object.keys(cloudSchedule).length);
-                localStorage.setItem('nexus_schedule_db', JSON.stringify(cloudSchedule));
-
-                // FORCE UI UPDATE REFRESH
-                if (typeof loadWeeklyTable === 'function') loadWeeklyTable();
-                if (typeof loadTodaySchedule === 'function') loadTodaySchedule();
-            } else {
-                console.warn("⚠️ No Schedule in Cloud (or Fetch Error)");
-            }
-
-            // Subscribe to Changes
-            window.DB.subscribeToChanges(
-                // On Log Update
-                (newLog, isRefresh) => {
-                    if (isRefresh) {
-                        // Reload today's log? Or just simple alert? 
-                        // For simplicity, just re-fetch today's logs silently
-                        window.DB.fetchTodayAttendance().then(logs => {
-                            // 1. UPDATE LOCAL STORAGE (Critical for UI to see it)
-                            localStorage.setItem('nexus_attendance_log', JSON.stringify(logs));
-
-                            // 2. REFRESH ADMIN UI
-                            if (document.getElementById('admin-panel') && !document.getElementById('admin-panel').classList.contains('hidden')) {
-                                renderAdminUserList();
-                            }
-
-                            // 3. REFRESH USER UI (Mobile Buttons)
-                            // If I am observing my own attendance, update buttons
-                            if (typeof loadAttendanceList === 'function') loadAttendanceList();
-
-                            // 4. VISUAL FEEDBACK (Toast)
-                            const toast = document.createElement('div');
-                            toast.textContent = `🔄 Asistencia Sincronizada (${logs.length})`;
-                            toast.style.position = 'fixed';
-                            toast.style.bottom = '20px';
-                            toast.style.right = '20px';
-                            toast.style.background = 'green';
-                            toast.style.color = 'white';
-                            toast.style.padding = '10px 20px';
-                            toast.style.borderRadius = '5px';
-                            toast.style.zIndex = '9999';
-                            toast.style.boxShadow = '0 4px 6px rgba(0,0,0,0.3)';
-                            document.body.appendChild(toast);
-                            setTimeout(() => toast.remove(), 3000);
-                        });
-                    } else if (newLog) {
-                        // Fallback (Append locally if not refresh)
-                        const current = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-                        if (!current.find(c => c.timestamp === newLog.timestamp && c.userId === newLog.user_phone)) {
-                            // ... existing append logic ...
-                            // But since isRefresh is always true in current service, this block is rarely hit.
-                            // We'll leave it as backup.
-                        }
-                    }
-                },
-                // On Config Update (Schedule, Theme, Location)
-                (newConfig) => {
-                    if (newConfig) {
-                        if (newConfig.key === 'weekly_schedule') {
-                            localStorage.setItem('nexus_schedule_db', JSON.stringify(newConfig.value));
-                            console.log("Synced Schedule from Cloud");
-                            // DEBUG ALERT FOR MOBILE
-                            // alert("📅 Datos recibidos en el celular!\nActualizando tabla...");
-                            if (typeof loadTodaySchedule === 'function') loadTodaySchedule();
-                            if (typeof loadWeeklyTable === 'function') loadWeeklyTable();
-                        }
-                        if (newConfig.key === 'weekly_theme') {
-                            localStorage.setItem('nexus_theme', newConfig.value.text);
-                            console.log("Synced Theme from Cloud");
-                            if (typeof loadTheme === 'function') loadTheme();
-                        }
-                        if (newConfig.key === 'church_location') {
-                            // Location sync
-                            const currentSettings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
-                            currentSettings.targetLocation = newConfig.value;
-                            localStorage.setItem('nexus_settings', JSON.stringify(currentSettings));
-                            STATE.targetLocation = newConfig.value;
-                            console.log("Synced Location from Cloud");
-                            updateLocationStatus();
-                        }
-                    }
+                // Update Attendance
+                if (attendance && attendance.length > 0) {
+                    localStorage.setItem('nexus_attendance_log', JSON.stringify(attendance));
                 }
-            );
 
-            // GLOBAL USER UPDATE HANDLER
-            window.onUserUpdate = (newUser) => {
-                console.log("🔔 Recibido Update:", newUser);
-                if (newUser && newUser.id) {
-                    let currentUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+                // Update Schedule
+                if (cloudSchedule) {
+                    localStorage.setItem('nexus_schedule_db', JSON.stringify(cloudSchedule));
+                }
 
-                    // Normalizar el objeto para uso local
-                    const mappedUser = {
-                        id: newUser.id,
-                        phone: newUser.phone,
-                        full_name: newUser.full_name,
-                        role: newUser.role,
-                        password: newUser.password,
-                        dob: newUser.dob,
-                        age_label: newUser.age, // DB 'age' -> Local 'age_label'
-                        colonia: newUser.colony, // DB 'colony' -> Local 'colonia'
-                        createdAt: newUser.created_at
-                    };
+                // Update Theme
+                if (cloudTheme) {
+                    localStorage.setItem('nexus_theme', cloudTheme.text);
+                    if (typeof loadTheme === 'function') loadTheme();
+                }
 
-                    // Buscar si ya existe (por ID)
-                    const index = currentUsers.findIndex(u => u.id === mappedUser.id);
-
-                    if (index >= 0) {
-                        // UPDATE existing
-                        console.log("🔄 Actualizando usuario existente:", mappedUser.full_name);
-                        currentUsers[index] = mappedUser;
-                    } else {
-                        // INSERT new
-                        console.log("✨ Insertando nuevo usuario:", mappedUser.full_name);
-                        currentUsers.push(mappedUser);
-                    }
-
-                    // Guardar y Renderizar
-                    localStorage.setItem('nexus_users', JSON.stringify(currentUsers));
-
-                    if (typeof renderAdminUserList === 'function') {
+                // Trigger UI Refresh if on Dashboard using the new data
+                if (userLoggedIn) {
+                    // Refresh Admin List if active
+                    if (typeof renderAdminUserList === 'function' && document.getElementById('admin-panel') && !document.getElementById('admin-panel').classList.contains('hidden')) {
                         renderAdminUserList();
                     }
-
-                    // Actualizar dropdown de login si es necesario
-                    const select = document.getElementById('login-phone');
-                    if (select) populateUserSelect(select);
-
-                    // Pequeña notificación visual (Toast)
-                    const toast = document.createElement('div');
-                    toast.textContent = `🔄 Sincronizado: ${mappedUser.full_name}`;
-                    toast.style.cssText = "position:fixed; top:20px; right:20px; background:#4ade80; color:black; padding:10px; border-radius:8px; z-index:9999;";
-                    document.body.appendChild(toast);
-                    setTimeout(() => toast.remove(), 3000);
-                }
-            };
-
-            // Force Sync Button REMOVED (v6.13)
-            /*
-            if (!document.getElementById('force-sync-btn')) {
-                 ... removed ...
-            }
-            */
-            // Force Sync & Check Data Buttons REMOVED (v6.15)
-            /*
-             ... cleanup ...
-            */
-
-            // Initial Fetch of Configs
-            const cloudTheme = await window.DB.fetchConfig('weekly_theme');
-            if (cloudTheme) {
-                localStorage.setItem('nexus_theme', cloudTheme.text);
-                if (typeof loadTheme === 'function') loadTheme();
-            }
-
-            const cloudLoc = await window.DB.fetchConfig('church_location');
-            if (cloudLoc) {
-                const currentSettings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
-                currentSettings.targetLocation = cloudLoc;
-                localStorage.setItem('nexus_settings', JSON.stringify(currentSettings));
-                STATE.targetLocation = cloudLoc;
-                updateLocationStatus();
-            }
-
-        } catch (e) {
-            console.warn("Cloud Sync Failed (Offline?)", e);
-        }
-    }
-
-    // MIGRATION: Ensure all users have IDs
-    const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-    let modified = false;
-    users.forEach((u, index) => {
-        if (!u.id) {
-            u.id = 'user-' + Date.now() + '-' + index; // Unique ID
-            modified = true;
-        }
-    });
-    if (modified) {
-        localStorage.setItem('nexus_users', JSON.stringify(users));
-    }
-
-    // Load settings
-    const savedSettings = localStorage.getItem('nexus_settings');
-    if (savedSettings) {
-        const settings = JSON.parse(savedSettings);
-        if (settings.targetLocation) {
-            STATE.user = user;
-            STATE.targetLocation = settings.targetLocation;
-        }
-    }
-
-    // Check for ACTIVE SESSION
-    const activeSession = localStorage.getItem('nexus_session');
-    if (activeSession === 'active') {
-        const accountData = localStorage.getItem('nexus_account');
-        if (accountData) {
-            try {
-                const user = JSON.parse(accountData);
-                STATE.user = user;
-
-                // If ADMIN, Start Realtime Listener
-                if (user.role === 'admin' && window.DB) {
-                    window.DB.subscribeToChanges((newEntry, isDelete) => {
-                        console.log("Realtime Update Recibido!");
-                        // If delete, we might need to re-fetch or find and remove.
-                        // Ideally: Re-sync today's log or just append if insert.
-                        if (isDelete) {
-                            // Quick hack: Reload all today's logs
-                            // Or notify user "Data Changed"
-                            showToast("♻️ Datos actualizados remotamente", "warning");
-                            setTimeout(() => window.location.reload(), 1000); // Brute force sync
-                        } else if (newEntry) {
-                            // Append to local log
-                            const localLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-                            // Check dupe
-                            const exists = localLog.find(l => l.timestamp === newEntry.timestamp && l.userId === newEntry.user_phone);
-                            if (!exists) {
-                                localLog.push({
-                                    userId: newEntry.user_phone,
-                                    name: newEntry.user_name,
-                                    timestamp: newEntry.timestamp,
-                                    method: newEntry.method,
-                                    serviceSlot: newEntry.service_slot,
-                                    serviceName: newEntry.service_name
-                                });
-                                localStorage.setItem('nexus_attendance_log', JSON.stringify(localLog));
-                                showToast(`📡 Nueva Asistencia: ${newEntry.user_name}`);
-                                if (typeof renderAdminUserList === 'function') renderAdminUserList();
-                            }
-                        }
-                    });
+                } else {
+                    // If we were waiting on Register screen, maybe now we have users?
+                    // Re-evaluate
+                    const updatedUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+                    if (updatedUsers.length > 0 && !document.getElementById('login-section').classList.contains('active-section')) {
+                        // Only switch if we are not already in a specific flow? 
+                        // Safer to just let user navigate using the buttons.
+                        // But we can enable login if it was hidden.
+                    }
                 }
 
-                showDashboard(user);
+                // Start Realtime
+                const startRealtime = () => {
+                    window.DB.subscribeToChanges(
+                        (newUser) => { if (window.onUserUpdate) window.onUserUpdate(newUser); },
+                        (newLog) => { /* log update handled mostly by refresh */ }
+                    );
+                };
+                startRealtime();
+
             } catch (e) {
-                console.error("Account data corrupted", e);
-                localStorage.removeItem('nexus_session');
-                showLogin();
+                console.warn("⚠️ Cloud Sync Warning:", e);
             }
-        } else {
+        }
+    })();
+}
+// End initApp    }
+    }
+
+// MIGRATION: Ensure all users have IDs
+const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+let modified = false;
+users.forEach((u, index) => {
+    if (!u.id) {
+        u.id = 'user-' + Date.now() + '-' + index; // Unique ID
+        modified = true;
+    }
+});
+if (modified) {
+    localStorage.setItem('nexus_users', JSON.stringify(users));
+}
+
+// Load settings
+const savedSettings = localStorage.getItem('nexus_settings');
+if (savedSettings) {
+    const settings = JSON.parse(savedSettings);
+    if (settings.targetLocation) {
+        STATE.user = user;
+        STATE.targetLocation = settings.targetLocation;
+    }
+}
+
+// Check for ACTIVE SESSION
+const activeSession = localStorage.getItem('nexus_session');
+if (activeSession === 'active') {
+    const accountData = localStorage.getItem('nexus_account');
+    if (accountData) {
+        try {
+            const user = JSON.parse(accountData);
+            STATE.user = user;
+
+            // If ADMIN, Start Realtime Listener
+            if (user.role === 'admin' && window.DB) {
+                window.DB.subscribeToChanges((newEntry, isDelete) => {
+                    console.log("Realtime Update Recibido!");
+                    // If delete, we might need to re-fetch or find and remove.
+                    // Ideally: Re-sync today's log or just append if insert.
+                    if (isDelete) {
+                        // Quick hack: Reload all today's logs
+                        // Or notify user "Data Changed"
+                        showToast("♻️ Datos actualizados remotamente", "warning");
+                        setTimeout(() => window.location.reload(), 1000); // Brute force sync
+                    } else if (newEntry) {
+                        // Append to local log
+                        const localLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+                        // Check dupe
+                        const exists = localLog.find(l => l.timestamp === newEntry.timestamp && l.userId === newEntry.user_phone);
+                        if (!exists) {
+                            localLog.push({
+                                userId: newEntry.user_phone,
+                                name: newEntry.user_name,
+                                timestamp: newEntry.timestamp,
+                                method: newEntry.method,
+                                serviceSlot: newEntry.service_slot,
+                                serviceName: newEntry.service_name
+                            });
+                            localStorage.setItem('nexus_attendance_log', JSON.stringify(localLog));
+                            showToast(`📡 Nueva Asistencia: ${newEntry.user_name}`);
+                            if (typeof renderAdminUserList === 'function') renderAdminUserList();
+                        }
+                    }
+                });
+            }
+
+            showDashboard(user);
+        } catch (e) {
+            console.error("Account data corrupted", e);
             localStorage.removeItem('nexus_session');
             showLogin();
         }
     } else {
-        if (localStorage.getItem('nexus_account')) {
-            showLogin();
-        } else {
-            showRegister();
-        }
+        localStorage.removeItem('nexus_session');
+        showLogin();
     }
+} else {
+    if (localStorage.getItem('nexus_account')) {
+        showLogin();
+    } else {
+        showRegister();
+    }
+}
 }
 
 // BIND EVENTS ON DOM CONTENT LOADED
@@ -3205,10 +3117,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.17) ---
+// --- VERSION INDICATOR (v6.19) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.17 (Login Fixed)";
+    v.innerText = "v6.19 (Fixed Final)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
