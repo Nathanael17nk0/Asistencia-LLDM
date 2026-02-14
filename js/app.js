@@ -153,10 +153,6 @@ async function initApp() {
             showRegister();
         }
     }
-    console.log("➡️ No Users found. Showing Register.");
-    showRegister();
-}
-    }
 }
 
 // --- NAVIGATION HELPERS ---
@@ -3209,10 +3205,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.16) ---
+// --- VERSION INDICATOR (v6.17) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.16 (Sticky Login)";
+    v.innerText = "v6.17 (Login Fixed)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
