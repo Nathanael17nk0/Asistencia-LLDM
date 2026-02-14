@@ -279,20 +279,19 @@
                 <div class="admin-fixed-header">
                     <!-- HEADER & REPORTS -->
                     <div
-                        style="padding: 15px; border-bottom: 1px solid #eee; background: linear-gradient(135deg, #4169E1 0%, #0047AB 100%); display:flex; flex-direction:column; gap:10px;">
+                        style="padding: 10px; border-bottom: 1px solid #eee; background: linear-gradient(135deg, #4169E1 0%, #0047AB 100%); display:flex; flex-direction:column; gap:5px;">
                         <div style="display:flex; justify-content:space-between; align-items:center; width:100%;">
-                            <h4 style="margin:0; color:white;">PANEL ADMIN</h4>
+                            <h4 style="margin:0; color:white; font-size:1rem;">PANEL ADMIN</h4>
                             <button id="close-admin-btn" class="cyber-btn sm danger"
-                                style="font-size:0.75rem;">CERRAR</button>
+                                style="font-size:0.7rem; padding: 2px 8px;">CERRAR</button>
                         </div>
 
-                        <div style="display:flex; gap:10px; width:100%;">
+                        <div style="display:flex; gap:5px; width:100%;">
                             <button id="admin-view-schedule-btn-force" class="cyber-btn sm"
                                 onclick="window.manuallyOpenSchedule();"
                                 style="flex:1; background:#f1c40f; color:black; font-weight:bold; border:2px solid orange;">
                                 <i class="ri-calendar-check-line"></i> VER ROLES
                             </button>
-                            <!-- CLEAN UI: Removed Debug Buttons -->
                             <button onclick="toggleReportsModal()" class="cyber-btn sm" style="flex:1;">
                                 <i class="ri-file-chart-line"></i> REPORTES
                             </button>
@@ -300,27 +299,27 @@
                     </div>
 
                     <!-- 1. OCR Section (Roles) -->
-                    <div class="admin-section" style="padding: 15px; border-bottom: 1px solid #eee;">
-                        <h5 style="margin-bottom:5px; font-weight:bold;"><i class="ri-camera-lens-line"></i> Actualizar
+                    <div class="admin-section" style="padding: 10px; border-bottom: 1px solid #eee;">
+                        <h5 style="margin-bottom:5px; font-weight:bold; font-size:0.9rem;"><i
+                                class="ri-camera-lens-line"></i> Actualizar
                             Roles</h5>
                         <div style="display:flex; gap:10px; align-items:center;">
                             <input type="file" id="schedule-file-input" accept="image/*, .xlsx, .xls"
                                 style="display:none;">
                             <button id="upload-schedule-btn" class="cyber-btn sm"
-                                style="font-size:0.8rem; padding: 5px 15px;"><i class="ri-upload-cloud-line"></i> Subir
+                                style="font-size:0.8rem; padding: 5px 15px; width:100%;"><i
+                                    class="ri-upload-cloud-line"></i> Subir
                                 Foto</button>
-                            <!-- CHANGED TO GRAY -->
-                            <button id="clear-schedule-btn" class="cyber-btn sm gray"
-                                style="font-size:0.8rem; padding: 5px 10px;"><i class="ri-delete-bin-line"></i></button>
+                            <!-- REMOVED TRASH BUTTON as requested -->
                             <div id="ocr-status" class="hidden" style="font-size:0.8rem; color:#0066cc;"></div>
                         </div>
                     </div>
 
                     <!-- 2. Theme Section -->
-                    <div class="admin-section" style="padding: 15px; border-bottom: 1px solid #eee;">
+                    <div class="admin-section" style="padding: 8px; border-bottom: 1px solid #eee;">
                         <div class="input-group" style="display:flex; gap:5px; margin-top:0;">
                             <input type="text" id="admin-theme-input" placeholder="Tema Semanal..." class="simple-input"
-                                style="border:1px solid #ccc; flex:1; padding: 5px;">
+                                style="border:1px solid #ccc; flex:1; padding: 5px; font-size:0.9rem;">
                             <button id="save-theme-btn" class="cyber-btn sm" style="font-size:0.8rem;">GUARDAR</button>
                         </div>
                     </div>

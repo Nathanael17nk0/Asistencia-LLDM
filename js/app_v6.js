@@ -3315,10 +3315,10 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.9) ---
+// --- VERSION INDICATOR (v6.11) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.9 (Clean UI)";
+    v.innerText = "v6.11 (Final)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
