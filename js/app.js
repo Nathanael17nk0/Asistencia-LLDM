@@ -2948,10 +2948,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.28) ---
+// --- VERSION INDICATOR (v6.29) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.28 (Gold Icon)";
+    v.innerText = "v6.29 (Blue Icon)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
