@@ -2141,10 +2141,27 @@ async function initApp() {
                 }
 
                 // Start Realtime
+                // Start Realtime
                 const startRealtime = () => {
                     window.DB.subscribeToChanges(
                         (newUser) => { if (window.onUserUpdate) window.onUserUpdate(newUser); },
-                        (newLog) => { /* log update handled mostly by refresh */ }
+                        (newLog) => { /* log update handled mostly by refresh */ },
+                        (newConfig) => {
+                            console.log("🔔 Realtime Config Update:", newConfig);
+                            if (newConfig.key === 'church_location') {
+                                console.log("📍 Updating Target Location from Cloud:", newConfig.value);
+                                STATE.targetLocation = newConfig.value;
+                                // Update local storage
+                                const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+                                settings.targetLocation = newConfig.value;
+                                localStorage.setItem('nexus_settings', JSON.stringify(settings));
+                            }
+                            if (newConfig.key === 'weekly_theme') {
+                                console.log("🎨 Updating Theme from Cloud");
+                                localStorage.setItem('nexus_theme', newConfig.value.text);
+                                if (typeof loadTheme === 'function') loadTheme();
+                            }
+                        }
                     );
                 };
                 startRealtime();
@@ -2948,10 +2965,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.30b) ---
+// --- VERSION INDICATOR (v6.31) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.30b (Fixed Geo)";
+    v.innerText = "v6.31 (Realtime Fix)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
