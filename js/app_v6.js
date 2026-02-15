@@ -9,7 +9,8 @@
 const STATE = {
     user: null,
     currentLocation: { lat: 0, lng: 0 },
-    targetLocation: { lat: 0, lng: 0, radius: 50 }, // 50 meters
+    // FIXED COORDINATES (Templo) - v6.30
+    targetLocation: { lat: 26.096836, lng: -98.291939, radius: 30 },
     inGeofence: false
 };
 
@@ -2081,79 +2082,83 @@ async function initApp() {
                 const cloudTheme = await window.DB.fetchConfig('weekly_theme');
                 const cloudLoc = await window.DB.fetchConfig('church_location');
 
-                // Update Location (FIX v6.24)
+                // Update Location (FIX v6.30 - HARDCODED OVERRIDE)
+                /* 
                 if (cloudLoc && cloudLoc.lat && cloudLoc.lng) {
                     console.log("📍 Location synced from Cloud:", cloudLoc);
                     STATE.targetLocation = cloudLoc;
-
-                    // Persist to local settings
-                    const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
-                    settings.targetLocation = cloudLoc;
-                    localStorage.setItem('nexus_settings', JSON.stringify(settings));
                 }
+                */
+                console.log("📍 Location Fixed: Using Hardcoded Coordinates");
+
+                // Persist to local settings
+                const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+                settings.targetLocation = cloudLoc;
+                localStorage.setItem('nexus_settings', JSON.stringify(settings));
+            }
 
                 // Update Users
                 if (users && users.length > 0) {
-                    localStorage.setItem('nexus_users', JSON.stringify(users));
+                localStorage.setItem('nexus_users', JSON.stringify(users));
 
-                    // UX FIX: If we are on Register screen (default) and we found users, switch to Login!
-                    // This handles the "Fresh Load" case where we didn't know we had users yet.
-                    if (!userLoggedIn) {
-                        const currentSection = document.querySelector('.active-section');
-                        if (currentSection && currentSection.id === 'register-section') {
-                            console.log("🔄 Users found in Cloud -> Switching to Login");
-                            showLogin();
-                        }
+                // UX FIX: If we are on Register screen (default) and we found users, switch to Login!
+                // This handles the "Fresh Load" case where we didn't know we had users yet.
+                if (!userLoggedIn) {
+                    const currentSection = document.querySelector('.active-section');
+                    if (currentSection && currentSection.id === 'register-section') {
+                        console.log("🔄 Users found in Cloud -> Switching to Login");
+                        showLogin();
                     }
                 }
-
-                // Update Attendance
-                if (attendance && attendance.length > 0) {
-                    localStorage.setItem('nexus_attendance_log', JSON.stringify(attendance));
-                }
-
-                // Update Schedule
-                if (cloudSchedule) {
-                    localStorage.setItem('nexus_schedule_db', JSON.stringify(cloudSchedule));
-                }
-
-                // Update Theme
-                if (cloudTheme) {
-                    localStorage.setItem('nexus_theme', cloudTheme.text);
-                    if (typeof loadTheme === 'function') loadTheme();
-                }
-
-                // Trigger UI Refresh if on Dashboard using the new data
-                if (userLoggedIn) {
-                    // Refresh Admin List if active
-                    if (typeof renderAdminUserList === 'function' && document.getElementById('admin-panel') && !document.getElementById('admin-panel').classList.contains('hidden')) {
-                        renderAdminUserList();
-                    }
-                } else {
-                    // If we were waiting on Register screen, maybe now we have users?
-                    // Re-evaluate
-                    const updatedUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-                    if (updatedUsers.length > 0 && !document.getElementById('login-section').classList.contains('active-section')) {
-                        // Only switch if we are not already in a specific flow? 
-                        // Safer to just let user navigate using the buttons.
-                        // But we can enable login if it was hidden.
-                    }
-                }
-
-                // Start Realtime
-                const startRealtime = () => {
-                    window.DB.subscribeToChanges(
-                        (newUser) => { if (window.onUserUpdate) window.onUserUpdate(newUser); },
-                        (newLog) => { /* log update handled mostly by refresh */ }
-                    );
-                };
-                startRealtime();
-
-            } catch (e) {
-                console.warn("⚠️ Cloud Sync Warning:", e);
             }
+
+            // Update Attendance
+            if (attendance && attendance.length > 0) {
+                localStorage.setItem('nexus_attendance_log', JSON.stringify(attendance));
+            }
+
+            // Update Schedule
+            if (cloudSchedule) {
+                localStorage.setItem('nexus_schedule_db', JSON.stringify(cloudSchedule));
+            }
+
+            // Update Theme
+            if (cloudTheme) {
+                localStorage.setItem('nexus_theme', cloudTheme.text);
+                if (typeof loadTheme === 'function') loadTheme();
+            }
+
+            // Trigger UI Refresh if on Dashboard using the new data
+            if (userLoggedIn) {
+                // Refresh Admin List if active
+                if (typeof renderAdminUserList === 'function' && document.getElementById('admin-panel') && !document.getElementById('admin-panel').classList.contains('hidden')) {
+                    renderAdminUserList();
+                }
+            } else {
+                // If we were waiting on Register screen, maybe now we have users?
+                // Re-evaluate
+                const updatedUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+                if (updatedUsers.length > 0 && !document.getElementById('login-section').classList.contains('active-section')) {
+                    // Only switch if we are not already in a specific flow? 
+                    // Safer to just let user navigate using the buttons.
+                    // But we can enable login if it was hidden.
+                }
+            }
+
+            // Start Realtime
+            const startRealtime = () => {
+                window.DB.subscribeToChanges(
+                    (newUser) => { if (window.onUserUpdate) window.onUserUpdate(newUser); },
+                    (newLog) => { /* log update handled mostly by refresh */ }
+                );
+            };
+            startRealtime();
+
+        } catch (e) {
+            console.warn("⚠️ Cloud Sync Warning:", e);
         }
-    })();
+    }
+    }) ();
 }
 // [Orphaned Session Logic Removed v6.23]
 
@@ -2948,10 +2953,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.30) ---
+// --- VERSION INDICATOR (v6.30b) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.30 (UI Flames)";
+    v.innerText = "v6.30b (Fixed Geo)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
