@@ -2009,7 +2009,7 @@ function populateUserSelect() {
 // --- INITIALIZATION ---
 async function initApp() {
     console.log("Initializing App...");
-    alert("DEBUG: initApp Running"); // Force alert to confirm execution
+    // alert("DEBUG: initApp Running"); // CONFIRMED RUNNING
 
     // 1. IMMEDIATE SESSION RESTORE (Sticky Login)
     // We check this FIRST so user sees Dashboard immediately, without waiting for Cloud.
