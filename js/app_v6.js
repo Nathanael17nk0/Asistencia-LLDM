@@ -2142,10 +2142,20 @@ async function initApp() {
 
                 // Start Realtime
                 // Start Realtime
+                // Start Realtime
                 const startRealtime = () => {
+                    // 1. Setup Global User Listener (handled internally by supabase-service)
+                    window.onUserUpdate = (newUser) => {
+                        console.log("👤 User Update Root:", newUser);
+                        // Refresh Admin User List if needed
+                        if (typeof renderAdminUserList === 'function' && document.getElementById('admin-panel') && !document.getElementById('admin-panel').classList.contains('hidden')) {
+                            renderAdminUserList();
+                        }
+                    };
+
+                    // 2. Subscribe to Logs and Config
                     window.DB.subscribeToChanges(
-                        (newUser) => { if (window.onUserUpdate) window.onUserUpdate(newUser); },
-                        (newLog) => { /* log update handled mostly by refresh */ },
+                        (newLog) => { /* log update handled mostly by refresh or internal logic */ },
                         (newConfig) => {
                             console.log("🔔 Realtime Config Update:", newConfig);
                             if (newConfig.key === 'church_location') {
@@ -2965,10 +2975,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.31) ---
+// --- VERSION INDICATOR (v6.32) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.31 (Realtime Fix)";
+    v.innerText = "v6.32 (RT Fixed)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
