@@ -3,33 +3,24 @@
 
 // function startApp() { // REMOVED WRAPPER
 // console.log("Starting App...");
-// alert("DEBUG: App Starting (DOM Ready)");
-
 // --- STATE MANAGEMENT ---
 const STATE = {
     user: null,
     currentLocation: { lat: 0, lng: 0 },
-    // FIXED COORDINATES (Templo) - v6.30
-    targetLocation: { lat: 26.096836, lng: -98.291939, radius: 30 },
+    targetLocation: { lat: 0, lng: 0, radius: 50 }, // 50 meters
     inGeofence: false
 };
 
 // --- DOM ELEMENTS ---
 // --- DOM ELEMENTS ---
+// --- DOM ELEMENTS ---
+// --- DOM ELEMENTS ---
 const loginSection = document.getElementById('login-section');
-// Pre-check if already declared (though in module/script scope it shouldn't matter unless reloaded in same context)
-// But 'const' throws if redeclared. 
-// We will assume this script runs once. If it runs twice, that's the issue.
-// However, the user error says "Can't create duplicate variable". 
-// This usually happens in Safari if a variable is global and script runs twice.
-// Let's use var or just not redeclare if window.X exists? No, 'const' is block scoped but global here.
-// I will change these key elements to 'var' to be safe against re-execution or just rely on IDs.
-// actually, let's just use document.getElementById directly in functions or use 'var'.
-var registerSection = document.getElementById('register-section');
-var dashboardSection = document.getElementById('dashboard-section');
+const registerSection = document.getElementById('register-section');
+const dashboardSection = document.getElementById('dashboard-section');
 
-var loginForm = document.getElementById('login-form');
-var registerForm = document.getElementById('register-form');
+const loginForm = document.getElementById('login-form');
+const registerForm = document.getElementById('register-form');
 
 // Register specific
 const dobInput = document.getElementById('reg-dob');
@@ -2018,6 +2009,7 @@ function populateUserSelect() {
 // --- INITIALIZATION ---
 async function initApp() {
     console.log("Initializing App...");
+    alert("DEBUG: initApp Running"); // Force alert to confirm execution
 
     // 1. IMMEDIATE SESSION RESTORE (Sticky Login)
     // We check this FIRST so user sees Dashboard immediately, without waiting for Cloud.
@@ -2089,76 +2081,79 @@ async function initApp() {
                     STATE.targetLocation = cloudLoc;
                 }
                 */
-                console.log("📍 Location Fixed: Using Hardcoded Coordinates");
+                // Update Location (FIX v6.24)
+                if (cloudLoc && cloudLoc.lat && cloudLoc.lng) {
+                    console.log("📍 Location synced from Cloud:", cloudLoc);
+                    STATE.targetLocation = cloudLoc;
 
-                // Persist to local settings
-                const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
-                settings.targetLocation = cloudLoc;
-                localStorage.setItem('nexus_settings', JSON.stringify(settings));
-            }
+                    // Persist to local settings
+                    const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+                    settings.targetLocation = cloudLoc;
+                    localStorage.setItem('nexus_settings', JSON.stringify(settings));
+                }
 
                 // Update Users
                 if (users && users.length > 0) {
-                localStorage.setItem('nexus_users', JSON.stringify(users));
+                    localStorage.setItem('nexus_users', JSON.stringify(users));
 
-                // UX FIX: If we are on Register screen (default) and we found users, switch to Login!
-                // This handles the "Fresh Load" case where we didn't know we had users yet.
-                if (!userLoggedIn) {
-                    const currentSection = document.querySelector('.active-section');
-                    if (currentSection && currentSection.id === 'register-section') {
-                        console.log("🔄 Users found in Cloud -> Switching to Login");
-                        showLogin();
+                    // UX FIX: If we are on Register screen (default) and we found users, switch to Login!
+                    // This handles the "Fresh Load" case where we didn't know we had users yet.
+                    if (!userLoggedIn) {
+                        const currentSection = document.querySelector('.active-section');
+                        if (currentSection && currentSection.id === 'register-section') {
+                            console.log("🔄 Users found in Cloud -> Switching to Login");
+                            showLogin();
+                        }
                     }
                 }
-            }
 
-            // Update Attendance
-            if (attendance && attendance.length > 0) {
-                localStorage.setItem('nexus_attendance_log', JSON.stringify(attendance));
-            }
-
-            // Update Schedule
-            if (cloudSchedule) {
-                localStorage.setItem('nexus_schedule_db', JSON.stringify(cloudSchedule));
-            }
-
-            // Update Theme
-            if (cloudTheme) {
-                localStorage.setItem('nexus_theme', cloudTheme.text);
-                if (typeof loadTheme === 'function') loadTheme();
-            }
-
-            // Trigger UI Refresh if on Dashboard using the new data
-            if (userLoggedIn) {
-                // Refresh Admin List if active
-                if (typeof renderAdminUserList === 'function' && document.getElementById('admin-panel') && !document.getElementById('admin-panel').classList.contains('hidden')) {
-                    renderAdminUserList();
+                // Update Attendance
+                if (attendance && attendance.length > 0) {
+                    localStorage.setItem('nexus_attendance_log', JSON.stringify(attendance));
                 }
-            } else {
-                // If we were waiting on Register screen, maybe now we have users?
-                // Re-evaluate
-                const updatedUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-                if (updatedUsers.length > 0 && !document.getElementById('login-section').classList.contains('active-section')) {
-                    // Only switch if we are not already in a specific flow? 
-                    // Safer to just let user navigate using the buttons.
-                    // But we can enable login if it was hidden.
+
+                // Update Schedule
+                if (cloudSchedule) {
+                    localStorage.setItem('nexus_schedule_db', JSON.stringify(cloudSchedule));
                 }
+
+                // Update Theme
+                if (cloudTheme) {
+                    localStorage.setItem('nexus_theme', cloudTheme.text);
+                    if (typeof loadTheme === 'function') loadTheme();
+                }
+
+                // Trigger UI Refresh if on Dashboard using the new data
+                if (userLoggedIn) {
+                    // Refresh Admin List if active
+                    if (typeof renderAdminUserList === 'function' && document.getElementById('admin-panel') && !document.getElementById('admin-panel').classList.contains('hidden')) {
+                        renderAdminUserList();
+                    }
+                } else {
+                    // If we were waiting on Register screen, maybe now we have users?
+                    // Re-evaluate
+                    const updatedUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+                    if (updatedUsers.length > 0 && !document.getElementById('login-section').classList.contains('active-section')) {
+                        // Only switch if we are not already in a specific flow? 
+                        // Safer to just let user navigate using the buttons.
+                        // But we can enable login if it was hidden.
+                    }
+                }
+
+                // Start Realtime
+                const startRealtime = () => {
+                    window.DB.subscribeToChanges(
+                        (newUser) => { if (window.onUserUpdate) window.onUserUpdate(newUser); },
+                        (newLog) => { /* log update handled mostly by refresh */ }
+                    );
+                };
+                startRealtime();
+
+            } catch (e) {
+                console.warn("⚠️ Cloud Sync Warning:", e);
             }
-
-            // Start Realtime
-            const startRealtime = () => {
-                window.DB.subscribeToChanges(
-                    (newUser) => { if (window.onUserUpdate) window.onUserUpdate(newUser); },
-                    (newLog) => { /* log update handled mostly by refresh */ }
-                );
-            };
-            startRealtime();
-
-        } catch (e) {
-            console.warn("⚠️ Cloud Sync Warning:", e);
         }
-    }
-    }) ();
+    })();
 }
 // [Orphaned Session Logic Removed v6.23]
 
