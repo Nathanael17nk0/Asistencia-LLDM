@@ -7,7 +7,12 @@
 const STATE = {
     user: null,
     currentLocation: { lat: 0, lng: 0 },
-    targetLocation: { lat: 0, lng: 0, radius: 50 }, // 50 meters
+    // HARDCODED GEOFENCE (Templo) - v6.35
+    targetLocation: {
+        lat: 26.096836,
+        lng: -98.291939,
+        radius: 35
+    },
     inGeofence: false
 };
 
@@ -913,8 +918,51 @@ function initAdminFeatures() {
 
                     if (window.DB) window.DB.saveConfig('church_location', loc).catch(console.error);
 
-                    // Assuming updateLocationStatus is a function that updates the UI
-                    // If not, you might need to call loadTheme() or similar for location.
+                    // --- LOCATION UI ---
+                    function updateLocationStatus() {
+                        const statusEl = document.getElementById('location-status');
+                        const registerBtn = document.getElementById('register-btn');
+                        const distEl = document.getElementById('distance-display');
+
+                        if (!STATE.targetLocation || STATE.targetLocation.lat === 0) return;
+
+                        // Calculate if not already done
+                        if (STATE.currentLocation.lat !== 0) {
+                            const dist = getDistanceInMeters(
+                                STATE.currentLocation.lat, STATE.currentLocation.lng,
+                                STATE.targetLocation.lat, STATE.targetLocation.lng
+                            );
+                            STATE.distance = dist;
+                            STATE.inGeofence = dist <= STATE.targetLocation.radius;
+                        }
+
+                        const distDisplay = STATE.distance ? Math.round(STATE.distance) + "m" : "--";
+
+                        // UPDATE UI
+                        const fingerprintDiv = document.querySelector('.fingerprint-container');
+                        const messageDiv = document.querySelector('.geofence-message'); // "ACÉRCATE AL TEMPLO..."
+
+                        if (STATE.inGeofence) {
+                            // IN RANGE
+                            if (fingerprintDiv) fingerprintDiv.classList.remove('hidden-geo');
+                            if (messageDiv) messageDiv.style.display = 'none'; // Hide message
+                            if (registerBtn) registerBtn.disabled = false;
+                        } else {
+                            // OUT OF RANGE
+                            if (fingerprintDiv) fingerprintDiv.classList.add('hidden-geo');
+
+                            if (messageDiv) {
+                                messageDiv.style.display = 'block';
+                                messageDiv.innerHTML = `
+                ACÉRCATE AL TEMPLO PARA REGISTRAR<br>
+                <small>Distancia: ${distDisplay}</small><br>
+                <button onclick="window.checkLocationStatus()" style="background:#333; color:white; border:none; padding:5px 10px; border-radius:10px; margin-top:5px; font-size:0.8rem;">
+                    <i class="ri-refresh-line"></i> Actualizar GPS
+                </button>
+            `;
+                            }
+                        }
+                    }                   // If not, you might need to call loadTheme() or similar for location.
                     // For now, let's just update the locStatus text directly.
                     if (locStatus) {
                         locStatus.textContent = `✅ Fijado: ${loc.lat.toFixed(4)}, ${loc.lng.toFixed(4)}`;
@@ -2169,19 +2217,17 @@ async function initApp() {
                         (newConfig) => {
                             console.log("🔔 Realtime Config Update:", newConfig);
                             if (newConfig.key === 'church_location') {
-                                console.log("📍 Updating Target Location from Cloud:", newConfig.value);
-                                STATE.targetLocation = newConfig.value;
-                                // Update local storage
-                                const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
-                                settings.targetLocation = newConfig.value;
-                                localStorage.setItem('nexus_settings', JSON.stringify(settings));
-
-                                // FORCE RE-CALCULATION
-                                if (window.checkLocationStatus) window.checkLocationStatus();
+                                // SKIP CLOUD SYNC IF HARDCODED
+                                // console.log("📍 Cloud Location Update Ignored (Hardcoded Mode)");
                             }
                             if (newConfig.key === 'weekly_theme') {
-                                console.log("🎨 Updating Theme from Cloud");
-                                localStorage.setItem('nexus_theme', newConfig.value.text);
+                                console.log("🎨 Updating Theme from Cloud", newConfig.value);
+                                // Handle both Object {text: "..."} and String "..."
+                                const text = (typeof newConfig.value === 'object' && newConfig.value.text)
+                                    ? newConfig.value.text
+                                    : newConfig.value;
+
+                                localStorage.setItem('nexus_theme', text);
                                 if (typeof loadTheme === 'function') loadTheme();
                             }
                         }
@@ -2988,10 +3034,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.33) ---
+// --- VERSION INDICATOR (v6.35) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.33 (UI Refresh)";
+    v.innerText = "v6.35 (35m Radius)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
