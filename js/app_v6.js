@@ -246,7 +246,12 @@ async function handleLogin(e) {
         const cleanPhone = String(phone).trim();
         const cleanPass = String(password).trim();
 
-        console.log("Attempting login:", cleanPhone);
+        const cleanPhone = String(phone).trim();
+        const cleanPass = String(password).trim();
+
+        console.log(`🔑 Login Attempt: ${cleanPhone}`);
+        // Force UI update to show action
+        if (btnContent) btnContent.innerText = "⏳ ...";
 
         // Helper to Restore Button
         const resetButton = () => {
@@ -2914,11 +2919,26 @@ document.addEventListener('DOMContentLoaded', () => {
     const st = document.getElementById('realtime-status');
     if (st) st.innerHTML = "⏳ Iniciando...";
 
-    if (typeof initApp === 'function') {
-        setTimeout(initApp, 500); // Small delay to let Supabase Init
-    } else {
-        console.error("initApp not found!");
-    }
+    // DEFINE INITAPP (Was missing)
+    window.initApp = async function () {
+        console.log("🚀 Running initApp...");
+
+        // 1. Load Theme
+        if (typeof loadTheme === 'function') loadTheme();
+
+        // 2. Load v2.0 Features
+        if (typeof window.loadNotices === 'function') {
+            // Background check for badge
+            await window.loadNotices();
+        }
+
+        if (st) {
+            st.innerHTML = "✅ Listo";
+            setTimeout(() => st.remove(), 2000);
+        }
+    };
+
+    setTimeout(window.initApp, 500); // Small delay to let Supabase Init
 
     // SAFETY RE-BIND
     const btnAdmin = document.getElementById('admin-view-schedule-btn');
