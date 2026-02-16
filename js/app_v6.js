@@ -795,35 +795,45 @@ function seedScheduleData() {
 
 // --- GEOLOCATION ---
 // --- GEOLOCATION (OPTIMIZED FOR HEAT/BATTERY) ---
-function startLocationWatch() {
+// GLOBAL LOCATION CHECK (Callable from Realtime)
+window.checkLocationStatus = function () {
     if (!navigator.geolocation) return;
-
-    // CHANGED: Use getCurrentPosition (One-time) instead of watchPosition (Continuous)
-    // This prevents the Mac/Phone from overheating due to constant GPS polling.
-    console.log("📍 Getting location (Single Shot)...");
+    console.log("📍 Checking Location Status...");
 
     navigator.geolocation.getCurrentPosition((pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
         STATE.currentLocation = { lat, lng };
 
-        console.log("📍 Location Acquired:", lat, lng);
+        // console.log("📍 Location Acquired:", lat, lng);
 
         // Validation Logic
-        if (STATE.targetLocation.lat !== 0) {
+        if (STATE.targetLocation && STATE.targetLocation.lat !== 0) {
             const dist = getDistanceInMeters(lat, lng, STATE.targetLocation.lat, STATE.targetLocation.lng);
             STATE.distance = dist;
             STATE.inGeofence = dist <= STATE.targetLocation.radius;
-            updateLocationStatus();
-        }
-    }, (err) => console.warn(err), { enableHighAccuracy: true });
 
-    // Optional: Poll every 60 seconds instead of realtime
-    /*
-    setInterval(() => {
-        navigator.geolocation.getCurrentPosition(...)
-    }, 60000);
-    */
+            // Debug Logs (Optional)
+            // console.log(`📏 Dist: ${Math.round(dist)}m, Target: ${STATE.targetLocation.radius}m, In: ${STATE.inGeofence}`);
+
+            if (typeof updateLocationStatus === 'function') {
+                updateLocationStatus();
+            }
+        }
+    }, (err) => console.warn("Geo Error:", err), { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 });
+};
+
+function startLocationWatch() {
+    // 1. Initial Check
+    if (window.checkLocationStatus) window.checkLocationStatus();
+
+    // 2. Poll every 20 seconds (Battery Efficient but Responsive)
+    // Clear existing to avoid dupes
+    if (window.locationInterval) clearInterval(window.locationInterval);
+
+    window.locationInterval = setInterval(() => {
+        if (window.checkLocationStatus) window.checkLocationStatus();
+    }, 20000);
 }
 
 // --- ADMIN FEATURES (OCR & MANUAL) ---
@@ -2165,6 +2175,9 @@ async function initApp() {
                                 const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
                                 settings.targetLocation = newConfig.value;
                                 localStorage.setItem('nexus_settings', JSON.stringify(settings));
+
+                                // FORCE RE-CALCULATION
+                                if (window.checkLocationStatus) window.checkLocationStatus();
                             }
                             if (newConfig.key === 'weekly_theme') {
                                 console.log("🎨 Updating Theme from Cloud");
@@ -2975,10 +2988,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.32) ---
+// --- VERSION INDICATOR (v6.33) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.32 (RT Fixed)";
+    v.innerText = "v6.33 (UI Refresh)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
