@@ -2289,36 +2289,60 @@ document.addEventListener('DOMContentLoaded', () => {
                 const instruction = document.querySelector('.instruction-text');
 
                 if (isOpen && STATE.inGeofence) {
-                    // ACTIVE STATE
-                    if (btnContainer) {
-                        btnContainer.classList.add('active'); // Pulse effect
-                        btnContainer.classList.add('scanning'); // Scan line
-                        btnContainer.style.opacity = '1';
-                        btnContainer.style.cursor = 'pointer';
-                        btnContainer.style.pointerEvents = 'auto'; // ENABLE CLICK
-                        btnContainer.style.borderColor = 'var(--primary-gold)';
+
+                    // CHECK IF ALREADY ATTENDED
+                    const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+                    const todayISO = now.toISOString().split('T')[0];
+                    const activeSlotId = getServiceSlot(now).slotId;
+
+                    const hasAttended = log.find(e =>
+                        e.userId === STATE.user.phone &&
+                        e.timestamp.startsWith(todayISO) &&
+                        e.serviceSlot === activeSlotId
+                    );
+
+                    if (hasAttended) {
+                        // SUCCESS STATE (Green)
+                        if (btnContainer) {
+                            btnContainer.className = 'fingerprint-container success-state'; // Reset classes
+                            btnContainer.style.opacity = '1';
+                            btnContainer.style.cursor = 'default';
+                        }
+                        if (instruction) {
+                            instruction.textContent = "ASISTENCIA REGISTRADA";
+                            instruction.className = "instruction-text success-text";
+                        }
+                    } else {
+                        // READY STATE (Active & Glowing)
+                        if (btnContainer) {
+                            btnContainer.className = 'fingerprint-container active scanning ready-glow';
+                            btnContainer.style.opacity = '1';
+                            btnContainer.style.cursor = 'pointer';
+                            btnContainer.style.pointerEvents = 'auto'; // ENABLE CLICK
+                        }
+                        if (instruction) {
+                            instruction.textContent = "PRESIONA PARA REGISTRAR";
+                            instruction.className = "instruction-text"; // Reset class
+                            instruction.style.color = "var(--primary-gold)";
+                        }
                     }
-                    if (instruction) {
-                        instruction.textContent = "DETECTANDO HUELLA... PRESIONA PARA REGISTRAR";
-                        instruction.style.color = "var(--primary-gold)";
-                    }
+
                 } else {
                     // INACTIVE STATE
                     if (btnContainer) {
-                        btnContainer.classList.remove('active');
-                        btnContainer.classList.remove('scanning');
+                        btnContainer.className = 'fingerprint-container'; // Reset
                         btnContainer.style.opacity = '0.5';
                         btnContainer.style.cursor = 'not-allowed';
                         btnContainer.style.pointerEvents = 'none'; // DISABLE CLICK
-                        btnContainer.style.borderColor = '#ccc';
                     }
                     if (instruction) {
+                        instruction.className = "instruction-text"; // Reset
                         if (!isOpen) {
                             instruction.textContent = "FUERA DE HORARIO DE ORACIÓN";
                             instruction.style.color = "var(--text-muted)";
                         } else {
                             // Check if we have a valid target
-                            if (STATE.targetLocation.lat === 0) {
+                            if (STATE.targetLocation && STATE.targetLocation.lat === 0) {
                                 instruction.textContent = "BUSCANDO UBICACIÓN DEL TEMPLO...";
                                 instruction.style.color = "var(--warning)";
                             } else if (!STATE.inGeofence) {
@@ -3034,10 +3058,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.35) ---
+// --- VERSION INDICATOR (v6.36) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.35 (35m Radius)";
+    v.innerText = "v6.36 (Green Success UI)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#444; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
