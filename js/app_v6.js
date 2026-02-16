@@ -1708,6 +1708,18 @@ function renderAdminUserList() {
         if (!Array.isArray(users)) users = [];
         if (!Array.isArray(log)) log = [];
 
+        // Initialize Tab State if not exists
+        if (!STATE.adminTab) STATE.adminTab = 'pending';
+
+        // Update Tab UI
+        ['pending', 'attended', 'all'].forEach(t => {
+            const btn = document.getElementById(`tab-${t}`);
+            if (btn) {
+                if (t === STATE.adminTab) btn.classList.add('active');
+                else btn.classList.remove('active');
+            }
+        });
+
         // SAFETY: Filter out bad records (null IDs)
         users = users.filter(u => u && u.id && u.id !== 'null');
 
@@ -1741,13 +1753,28 @@ function renderAdminUserList() {
 
         const filteredUsers = users.filter(u => {
             if (u.role === 'admin') return false;
+
+            // 1. Search Filter
             const name = (u.full_name || u.name || '').toLowerCase();
             const matchesSearch = name.includes(searchVal);
-            return matchesSearch;
+            if (!matchesSearch) return false;
+
+            // 2. Tab Filter (v2.0 Logic)
+            if (STATE.adminTab === 'pending') {
+                return !attendedIds.has(String(u.phone));
+            }
+            if (STATE.adminTab === 'attended') {
+                return attendedIds.has(String(u.phone));
+            }
+            // 'all' -> no filter
+            return true;
         });
 
-        // Update Count
-        // Count depends on FILTER. If filter is active, we want to know how many attended THAT service vs total active users?
+        // Update Count Header
+        let tabLabel = "Usuarios";
+        if (STATE.adminTab === 'pending') tabLabel = "Faltan";
+        if (STATE.adminTab === 'attended') tabLabel = "Asistieron";
+        if (countSpan) countSpan.textContent = `${tabLabel}: ${filteredUsers.length}`;
         // Actually, users count is always total. Attendance count is for current view.
         const userCount = users.filter(u => u.role !== 'admin').length;
         if (countSpan) countSpan.textContent = `${attendedIds.size}/${userCount}`;
@@ -1789,6 +1816,7 @@ function renderAdminUserList() {
             return;
         }
 
+        // RENDER LOOP
         filteredUsers.forEach(u => {
             // CRITICAL FIX: Use ID if available, fallback to phone (legacy), but ID is safer for manual users without phone.
             // Reg users have ID. 
@@ -3058,7 +3086,265 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.36) ---
+// --- v2.0 LIBRARY LOGIC ---
+
+window.openLibrary = async function () {
+    const dash = document.getElementById('dashboard-section');
+    const lib = document.getElementById('library-section');
+
+    if (dash) dash.classList.add('hidden-section');
+    if (lib) {
+        lib.classList.remove('hidden-section');
+        lib.style.display = 'flex';
+    }
+
+    // Show Admin Controls?
+    const adminControls = document.getElementById('library-admin-controls');
+    if (STATE.user && STATE.user.role === 'admin' && adminControls) {
+        adminControls.classList.remove('hidden');
+    }
+
+    await loadLibrary();
+};
+
+window.closeLibrary = function () {
+    const dash = document.getElementById('dashboard-section');
+    const lib = document.getElementById('library-section');
+
+    if (lib) lib.classList.add('hidden-section');
+    if (dash) {
+        dash.classList.remove('hidden-section');
+        dash.style.display = 'flex'; // Ensure flex layout
+    }
+};
+
+window.loadLibrary = async function () {
+    const container = document.getElementById('library-container');
+    if (!container) return;
+
+    container.innerHTML = '<p style="text-align:center; color:#aaa;"><i class="ri-loader-4-line ri-spin"></i> Cargando...</p>';
+
+    try {
+        const letters = await window.DB.getLetters();
+
+        if (letters.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#aaa;">No hay cartas disponibles aún.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        letters.forEach(l => {
+            const card = document.createElement('div');
+            card.className = 'glass-card';
+            card.style.marginBottom = '15px';
+            card.style.display = 'flex';
+            card.style.alignItems = 'center';
+            card.style.padding = '15px';
+
+            const isAdmin = (STATE.user && STATE.user.role === 'admin');
+            const deleteBtn = isAdmin ? `<button onclick="window.deleteLetter('${l.id}')" style="margin-left:10px; color:red; border:none; background:none;"><i class="ri-delete-bin-line"></i></button>` : '';
+
+            card.innerHTML = `
+                <div style="font-size:2rem; color:var(--secondary-navy); margin-right:15px;">
+                    <i class="ri-file-pdf-2-line"></i>
+                </div>
+                <div style="flex:1;">
+                    <h4 style="margin:0; font-size:1rem; color:var(--text-main);">${l.title}</h4>
+                    <p style="margin:0; font-size:0.8rem; color:var(--text-muted);">${l.description || 'Sin descripción'}</p>
+                    <small style="color:#aaa;">${new Date(l.created_at).toLocaleDateString()}</small>
+                </div>
+                <button onclick="window.openPDF('${l.pdf_url}')" class="cyber-btn sm" style="padding:5px 10px;">LEER</button>
+                ${deleteBtn}
+            `;
+            container.appendChild(card);
+        });
+
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="text-align:center; color:red;">Error al cargar.</p>';
+    }
+};
+
+window.openPDF = function (url) {
+    if (!url) return;
+    window.open(url, '_blank');
+};
+
+window.promptAddLetter = async function () {
+    const title = prompt("Título de la Carta:");
+    if (!title) return;
+
+    const desc = prompt("Descripción corta (opcional):");
+
+    const url = prompt("URL del PDF Directo (ej: https://.../carta.pdf):");
+    if (!url) return alert("URL requerida");
+
+    try {
+        await window.DB.addLetter(title, desc, url);
+        alert("Carta agregada");
+        loadLibrary();
+    } catch (e) {
+        alert("Error al subir: " + e.message);
+    }
+};
+
+// --- v2.0 NOTICES LOGIC ---
+window.openNotices = async function () {
+    const dash = document.getElementById('dashboard-section');
+    const not = document.getElementById('notices-section');
+
+    if (dash) dash.classList.add('hidden-section');
+    if (not) {
+        not.classList.remove('hidden-section');
+        not.style.display = 'flex';
+    }
+
+    // Hide Badge locally
+    const badge = document.getElementById('notice-badge');
+    if (badge) badge.classList.add('hidden');
+    localStorage.setItem('nexus_last_read_notice', new Date().toISOString());
+
+    // Show Admin Controls?
+    const adminControls = document.getElementById('notices-admin-controls');
+    if (STATE.user && STATE.user.role === 'admin' && adminControls) {
+        adminControls.classList.remove('hidden');
+    }
+
+    await loadNotices();
+};
+
+window.closeNotices = function () {
+    const dash = document.getElementById('dashboard-section');
+    const not = document.getElementById('notices-section');
+
+    if (not) not.classList.add('hidden-section');
+    if (dash) {
+        dash.classList.remove('hidden-section');
+        dash.style.display = 'flex';
+    }
+    // Check notices again to allow polling to restore badge if new ones came in
+    checkNoticesBackground();
+};
+
+window.loadNotices = async function () {
+    const container = document.getElementById('notices-container');
+    if (!container) return;
+
+    container.innerHTML = '<p style="text-align:center; color:#aaa;"><i class="ri-loader-4-line ri-spin"></i> Cargando...</p>';
+
+    try {
+        const notices = await window.DB.getNotices();
+
+        if (notices.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#aaa;">No hay avisos recientes.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        notices.forEach(n => {
+            const card = document.createElement('div');
+            card.className = 'glass-card';
+            card.style.marginBottom = '15px';
+            card.style.padding = '15px';
+            card.style.borderLeft = (n.priority === 'high') ? '4px solid red' : '4px solid var(--primary-gold)';
+
+            const isAdmin = (STATE.user && STATE.user.role === 'admin');
+            const deleteBtn = isAdmin ? `<button onclick="window.deleteNotice('${n.id}')" style="float:right; color:red; border:none; background:none;"><i class="ri-delete-bin-line"></i></button>` : '';
+
+            card.innerHTML = `
+                ${deleteBtn}
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
+                    <h4 style="margin:0; font-size:1.1rem; color:var(--text-main);">${n.title}</h4>
+                    ${n.priority === 'high' ? '<span style="background:red; color:white; padding:2px 6px; border-radius:4px; font-size:0.7rem;">URGENTE</span>' : ''}
+                </div>
+                <p style="margin:5px 0; font-size:0.95rem; color:#444; white-space: pre-wrap;">${n.content}</p>
+                <small style="color:#aaa;">${new Date(n.created_at).toLocaleDateString()} ${new Date(n.created_at).toLocaleTimeString()}</small>
+            `;
+            container.appendChild(card);
+        });
+
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="text-align:center; color:red;">Error al cargar.</p>';
+    }
+};
+
+window.promptAddNotice = async function () {
+    const title = prompt("Título del Aviso:");
+    if (!title) return;
+
+    const content = prompt("Contenido del Aviso:");
+    if (!content) return;
+
+    const isUrgent = confirm("¿Es URGENTE? (Saldrá en rojo)");
+    const priority = isUrgent ? 'high' : 'normal';
+
+    try {
+        await window.DB.addNotice(title, content, priority);
+        alert("Aviso publicado");
+        loadNotices();
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+};
+
+window.deleteNotice = async function (id) {
+    if (!confirm("¿Borrar este aviso?")) return;
+    try {
+        await window.DB.deleteNotice(id);
+        loadNotices();
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+};
+
+// Background Polling for Badge
+window.checkNoticesBackground = async function () {
+    try {
+        const notices = await window.DB.getNotices();
+        if (notices.length > 0) {
+            const lastRead = localStorage.getItem('nexus_last_read_notice') || '1970-01-01';
+            const latestNotice = new Date(notices[0].created_at);
+            const lastReadDate = new Date(lastRead);
+
+            const badge = document.getElementById('notice-badge');
+            if (latestNotice > lastReadDate) {
+                if (badge) badge.classList.remove('hidden');
+
+                // Pop-up for Urgent
+                if (notices[0].priority === 'high') {
+                    // Check if we already showed this specific urgent notice? 
+                    // For now, let's just use the badge to avoid annoying popups on every refresh.
+                }
+            } else {
+                if (badge) badge.classList.add('hidden');
+            }
+        }
+    } catch (e) { console.warn("Notice Check Fail", e); }
+};
+
+// Check notices on load
+window.addEventListener('load', () => { setTimeout(checkNoticesBackground, 3000); });
+
+try {
+    await window.DB.addLetter(title, desc, url);
+    alert("Carta agregada");
+    loadLibrary();
+} catch (e) {
+    alert("Error al subir: " + e.message);
+}
+};
+
+window.deleteLetter = async function (id) {
+    if (!confirm("¿Borrar esta carta para todos?")) return;
+    try {
+        await window.DB.deleteLetter(id);
+        loadLibrary();
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+};
+
 window.addEventListener('load', () => {
     const v = document.createElement('div');
     v.innerText = "v6.36 (Green Success UI)";
