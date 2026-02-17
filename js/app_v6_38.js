@@ -56,7 +56,11 @@ function showDashboard(user) {
     const avatarName = user.full_name ? user.full_name.replace(/ /g, '+') : 'User';
     const avatarEl = document.getElementById('user-avatar');
     if (avatarEl) {
-        avatarEl.src = `https://ui-avatars.com/api/?name=${avatarName}&background=c5a059&color=fff&bold=true`;
+        if (user.photo_url) {
+            avatarEl.src = user.photo_url;
+        } else {
+            avatarEl.src = `https://ui-avatars.com/api/?name=${avatarName}&background=c5a059&color=fff&bold=true`;
+        }
     }
 
     if (user.role === 'admin') {
@@ -152,6 +156,22 @@ if (togglePassBtn) {
 }
 
 // Submit Register
+// --- PHOTO PREVIEW LOGIC ---
+const photoInput = document.getElementById('reg-photo-input');
+const photoPreview = document.getElementById('reg-photo-preview');
+
+if (photoInput && photoPreview) {
+    photoInput.addEventListener('change', (e) => {
+        const file = e.target.files[0];
+        if (file) {
+            const reader = new FileReader();
+            reader.onload = (e) => { photoPreview.src = e.target.result; };
+            reader.readAsDataURL(file);
+        }
+    });
+}
+
+// Submit Register
 if (registerForm) {
     registerForm.addEventListener('submit', async (e) => {
         e.preventDefault();
@@ -162,89 +182,129 @@ if (registerForm) {
         const celular = document.getElementById('reg-celular').value;
         const password = document.getElementById('reg-password').value;
 
-        const fullName = `${nombre} ${apellidoP} ${apellidoM}`;
+        // New Fields
+        const address = document.getElementById('reg-address').value;
+        const colonia = document.getElementById('reg-colonia').value;
+        const dob = document.getElementById('reg-dob').value;
+        const edad = document.getElementById('reg-edad').value; // numeric string
+        const baptismDate = document.getElementById('reg-baptism-date').value;
+        const holySpiritDate = document.getElementById('reg-holy-spirit-date').value;
+        const studyLevel = document.getElementById('reg-study-level').value;
+        const profession = document.getElementById('reg-profession').value;
 
-        const newUser = {
-            id: 'user-' + Date.now(),
-            phone: String(celular).trim(),
-            password: String(password).trim(),
-            role: 'user',
-            full_name: fullName
-        };
+        const photoFile = photoInput ? photoInput.files[0] : null;
+
+        // Validation
+        if (!address) return alert("El domicilio es obligatorio.");
+
+        const btnContent = registerForm.querySelector('button .btn-content');
+        const originalBtnText = btnContent ? btnContent.innerHTML : 'REGISTRARME';
+        if (btnContent) btnContent.innerHTML = 'Subiendo... <i class="ri-loader-4-line ri-spin"></i>';
 
         try {
-            // 1. SAVE ACCOUNT (Permanent for this device)
+            let photoUrl = "";
+
+            // 1. UPLOAD PHOTO (if exists)
+            if (photoFile && window.sbClient) {
+                try {
+                    const fileExt = photoFile.name.split('.').pop();
+                    const fileName = `${Date.now()}_${Math.random().toString(36).substring(7)}.${fileExt}`;
+                    const filePath = `${fileName}`;
+
+                    const { error: uploadError } = await window.sbClient.storage
+                        .from('avatars')
+                        .upload(filePath, photoFile);
+
+                    if (uploadError) throw uploadError;
+
+                    const { data: { publicUrl } } = window.sbClient.storage
+                        .from('avatars')
+                        .getPublicUrl(filePath);
+
+                    photoUrl = publicUrl;
+                    console.log("✅ Photo Uploaded:", photoUrl);
+                } catch (uploadErr) {
+                    console.error("Photo Upload Failed:", uploadErr);
+                    alert("Aviso: No se pudo subir la foto, se usará avatar genérico. " + uploadErr.message);
+                }
+            }
+
+            const fullName = `${nombre} ${apellidoP} ${apellidoM}`;
+
+            const newUser = {
+                id: 'user-' + Date.now(),
+                phone: String(celular).trim(),
+                password: String(password).trim(),
+                role: 'user',
+                full_name: fullName,
+                // Enhanced Fields
+                address: address,
+                colonia: colonia,
+                dob: dob,
+                age_label: edad, // "XX años"
+                baptism_date: baptismDate,
+                holy_spirit_date: holySpiritDate,
+                study_level: studyLevel,
+                profession: profession, // Includes Business
+                photo_url: photoUrl,
+                createdAt: new Date().toISOString()
+            };
+
+            // 2. SAVE ACCOUNT (Local)
             localStorage.setItem('nexus_account', JSON.stringify(newUser));
 
-            // 2. REGISTER IN CENTRAL DATABASE (nexus_users)
+            // 3. REGISTER IN CENTRAL DATABASE (nexus_users)
             const allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
             const existingUser = allUsers.find(u => u.phone === newUser.phone);
 
             if (!existingUser) {
-                allUsers.push({
-                    ...newUser,
-                    createdAt: new Date().toISOString()
-                });
+                allUsers.push(newUser);
                 localStorage.setItem('nexus_users', JSON.stringify(allUsers));
-            } else {
-                // Update existing if found (optional, but good for re-registration)
-                // For now, we prefer not to overwrite unless necessary, but let's assume valid update
-                // actually, let's just warn or skip. But finding it means they already exist.
-                // If they are registering, they might have lost local data. We should ensure they are in the list.
             }
 
-            // 3. SET ACTIVE SESSION (Transient)
+            // 4. SET ACTIVE SESSION
             localStorage.setItem('nexus_session', 'active');
-
             STATE.user = newUser;
 
-            // 4. CLOUD SYNC (Critical for Admin Visibility)
+            // 5. CLOUD SYNC
             if (window.DB) {
                 try {
+                    // Mapper to match DB columns
                     await window.DB.registerUser({
-                        ...newUser,
-                        colonia: '',
-                        dob: '',
-                        age_label: ''
+                        id: newUser.id,
+                        phone: newUser.phone,
+                        password: newUser.password,
+                        full_name: newUser.full_name,
+                        role: newUser.role,
+                        colonia: newUser.colonia,
+                        dob: newUser.dob,
+                        age_label: newUser.age_label,
+                        // New Columns
+                        address: newUser.address,
+                        baptism_date: newUser.baptism_date || null,
+                        holy_spirit_date: newUser.holy_spirit_date || null,
+                        study_level: newUser.study_level,
+                        profession: newUser.profession,
+                        photo_url: newUser.photo_url
                     });
                     console.log("✅ Self-Registration Synced to Cloud");
                 } catch (dbErr) {
                     console.error("⚠️ Cloud Register Error:", dbErr);
-
-                    // HANDLE DUPLICATE USER (ZOMBIE)
                     if (dbErr.message && (dbErr.message.includes('duplicate key') || dbErr.code === '23505')) {
                         alert("⚠️ ESTE NÚMERO YA ESTÁ REGISTRADO\n\nEntrando como usuarios local...");
-
-                        // 1. Force Save Account (Again, to be sure)
-                        localStorage.setItem('nexus_account', JSON.stringify(newUser));
-                        localStorage.setItem('nexus_session', 'active');
-
-                        // 2. Direct Entry (Skip Reload/Init check)
-                        hideAllSections();
-                        if (typeof showDashboard === 'function') {
-                            showDashboard(newUser);
-                        } else {
-                            window.location.reload(); // Fallback
-                        }
-                        return;
+                        // Proceed to enter anyway
+                    } else {
+                        alert("Aviso: Tu cuenta se creó localmente, pero hubo error en nube: " + dbErr.message);
                     }
-
-                    alert("Aviso: Tu cuenta se creó localmente, pero hubo error en nube: " + dbErr.message);
                 }
             }
 
-            alert(`REGISTRO EXITOSO\nBienvenido, ${nombre}.\n\nTus credenciales se han guardado.`);
+            alert(`REGISTRO EXITOSO\nBienvenido, ${nombre}.`);
             window.location.reload();
 
         } catch (err) {
-            // BACKUP CATCH (For critical failures)
-            if (err.message && (err.message.includes('duplicate key') || err.message.code === '23505')) {
-                alert("⚠️ CUENTA EXISTENTE\n\nRedirigiendo...");
-                localStorage.setItem('nexus_session', 'active');
-                window.location.reload();
-                return;
-            }
             alert("ERROR AL GUARDAR: " + err.message);
+            if (btnContent) btnContent.innerHTML = originalBtnText;
         }
     });
 }
@@ -2985,6 +3045,7 @@ document.addEventListener('DOMContentLoaded', () => {
             // Background check for badge
             await window.loadNotices();
         }
+        // if (typeof window.loadLibrary === 'function') await window.loadLibrary(); // HIDDEN v2.0
 
         if (st) {
             st.innerHTML = "✅ Listo";
