@@ -1722,18 +1722,50 @@ function renderAdminUserList() {
 
         if (!Array.isArray(log)) log = [];
 
-        // Today check (YYYY-MM-DD)
-        const todayISO = new Date().toISOString().split('T')[0];
+        // Today check (Local YYYY-MM-DD)
+        const now = new Date();
+        const year = now.getFullYear();
+        const month = String(now.getMonth() + 1).padStart(2, '0');
+        const day = String(now.getDate()).padStart(2, '0');
+        const todayLocal = `${year}-${month}-${day}`;
+
+        // Get Active Slot for auto-filtering
+        const { slotId: currentSlotId, isOpen } = getServiceSlot(now);
 
         // Build map of who attended TODAY, specific to the filter
         const attendeesMap = new Map(); // userId -> attendanceEntry
         const currentFilter = serviceProps ? serviceProps.value : 'all';
 
         log.forEach(entry => {
-            // Filter by Date (Today)
-            if (!entry || !entry.timestamp || !entry.timestamp.startsWith(todayISO)) return;
-            // Filter by Service Slot (if selected)
-            if (currentFilter !== 'all' && entry.serviceSlot !== currentFilter) return;
+            // Filter by Date (Today Local)
+            if (!entry || !entry.timestamp) return;
+            // Handle both ISO string (UTC) and Local strings. We compare YYYY-MM-DD.
+            // But entry.timestamp is usually ISO. We need to convert entry timestamp to local YYYY-MM-DD to match todayLocal?
+            // Actually, best to just check if it starts with todayLocal? 
+            // Warning: ISO timestamp is UTC. If it's 7PM Mexico (-6), it is 1AM tomorrow UTC. 
+            // So startsWith(todayLocal) might FAIL if todayLocal is 17th and ISO is 18th.
+            // We should convert entry.timestamp to Date object and check local date.
+
+            const entryDate = new Date(entry.timestamp);
+            const eYear = entryDate.getFullYear();
+            const eMonth = String(entryDate.getMonth() + 1).padStart(2, '0');
+            const eDay = String(entryDate.getDate()).padStart(2, '0');
+            const entryLocal = `${eYear}-${eMonth}-${eDay}`;
+
+            if (entryLocal !== todayLocal) return;
+
+            // Filter logic
+            if (currentFilter !== 'all') {
+                // Manual filter active: Show whomever attended that specific slot
+                if (entry.serviceSlot !== currentFilter) return;
+            } else {
+                // Default 'All' view:
+                // If service is CLOSED -> Clean list (Green for no one)
+                if (!isOpen) return;
+
+                // If service is OPEN -> Only show green for THIS service
+                if (entry.serviceSlot !== currentSlotId) return;
+            }
 
             attendeesMap.set(String(entry.userId), entry);
         });
