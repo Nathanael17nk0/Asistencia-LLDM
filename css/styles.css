@@ -94,8 +94,9 @@ body {
     width: 100%;
     max-width: 450px;
     height: 100vh;
-    background: rgba(255, 255, 255, 0.9);
-    backdrop-filter: blur(10px);
+    background: rgba(255, 255, 255, 0.95);
+    /* More opaque */
+    /* backdrop-filter: blur(10px); REMOVED/REDUCED FOR PERFORMANCE */
     position: relative;
     box-shadow: var(--card-shadow);
     display: flex;
@@ -589,7 +590,8 @@ h4 {
 }
 
 .switch-link a {
-    color: var(--primary-gold);
+    color: #b78e2d;
+    /* Darker Gold for Contrast > 4.5:1 */
     text-decoration: none;
     font-weight: bold;
     /* Added text-shadow for better readability against light bg */
