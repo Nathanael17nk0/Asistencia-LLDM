@@ -88,15 +88,33 @@ function showDashboard(user) {
 }
 
 function showRegister() {
-    hideAllSections();
-    registerSection.classList.remove('hidden-section');
-    registerSection.classList.add('active-section');
+    console.log("👉 Switching to Register");
+    try {
+        hideAllSections();
+        if (registerSection) {
+            registerSection.classList.remove('hidden-section');
+            registerSection.classList.add('active-section');
+        } else {
+            console.error("Register Section Not Found");
+        }
+    } catch (e) { console.error("ShowRegister Error:", e); }
 }
 
 function showLogin() {
-    hideAllSections();
-    loginSection.classList.remove('hidden-section');
-    loginSection.classList.add('active-section');
+    console.log("👉 Switching to Login");
+    try {
+        hideAllSections();
+        if (loginSection) {
+            loginSection.classList.remove('hidden-section');
+            loginSection.classList.add('active-section');
+        } else {
+            console.error("Login Section Not Found");
+            alert("Error: No se encuentra la sección de Login");
+        }
+    } catch (e) {
+        console.error("ShowLogin Error:", e);
+        alert("Error al cambiar de pantalla: " + e.message);
+    }
 }
 window.appShowLogin = showLogin; // EXPOSE GLOBAL
 
@@ -1748,7 +1766,7 @@ function renderAdminUserList() {
 
         log.forEach(entry => {
             // Filter by Date (Today)
-            if (!entry.timestamp.startsWith(todayISO)) return;
+            if (!entry || !entry.timestamp || !entry.timestamp.startsWith(todayISO)) return;
             // Filter by Service Slot (if selected)
             if (currentFilter !== 'all' && entry.serviceSlot !== currentFilter) return;
 

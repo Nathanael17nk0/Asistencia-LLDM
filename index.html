@@ -132,9 +132,7 @@
                         <span class="btn-content">REGISTRARME <i class="ri-arrow-right-line"></i></span>
                     </button>
 
-                    <p class="switch-link">¿Ya tienes cuenta? <a href="#" id="show-login"
-                            onclick="if(window.appShowLogin) window.appShowLogin(); return false;">Iniciar Sesión</a>
-                    </p>
+                    <p class="switch-link">¿Ya tienes cuenta? <a href="#" id="show-login">Iniciar Sesión</a></p>
                 </form>
             </div>
         </section>
@@ -211,7 +209,7 @@
                     <div class="ring"></div>
                     <div class="ring delay"></div>
                 </div>
-                <p class="instruction-text">PRESIONE PARA REGISTRAR ASISTENCIA</p>
+                <p class="instruction-text">Cargando...</p>
 
                 <!-- NEW: View Roles Button for Users -->
                 <!-- NEW: View Roles Button for Users -->
@@ -622,9 +620,10 @@
         window.addEventListener('load', initSupabaseDirect);
     </script>
 
-    <!-- Service & App -->
-    <script src="js/supabase-service.js"></script>
-    <script src="js/app_v6.js"></script>
+    <!-- Service & App (v6.37 Hotfix) -->
+    <script src="js/supabase-config.js?v=6.37"></script>
+    <script src="js/supabase-service.js?v=6.37"></script>
+    <script src="js/app_v6.js?v=6.37"></script>
 
     <!-- Version Indicator is handled by JS -->
 
