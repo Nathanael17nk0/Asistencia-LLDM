@@ -2389,6 +2389,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         icon.className = "ri-fingerprint-line fingerprint-icon"; // Reset Icon
                         icon.style.color = ""; // Reset Color
                     }
+                    const successMsg = document.getElementById('success-message');
+                    if (successMsg) successMsg.classList.add('hidden'); // FORCE HIDE SUCCESS
                 } else {
                     // Service Closed
                     if (btnContainer) {
@@ -2406,6 +2408,8 @@ document.addEventListener('DOMContentLoaded', () => {
                         icon.className = "ri-fingerprint-line fingerprint-icon"; // Reset Icon
                         icon.style.color = ""; // Reset Color
                     }
+                    const successMsg = document.getElementById('success-message');
+                    if (successMsg) successMsg.classList.add('hidden'); // FORCE HIDE SUCCESS
                 }
             };
 
