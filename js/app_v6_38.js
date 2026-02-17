@@ -3400,13 +3400,20 @@ window.checkNoticesBackground = async function () {
 // Check notices on load
 window.addEventListener('load', () => { setTimeout(checkNoticesBackground, 3000); });
 
-try {
-    await window.DB.addLetter(title, desc, url);
-    alert("Carta agregada");
-    loadLibrary();
-} catch (e) {
-    alert("Error al subir: " + e.message);
-}
+window.addLetter = async function () {
+    const title = prompt("Título de la Carta:");
+    if (!title) return;
+    const desc = prompt("Descripción (Opcional):") || "";
+    const url = prompt("URL del PDF:");
+    if (!url) return;
+
+    try {
+        await window.DB.addLetter(title, desc, url);
+        alert("Carta agregada");
+        loadLibrary();
+    } catch (e) {
+        alert("Error al subir: " + e.message);
+    }
 };
 
 window.deleteLetter = async function (id) {
