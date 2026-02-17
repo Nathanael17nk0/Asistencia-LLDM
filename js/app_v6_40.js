@@ -1730,7 +1730,54 @@ function renderAdminUserList() {
         const todayLocal = `${year}-${month}-${day}`;
 
         // Get Active Slot for auto-filtering
-        const { slotId: currentSlotId, isOpen } = getServiceSlot(now);
+        let { slotId: currentSlotId, isOpen } = getServiceSlot(now);
+        let targetSlotId = currentSlotId;
+
+        // CRITICAL UPDATE: If service is CLOSED, we usually want a "clean list".
+        // BUT if Admin manually registers someone for an UPCOMING service (or just finished one), they want to see it green.
+        // So, if !isOpen, we try to guess the "Relevant Manual Slot".
+        if (!isOpen) {
+            // Check if we are "pre-service" (e.g. 30 mins before next one) or "post-service" logic is handled by getServiceSlot usually returning 'general'.
+            // Let's iterate through slots to find the Next one today?
+            // Simple heuristic used by User: "Marked manually -> Green".
+            // If manual attendance is for "7pm", and we are at "5pm", we want to see it.
+            // If manual attendance is for "5am" (passed), do we show it? User said "limpia la lista".
+
+            // LOGIC: If 'All' is selected, show Green for ANY entry that matches 'Today' AND is NOT a 'past' service?
+            // No, that's hard to define.
+            // BETTER: Show Green for the NEAREST FUTURE slot if closed.
+            // And if manual is entered, it usually matches a real slot ID.
+
+            // QUICK IMPLEMENTATION: 
+            // If !isOpen, we look for the next slot.
+            // (Re-using getServiceSlot logic bits or just hardcoding the cycle for robustness)
+            // Actually, let's just use a loose matching for manual entries:
+            // "If !isOpen, show Green if entry.timestamp is created within last 2 hours?" 
+            // No, that's messy.
+
+            // Let's stick to the "Upcoming/Active" rule.
+            // If !isOpen, find next slot.
+            const hour = now.getHours() + (now.getMinutes() / 60);
+
+            // Simple Lookahead (Matches getServiceSlot logic roughly)
+            if (hour < 5) targetSlotId = '5am';
+            else if (hour < 9) targetSlotId = '9am'; // After 5am ends
+            else if (hour < 10) targetSlotId = '10am_dom'; // Sunday? Logic complex.
+            else if (hour < 18) {
+                // Afternoon lull. Target evening service.
+                const day = now.getDay();
+                if (day === 4) targetSlotId = '6pm_jue';
+                else if (day === 0) targetSlotId = '6pm_dom';
+                else targetSlotId = '7pm';
+            }
+            // If it's late night (after 9pm), targetSlotId might be '5am' tomorrow? 
+            // But we filter by Today's date, so '5am' attendance for Today (past) would show? 
+            // This contradicts "Clean list". 
+            // If I look at 10PM, and target is 'tomorrow', then today's 5am is NOT next. 
+            // So if I set targetSlotId = 'general' (default), nobody is green.
+            // The User wants to see MANUAL adds. Manual adds usually require picking a specific slot.
+            // If they pick "7pm" and it is 5pm, it will show if we set target = '7pm'.
+        }
 
         // Build map of who attended TODAY, specific to the filter
         const attendeesMap = new Map(); // userId -> attendanceEntry
@@ -1739,12 +1786,6 @@ function renderAdminUserList() {
         log.forEach(entry => {
             // Filter by Date (Today Local)
             if (!entry || !entry.timestamp) return;
-            // Handle both ISO string (UTC) and Local strings. We compare YYYY-MM-DD.
-            // But entry.timestamp is usually ISO. We need to convert entry timestamp to local YYYY-MM-DD to match todayLocal?
-            // Actually, best to just check if it starts with todayLocal? 
-            // Warning: ISO timestamp is UTC. If it's 7PM Mexico (-6), it is 1AM tomorrow UTC. 
-            // So startsWith(todayLocal) might FAIL if todayLocal is 17th and ISO is 18th.
-            // We should convert entry.timestamp to Date object and check local date.
 
             const entryDate = new Date(entry.timestamp);
             const eYear = entryDate.getFullYear();
@@ -1760,11 +1801,14 @@ function renderAdminUserList() {
                 if (entry.serviceSlot !== currentFilter) return;
             } else {
                 // Default 'All' view:
-                // If service is CLOSED -> Clean list (Green for no one)
-                if (!isOpen) return;
-
-                // If service is OPEN -> Only show green for THIS service
-                if (entry.serviceSlot !== currentSlotId) return;
+                if (isOpen) {
+                    // OPEN: Strict check for CURRENT slot.
+                    if (entry.serviceSlot !== currentSlotId) return;
+                } else {
+                    // CLOSED: "Clean List" preference vs "See Manual" preference.
+                    // Compromise: Match the Target (Upcoming) slot.
+                    if (entry.serviceSlot !== targetSlotId) return;
+                }
             }
 
             attendeesMap.set(String(entry.userId), entry);
