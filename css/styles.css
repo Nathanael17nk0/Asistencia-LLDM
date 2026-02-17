@@ -136,7 +136,7 @@ h4 {
     flex-direction: column;
     height: 100%;
     width: 100%;
-    animation: fadeIn 0.5s ease-out;
+    /* animation: fadeIn 0.5s ease-out; REMOVED FOR PERFORMANCE (INP Fix) */
 }
 
 @keyframes fadeIn {
@@ -303,7 +303,15 @@ h4 {
 }
 
 .input-group input::placeholder {
-    color: #a0aec0;
+    color: #555;
+    /* Darker grey for contrast */
+    opacity: 1;
+}
+
+#reg-edad {
+    color: #333;
+    /* Ensuring readable text */
+    font-weight: bold;
 }
 
 /* Gold Button -> Now Royal Blue */
@@ -573,15 +581,19 @@ h4 {
 }
 
 .switch-link {
+    text-align: center;
+    margin-top: 15px;
     font-size: 0.9rem;
-    color: var(--text-muted);
-    margin-top: 1rem;
+    color: #444;
+    /* Darker than #718096 */
 }
 
 .switch-link a {
     color: var(--primary-gold);
     text-decoration: none;
-    font-weight: 700;
+    font-weight: bold;
+    /* Added text-shadow for better readability against light bg */
+    text-shadow: 0px 0px 1px rgba(0, 0, 0, 0.1);
 }
 
 .switch-link a:hover {
