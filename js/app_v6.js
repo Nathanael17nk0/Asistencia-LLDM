@@ -841,6 +841,14 @@ function startLocationWatch() {
     // Clear existing to avoid dupes
     if (window.locationInterval) clearInterval(window.locationInterval);
 
+    // 3. Force check on App Resume (Fix for background issue)
+    document.addEventListener('visibilitychange', () => {
+        if (document.visibilityState === 'visible') {
+            console.log("👁️ App Resumed - Forcing Location Check");
+            if (window.checkLocationStatus) window.checkLocationStatus();
+        }
+    });
+
     window.locationInterval = setInterval(() => {
         if (window.checkLocationStatus) window.checkLocationStatus();
     }, 20000);
@@ -2246,7 +2254,31 @@ async function initApp() {
 
                     // 2. Subscribe to Logs and Config
                     window.DB.subscribeToChanges(
-                        (newLog) => { /* log update handled mostly by refresh or internal logic */ },
+                        (newLog) => {
+                            console.log("🔔 Realtime Attendance:", newLog);
+                            // 1. Update Local Log (to match report)
+                            const currentLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+                            // Avoid dupes
+                            if (!currentLog.find(e => e.id === newLog.id || (e.timestamp === newLog.timestamp && e.userId === newLog.user_phone))) {
+                                currentLog.push({
+                                    userId: newLog.user_phone,
+                                    name: newLog.user_name,
+                                    timestamp: newLog.timestamp,
+                                    method: newLog.method,
+                                    serviceSlot: newLog.service_slot,
+                                    serviceName: newLog.service_name,
+                                    id: newLog.id
+                                });
+                                localStorage.setItem('nexus_attendance_log', JSON.stringify(currentLog));
+                            }
+
+                            // 2. Refresh Admin UI (Green Status)
+                            if (typeof renderAdminUserList === 'function' &&
+                                document.getElementById('admin-panel') &&
+                                !document.getElementById('admin-panel').classList.contains('hidden')) {
+                                renderAdminUserList();
+                            }
+                        },
                         (newConfig) => {
                             console.log("🔔 Realtime Config Update:", newConfig);
                             if (newConfig.key === 'church_location') {
