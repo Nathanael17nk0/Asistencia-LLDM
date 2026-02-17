@@ -2245,6 +2245,9 @@ async function initApp() {
                                 !document.getElementById('admin-panel').classList.contains('hidden')) {
                                 renderAdminUserList();
                             }
+
+                            // 3. Refresh User UI (If it's me!)
+                            if (window.updateCheckInStatus) window.updateCheckInStatus();
                         },
                         (newConfig) => {
                             console.log("🔔 Realtime Config Update:", newConfig);
@@ -2312,76 +2315,88 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (!STATE.user) return; // Not logged in
 
                 const now = new Date();
-                const { isOpen } = getServiceSlot(now);
-                const inFence = STATE.inGeofence || (STATE.user.role === 'admin'); // Admins bypass geo? User didn't specify, but nice to have. Assume strict for now unless admin.
-                // Strict per user request: "si no estan dentro de la geocerca... mensaje"
-                // Let's stick to strict logic for "Member Panel".
+                const { isOpen, slotId, slotName } = getServiceSlot(now);
+
+                // 1. CRITICAL: CHECK ATTENDANCE FIRST (Persistence Fix)
+                const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+                const todayISO = now.toISOString().split('T')[0];
+
+                const hasAttended = log.find(e =>
+                    e.userId === STATE.user.phone &&
+                    e.timestamp.startsWith(todayISO) &&
+                    e.serviceSlot === slotId
+                );
 
                 const btnContainer = document.querySelector('.fingerprint-container');
                 const instruction = document.querySelector('.instruction-text');
+                const messageDiv = document.querySelector('.geofence-message');
+                const icon = document.querySelector('.fingerprint-icon');
 
-                if (isOpen && STATE.inGeofence) {
-
-                    // CHECK IF ALREADY ATTENDED
-                    const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-                    const todayISO = now.toISOString().split('T')[0];
-                    const activeSlotId = getServiceSlot(now).slotId;
-
-                    const hasAttended = log.find(e =>
-                        e.userId === STATE.user.phone &&
-                        e.timestamp.startsWith(todayISO) &&
-                        e.serviceSlot === activeSlotId
-                    );
-
-                    if (hasAttended) {
-                        // SUCCESS STATE (Green)
-                        if (btnContainer) {
-                            btnContainer.className = 'fingerprint-container success-state'; // Reset classes
-                            btnContainer.style.opacity = '1';
-                            btnContainer.style.cursor = 'default';
-                        }
-                        if (instruction) {
-                            instruction.textContent = "ASISTENCIA REGISTRADA";
-                            instruction.className = "instruction-text success-text";
-                        }
-                    } else {
-                        // READY STATE (Active & Glowing)
-                        if (btnContainer) {
-                            btnContainer.className = 'fingerprint-container active scanning ready-glow';
-                            btnContainer.style.opacity = '1';
-                            btnContainer.style.cursor = 'pointer';
-                            btnContainer.style.pointerEvents = 'auto'; // ENABLE CLICK
-                        }
-                        if (instruction) {
-                            instruction.textContent = "PRESIONA PARA REGISTRAR";
-                            instruction.className = "instruction-text"; // Reset class
-                            instruction.style.color = "var(--primary-gold)";
-                        }
-                    }
-
-                } else {
-                    // INACTIVE STATE
+                if (hasAttended && isOpen) {
+                    // SHOW SUCCESS STATE PERMANENTLY FOR THIS SLOT
                     if (btnContainer) {
-                        btnContainer.className = 'fingerprint-container'; // Reset
-                        btnContainer.style.opacity = '0.5';
-                        btnContainer.style.cursor = 'not-allowed';
-                        btnContainer.style.pointerEvents = 'none'; // DISABLE CLICK
+                        btnContainer.className = 'fingerprint-container success-state';
+                        btnContainer.classList.remove('hidden-geo'); // Ensure visible
+                        btnContainer.style.opacity = '1';
+                        btnContainer.style.pointerEvents = 'none'; // Disable click
+                    }
+                    if (icon) {
+                        // icon.className = "ri-checkbox-circle-fill fingerprint-icon"; // If icon exists
+                        // icon.style.color = "var(--success)";
                     }
                     if (instruction) {
-                        instruction.className = "instruction-text"; // Reset
-                        if (!isOpen) {
-                            instruction.textContent = "FUERA DE HORARIO DE ORACIÓN";
-                            instruction.style.color = "var(--text-muted)";
-                        } else {
-                            // Check if we have a valid target
-                            if (STATE.targetLocation && STATE.targetLocation.lat === 0) {
-                                instruction.textContent = "BUSCANDO UBICACIÓN DEL TEMPLO...";
-                                instruction.style.color = "var(--warning)";
-                            } else if (!STATE.inGeofence) {
-                                instruction.textContent = "ACÉRCATE AL TEMPLO PARA REGISTRAR";
-                                instruction.style.color = "var(--danger)";
-                            }
-                        }
+                        instruction.innerHTML = `✅ ASISTENCIA REGISTRADA<br><small>${slotName || 'Culto'}</small>`;
+                        instruction.classList.remove('hidden');
+                        instruction.className = "instruction-text success-text";
+                        instruction.style.color = "var(--success)";
+                    }
+                    if (messageDiv) messageDiv.style.display = 'none';
+                    return; // EXIT - DO NOT CHECK GEOFENCE
+                }
+
+                // 2. Geofence Logic (Only if not attended)
+                const inFence = STATE.inGeofence || (STATE.user.role === 'admin');
+
+                if (isOpen && inFence) {
+                    // Ready to Scan
+                    if (btnContainer) {
+                        btnContainer.className = 'fingerprint-container active scanning ready-glow';
+                        btnContainer.classList.remove('hidden-geo');
+                        btnContainer.style.opacity = '1';
+                        btnContainer.style.cursor = 'pointer';
+                        btnContainer.style.pointerEvents = 'auto'; // Enable
+                    }
+                    if (instruction) {
+                        instruction.textContent = "PRESIONA PARA REGISTRAR";
+                        instruction.className = "instruction-text";
+                        instruction.classList.remove('hidden');
+                        instruction.style.color = "var(--primary-gold)";
+                    }
+                    if (messageDiv) messageDiv.style.display = 'none';
+
+                } else if (isOpen && !inFence) {
+                    // Out of Range
+                    if (btnContainer) {
+                        btnContainer.className = 'fingerprint-container';
+                        btnContainer.classList.add('hidden-geo'); // Hide button if far
+                    }
+                    if (messageDiv) {
+                        messageDiv.style.display = 'block';
+                        messageDiv.innerHTML = `<i class="ri-map-pin-user-fill"></i> ACÉRCATE AL TEMPLO<br><small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
+                    }
+                    if (instruction) instruction.classList.add('hidden'); // Hide text if far
+                } else {
+                    // Service Closed
+                    if (btnContainer) {
+                        btnContainer.className = 'fingerprint-container';
+                        btnContainer.classList.add('hidden-geo');
+                    }
+                    if (messageDiv) messageDiv.style.display = 'none';
+                    if (instruction) {
+                        instruction.innerHTML = "No hay servicio activo en este momento.";
+                        instruction.classList.remove('hidden');
+                        instruction.className = "instruction-text";
+                        instruction.style.color = "var(--text-muted)";
                     }
                 }
             };
