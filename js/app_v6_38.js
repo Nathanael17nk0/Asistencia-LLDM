@@ -268,8 +268,8 @@ async function handleLogin(e) {
         const cleanPhone = String(phone).trim();
         const cleanPass = String(password).trim();
 
-        const cleanPhone = String(phone).trim();
-        const cleanPass = String(password).trim();
+        // Duplicate declarations removed
+
 
         console.log(`🔑 Login Attempt: ${cleanPhone}`);
         // Force UI update to show action
