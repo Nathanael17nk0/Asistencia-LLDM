@@ -2385,6 +2385,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         messageDiv.innerHTML = `<i class="ri-map-pin-user-fill"></i> ACÉRCATE AL TEMPLO<br><small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
                     }
                     if (instruction) instruction.classList.add('hidden'); // Hide text if far
+                    if (icon) {
+                        icon.className = "ri-fingerprint-line fingerprint-icon"; // Reset Icon
+                        icon.style.color = ""; // Reset Color
+                    }
                 } else {
                     // Service Closed
                     if (btnContainer) {
@@ -2397,6 +2401,10 @@ document.addEventListener('DOMContentLoaded', () => {
                         instruction.classList.remove('hidden');
                         instruction.className = "instruction-text";
                         instruction.style.color = "var(--text-muted)";
+                    }
+                    if (icon) {
+                        icon.className = "ri-fingerprint-line fingerprint-icon"; // Reset Icon
+                        icon.style.color = ""; // Reset Color
                     }
                 }
             };
