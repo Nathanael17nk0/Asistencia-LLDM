@@ -120,7 +120,11 @@ window.appShowLogin = showLogin; // EXPOSE GLOBAL
 
 const showLoginBtn = document.getElementById('show-login');
 const showRegisterBtn = document.getElementById('show-register');
-if (showLoginBtn) showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+if (showLoginBtn) {
+    showLoginBtn.style.border = "2px solid red"; // DEBUG VISUAL CONFIRMATION
+    showLoginBtn.innerText = "Iniciar Sesión (v6.38)"; // DEBUG TEXT
+    showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+}
 if (showRegisterBtn) showRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); showRegister(); });
 
 // --- REGISTER LOGIC ---
