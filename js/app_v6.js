@@ -1731,7 +1731,7 @@ function renderAdminUserList() {
 
         log.forEach(entry => {
             // Filter by Date (Today)
-            if (!entry.timestamp.startsWith(todayISO)) return;
+            if (!entry || !entry.timestamp || !entry.timestamp.startsWith(todayISO)) return;
             // Filter by Service Slot (if selected)
             if (currentFilter !== 'all' && entry.serviceSlot !== currentFilter) return;
 
