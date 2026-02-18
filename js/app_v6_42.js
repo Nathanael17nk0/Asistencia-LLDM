@@ -2691,14 +2691,19 @@ document.addEventListener('DOMContentLoaded', () => {
     // Init Logic
     try {
         seedScheduleData();
-        initApp().then(() => {
-            // Safe Init after Main App
-            initAdminFeatures();
-
-            // UNSTUCK LOADING
-            const loader = document.getElementById('loading-screen');
-            if (loader) loader.style.display = 'none';
-        });
+        // UNSTUCK LOADING (Always run, even if init fails)
+        initApp()
+            .then(() => {
+                initAdminFeatures();
+            })
+            .catch(err => {
+                console.error("Init Failed:", err);
+                alert("Error iniciando app: " + err.message);
+            })
+            .finally(() => {
+                const loader = document.getElementById('loading-screen');
+                if (loader) loader.style.display = 'none';
+            });
     } catch (e) {
         console.error(e);
         alert("ERROR CRITICO AL INICIAR APP:\n" + e.message);

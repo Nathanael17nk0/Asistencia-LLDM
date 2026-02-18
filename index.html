@@ -536,6 +536,17 @@
             }
         }
 
+        window.onerror = function (msg, url, lineNo, columnNo, error) {
+            const string = msg.toLowerCase();
+            const substring = "script error";
+            if (string.indexOf(substring) > -1) {
+                updateStatus('❌ Error de Script (Ver Consola)', 'red');
+            } else {
+                updateStatus(`❌ Error: ${msg} (Línea ${lineNo})`, 'red');
+            }
+            return false;
+        };
+
         function initSupabaseDirect() {
             if (window.sbClient) return;
 
@@ -559,10 +570,10 @@
         window.addEventListener('load', initSupabaseDirect);
     </script>
 
-    <!-- Service & App (v6.42 UI Fixes) -->
-    <script src="js/supabase-config.js?v=6.42"></script>
-    <script src="js/supabase-service.js?v=6.42"></script>
-    <script src="js/app_v6_42.js?v=6.42"></script>
+    <!-- Service & App (v6.43 Debug Mode) -->
+    <script src="js/supabase-config.js?v=6.43"></script>
+    <script src="js/supabase-service.js?v=6.43"></script>
+    <script src="js/app_v6_42.js?v=6.43"></script>
 
     <!-- Version Indicator is handled by JS but fallback here -->
 
