@@ -102,8 +102,9 @@ window.appShowLogin = showLogin; // EXPOSE GLOBAL
 
 const showLoginBtn = document.getElementById('show-login');
 const showRegisterBtn = document.getElementById('show-register');
-if (showLoginBtn) showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
-if (showRegisterBtn) showRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); showRegister(); });
+// MOVED TO DOMContentLoaded BINDING TO PREVENT NULL ERRORS
+// if (showLoginBtn) showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+// if (showRegisterBtn) showRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); showRegister(); });
 
 // --- REGISTER LOGIC ---
 // Age Calc
@@ -356,8 +357,17 @@ async function handleLogin(e) {
             }
         }
 
+        if (window.DB && !window.sbClient) {
+            // DB exists but Client missing?
+            console.warn("Supabase Client missing in handleLogin");
+        }
+
         resetButton();
-        alert("❌ CREDENCIALES INCORRECTAS\n\nNo encontramos este usuario ni localmente ni en la nube.\nVerifica el número y contraseña.");
+        if (!window.DB || !window.sbClient) {
+            alert("⚠️ SIN CONEXIÓN A LA NUBE\n\nNo encontramos este usuario localmente y no hay conexión con la base de datos.\n\nPor favor:\n1. Revisa tu internet.\n2. Recarga la página.\n3. Si eres Admin, usa '0000'.");
+        } else {
+            alert("❌ CREDENCIALES INCORRECTAS\n\nNo encontramos este usuario ni localmente ni en la nube.\nVerifica el número y contraseña.");
+        }
     } catch (criticalErr) {
         alert("CRITICAL LOGIN ERROR: " + criticalErr.message);
         console.error(criticalErr);
