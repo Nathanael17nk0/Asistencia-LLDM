@@ -2352,13 +2352,7 @@ async function initApp() {
                                 if (typeof loadTheme === 'function') loadTheme();
                             }
                         }
-                    )
-                        .subscribe((status) => {
-                            console.log("Realtime Status:", status);
-                            if (status === 'SUBSCRIBED') {
-                                if (typeof updateStatus === 'function') updateStatus("✅ SINCRONIZADO EN VIVO", "#2ecc71");
-                            }
-                        });
+                    );
                 };
                 startRealtime();
 
