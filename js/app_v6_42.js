@@ -3214,10 +3214,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.36) ---
+// --- VERSION INDICATOR (v6.44) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.42 (Main UI Fixes)";
-    v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#aaa; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
+    v.innerText = "v6.44 (Crash Fix)";
+    v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
