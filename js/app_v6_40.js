@@ -2599,104 +2599,104 @@ document.addEventListener('DOMContentLoaded', () => {
             }
         });
     }
-} // End of fingerprintBtn check
+
 
     // Register Logic
     if (registerForm) {
-    registerForm.addEventListener('submit', async (e) => {
-        e.preventDefault();
-        const nombre = document.getElementById('reg-nombre').value;
-        const apellidoP = document.getElementById('reg-paterno').value;
-        const apellidoM = document.getElementById('reg-materno').value;
-        const celular = document.getElementById('reg-celular').value;
-        const password = document.getElementById('reg-password').value;
-        const fullName = `${nombre} ${apellidoP} ${apellidoM}`;
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('reg-nombre').value;
+            const apellidoP = document.getElementById('reg-paterno').value;
+            const apellidoM = document.getElementById('reg-materno').value;
+            const celular = document.getElementById('reg-celular').value;
+            const password = document.getElementById('reg-password').value;
+            const fullName = `${nombre} ${apellidoP} ${apellidoM}`;
 
-        const newUser = {
-            id: 'user-' + Date.now(),
-            phone: String(celular).trim(),
-            password: String(password).trim(),
-            role: 'user',
-            full_name: fullName
-        };
+            const newUser = {
+                id: 'user-' + Date.now(),
+                phone: String(celular).trim(),
+                password: String(password).trim(),
+                role: 'user',
+                full_name: fullName
+            };
 
-        try {
-            // SUPABASE SYNC
-            if (window.DB) {
-                await window.DB.registerUser(newUser);
+            try {
+                // SUPABASE SYNC
+                if (window.DB) {
+                    await window.DB.registerUser(newUser);
+                }
+
+                localStorage.setItem('nexus_account', JSON.stringify(newUser));
+                const allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+                if (!allUsers.find(u => u.phone === newUser.phone)) {
+                    allUsers.push({ ...newUser, createdAt: new Date().toISOString() });
+                    localStorage.setItem('nexus_users', JSON.stringify(allUsers));
+                }
+                localStorage.setItem('nexus_session', 'active');
+                STATE.user = newUser;
+
+                alert(`REGISTRO EXITOSO\nBienvenido, ${nombre}.`);
+
+                // Direct Transition without Reload
+                window.location.hash = ''; // Clear any hash
+                initApp(); // Re-run init to set up UI
+            } catch (err) {
+                console.error("Register Error:", err);
+                // Detailed alert for mobile debugging
+                const msg = err.message || JSON.stringify(err);
+                const hint = err.hint || err.details || '';
+                alert(`❌ ERROR AL GUARDAR:\n\n${msg}\n\n${hint}`);
             }
-
-            localStorage.setItem('nexus_account', JSON.stringify(newUser));
-            const allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-            if (!allUsers.find(u => u.phone === newUser.phone)) {
-                allUsers.push({ ...newUser, createdAt: new Date().toISOString() });
-                localStorage.setItem('nexus_users', JSON.stringify(allUsers));
-            }
-            localStorage.setItem('nexus_session', 'active');
-            STATE.user = newUser;
-
-            alert(`REGISTRO EXITOSO\nBienvenido, ${nombre}.`);
-
-            // Direct Transition without Reload
-            window.location.hash = ''; // Clear any hash
-            initApp(); // Re-run init to set up UI
-        } catch (err) {
-            console.error("Register Error:", err);
-            // Detailed alert for mobile debugging
-            const msg = err.message || JSON.stringify(err);
-            const hint = err.hint || err.details || '';
-            alert(`❌ ERROR AL GUARDAR:\n\n${msg}\n\n${hint}`);
-        }
-    });
-}
-
-// Logout
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-        if (confirm("¿Cerrar sesión?")) {
-            localStorage.removeItem('nexus_session');
-            localStorage.removeItem('nexus_account'); // FIXED: prevent auto-login
-            location.reload();
-        }
-    });
-}
-
-// --- DEBUG BUTTON (To diagnose Cloud Sync) ---
-const debugBtn = document.createElement('button');
-debugBtn.innerHTML = '☁️ Checar Nube';
-debugBtn.className = 'cyber-btn sm secondary';
-debugBtn.style.cssText = "margin-top:10px; width:100%; background:#2c3e50;";
-debugBtn.onclick = async (e) => {
-    e.preventDefault();
-    debugBtn.innerText = "⏳ Buscando...";
-    try {
-        const users = await window.DB.fetchAllUsers();
-        alert(`🔍 DIAGNÓSTICO NUBE:\n\nUsuarios Encontrados: ${users.length}\n\nSi es 0, hay un error de permisos.`);
-        debugBtn.innerText = `✅ Encontrados: ${users.length}`;
-
-        // If users found, force reload to let initApp handle it
-        if (users.length > 0) {
-            if (confirm("¡Datos encontrados! ¿Recargar para entrar?")) window.location.reload();
-        }
-    } catch (err) {
-        alert("❌ ERROR CONEXIÓN: " + err.message);
-        debugBtn.innerText = "❌ Error";
+        });
     }
-};
-// Append to Register Form container (bottom)
-if (registerForm) registerForm.parentElement.appendChild(debugBtn);
 
-// --- END DEBUG ---
+    // Logout
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (confirm("¿Cerrar sesión?")) {
+                localStorage.removeItem('nexus_session');
+                localStorage.removeItem('nexus_account'); // FIXED: prevent auto-login
+                location.reload();
+            }
+        });
+    }
 
-// Init Logic
-try {
-    seedScheduleData();
-    initApp();
-    initAdminFeatures();
-} catch (e) {
-    console.error(e);
-    alert("ERROR CRITICO AL INICIAR APP:\n" + e.message);
-}
+    // --- DEBUG BUTTON (To diagnose Cloud Sync) ---
+    const debugBtn = document.createElement('button');
+    debugBtn.innerHTML = '☁️ Checar Nube';
+    debugBtn.className = 'cyber-btn sm secondary';
+    debugBtn.style.cssText = "margin-top:10px; width:100%; background:#2c3e50;";
+    debugBtn.onclick = async (e) => {
+        e.preventDefault();
+        debugBtn.innerText = "⏳ Buscando...";
+        try {
+            const users = await window.DB.fetchAllUsers();
+            alert(`🔍 DIAGNÓSTICO NUBE:\n\nUsuarios Encontrados: ${users.length}\n\nSi es 0, hay un error de permisos.`);
+            debugBtn.innerText = `✅ Encontrados: ${users.length}`;
+
+            // If users found, force reload to let initApp handle it
+            if (users.length > 0) {
+                if (confirm("¡Datos encontrados! ¿Recargar para entrar?")) window.location.reload();
+            }
+        } catch (err) {
+            alert("❌ ERROR CONEXIÓN: " + err.message);
+            debugBtn.innerText = "❌ Error";
+        }
+    };
+    // Append to Register Form container (bottom)
+    if (registerForm) registerForm.parentElement.appendChild(debugBtn);
+
+    // --- END DEBUG ---
+
+    // Init Logic
+    try {
+        seedScheduleData();
+        initApp();
+        initAdminFeatures();
+    } catch (e) {
+        console.error(e);
+        alert("ERROR CRITICO AL INICIAR APP:\n" + e.message);
+    }
 });
 
 
@@ -3206,7 +3206,7 @@ document.addEventListener('DOMContentLoaded', () => {
 // --- VERSION INDICATOR (v6.36) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.40 (Nuclear Fix)";
+    v.innerText = "v6.41 (Main Stable)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#aaa; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
