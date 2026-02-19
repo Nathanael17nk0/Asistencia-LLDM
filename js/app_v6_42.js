@@ -2438,7 +2438,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (messageDiv) messageDiv.style.display = 'none';
                 return; // EXIT - DO NOT CHECK GEOFENCE
-            }
+            } // Added closing brace here
 
             // 2. Geofence Logic (Only if not attended)
             const inFence = STATE.inGeofence || (STATE.user.role === 'admin');
@@ -3214,10 +3214,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.44) ---
+// --- VERSION INDICATOR (v6.46) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.44 (Crash Fix)";
-    v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
+    v.innerText = "v6.46 (Logic Enforced)";
+    v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,0,255,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
