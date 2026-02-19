@@ -2679,7 +2679,6 @@ document.addEventListener('DOMContentLoaded', () => {
         };
         // Append to Register Form container (bottom)
         if (registerForm) registerForm.parentElement.appendChild(debugBtn);
-
         // --- END DEBUG ---
 
         // Init Logic
@@ -2702,7 +2701,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(e);
             alert("ERROR CRITICO AL INICIAR APP:\n" + e.message);
         }
-    });
+    }); // Close DOMContentLoaded
 
 
 
