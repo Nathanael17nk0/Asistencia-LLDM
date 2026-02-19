@@ -2701,7 +2701,7 @@ document.addEventListener('DOMContentLoaded', () => {
             console.error(e);
             alert("ERROR CRITICO AL INICIAR APP:\n" + e.message);
         }
-    }); // Close DOMContentLoaded
+    });
 
 
 
