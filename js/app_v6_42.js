@@ -3208,10 +3208,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.47) ---
+// --- VERSION INDICATOR (v6.51) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.47 (Rewritten)";
+    v.innerText = "v6.51 (Final Syntax)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });

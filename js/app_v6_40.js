@@ -2348,12 +2348,20 @@ async function initApp() {
                                     ? newConfig.value.text
                                     : newConfig.value;
 
+                                console.log("🎨 Theme Updated Realtime:", text);
                                 localStorage.setItem('nexus_theme', text);
                                 if (typeof loadTheme === 'function') loadTheme();
                             }
                         }
-                    );
+                    )
+                        .subscribe((status) => {
+                            console.log("Realtime Status:", status);
+                            if (status === 'SUBSCRIBED') {
+                                if (typeof updateStatus === 'function') updateStatus("✅ SINCRONIZADO EN VIVO", "#2ecc71");
+                            }
+                        });
                 };
+
                 startRealtime();
 
             } catch (e) {
@@ -2691,8 +2699,14 @@ document.addEventListener('DOMContentLoaded', () => {
     // Init Logic
     try {
         seedScheduleData();
-        initApp();
-        initAdminFeatures();
+        initApp().then(() => {
+            // Safe Init after Main App
+            initAdminFeatures();
+
+            // UNSTUCK LOADING
+            const loader = document.getElementById('loading-screen');
+            if (loader) loader.style.display = 'none';
+        });
     } catch (e) {
         console.error(e);
         alert("ERROR CRITICO AL INICIAR APP:\n" + e.message);
