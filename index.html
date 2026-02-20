@@ -513,9 +513,6 @@
 
     <!-- INLINE SUPABASE CONFIG & DEBUG -->
     <script>
-        const SUPABASE_URL = "https://pmdqpkucejctdodmkoym.supabase.co";
-        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtZHFwa3VjZWpjdGRvZG1rb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NjM2MzMsImV4cCI6MjA4NjAzOTYzM30.KYOCRTl3y0kIQsCc5QK7uPcsxYfhus_sSuUVzv1mvNU";
-
         // Visual Status Bar
         const statusDiv = document.createElement('div');
         statusDiv.id = 'sys-status';
@@ -548,9 +545,12 @@
         };
 
         function initSupabaseDirect() {
-            if (window.sbClient) return;
+            if (window.sbClient) {
+                updateStatus("✅ NUBE CONECTADA", "#2ecc71"); // Green
+                return;
+            }
 
-            if (window.supabase) {
+            if (typeof window.supabase !== 'undefined' && typeof SUPABASE_URL !== 'undefined') {
                 try {
                     window.sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                     console.log("✅ Supabase INIT (Inline)");
@@ -560,7 +560,7 @@
                     updateStatus("❌ ERROR CONFIG NUBE: " + e.message, "red");
                 }
             } else {
-                updateStatus("⚠️ LIBRERÍA SUPABASE NO CARGADA", "orange");
+                updateStatus("⏳ CARGANDO CONFIGURACIÓN DE NUBE...", "orange");
                 setTimeout(initSupabaseDirect, 500);
             }
         }
@@ -570,10 +570,10 @@
         window.addEventListener('load', initSupabaseDirect);
     </script>
 
-    <!-- Service & App (v6.51 Final Syntax) -->
-    <script src="js/supabase-config.js?v=6.51"></script>
-    <script src="js/supabase-service.js?v=6.51"></script>
-    <script src="js/app_v6_42.js?v=6.51"></script>
+    <!-- Service & App (v6.52 Duplicate Fix) -->
+    <script src="js/supabase-config.js?v=6.52"></script>
+    <script src="js/supabase-service.js?v=6.52"></script>
+    <script src="js/app_v6_42.js?v=6.52"></script>
 
     <!-- Version Indicator is handled by JS but fallback here -->
 
