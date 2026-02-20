@@ -2348,20 +2348,12 @@ async function initApp() {
                                     ? newConfig.value.text
                                     : newConfig.value;
 
-                                console.log("🎨 Theme Updated Realtime:", text);
                                 localStorage.setItem('nexus_theme', text);
                                 if (typeof loadTheme === 'function') loadTheme();
                             }
                         }
-                    )
-                        .subscribe((status) => {
-                            console.log("Realtime Status:", status);
-                            if (status === 'SUBSCRIBED') {
-                                if (typeof updateStatus === 'function') updateStatus("✅ SINCRONIZADO EN VIVO", "#2ecc71");
-                            }
-                        });
+                    );
                 };
-
                 startRealtime();
 
             } catch (e) {
@@ -2401,42 +2393,40 @@ document.addEventListener('DOMContentLoaded', () => {
                 { enableHighAccuracy: true, timeout: 5000 }
             );
         }
+    }
 
-        // CHECK-IN BUTTON LOGIC
-        if (fingerprintBtn) {
-            // UI State Updater
-            window.updateCheckInStatus = function () {
-                if (!STATE.user) return; // Not logged in
+    // CHECK-IN BUTTON LOGIC
+    if (fingerprintBtn) {
+        // UI State Updater
+        // UI State Updater (Rewritten v6.47)
+        window.updateCheckInStatus = function () {
+            if (!STATE.user) return; // Guard: Must be logged in
 
-                const now = new Date();
-                const { isOpen, slotId, slotName } = getServiceSlot(now);
+            const now = new Date();
+            const { isOpen, slotId, slotName } = getServiceSlot(now);
 
-                // 1. CRITICAL: CHECK ATTENDANCE FIRST (Persistence Fix)
-                const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-                const todayISO = now.toISOString().split('T')[0];
+            // 1. Persistence Check
+            const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+            const todayISO = now.toISOString().split('T')[0];
 
-                const hasAttended = log.find(e =>
-                    e.userId === STATE.user.phone &&
-                    e.timestamp.startsWith(todayISO) &&
-                    e.serviceSlot === slotId
-                );
+            const hasAttended = log.find(e =>
+                e.userId === STATE.user.phone &&
+                e.timestamp.startsWith(todayISO) &&
+                e.serviceSlot === slotId
+            );
 
-                const btnContainer = document.querySelector('.fingerprint-container');
-                const instruction = document.querySelector('.instruction-text');
-                const messageDiv = document.querySelector('.geofence-message');
-                const icon = document.querySelector('.fingerprint-icon');
+            const btnContainer = document.querySelector('.fingerprint-container');
+            const instruction = document.querySelector('.instruction-text');
+            const messageDiv = document.querySelector('.geofence-message');
+            const icon = document.querySelector('.fingerprint-icon');
 
-                if (hasAttended && isOpen) {
-                    // SHOW SUCCESS STATE PERMANENTLY FOR THIS SLOT
+            if (hasAttended && isOpen) {
+                // SUCCESS STATE
+                if (btnContainer) {
                     btnContainer.className = 'fingerprint-container success-state';
-                    btnContainer.classList.remove('hidden-geo'); // Ensure visible
+                    btnContainer.classList.remove('hidden-geo');
                     btnContainer.style.opacity = '1';
-                    // btnContainer.style.pointerEvents = 'none'; // REMOVED: Allow interaction (to cancel/verify)
-                    btnContainer.style.cursor = 'pointer'; // Show it is clickable
-                }
-                if (icon) {
-                    // icon.className = "ri-checkbox-circle-fill fingerprint-icon"; // If icon exists
-                    // icon.style.color = "var(--success)";
+                    btnContainer.style.cursor = 'pointer';
                 }
                 if (instruction) {
                     instruction.innerHTML = `✅ ASISTENCIA REGISTRADA<br><small>${slotName || 'Culto'}</small>`;
@@ -2445,20 +2435,20 @@ document.addEventListener('DOMContentLoaded', () => {
                     instruction.style.color = "var(--success)";
                 }
                 if (messageDiv) messageDiv.style.display = 'none';
-                return; // EXIT - DO NOT CHECK GEOFENCE
+                return; // EXIT
             }
 
-            // 2. Geofence Logic (Only if not attended)
-            const inFence = STATE.inGeofence || (STATE.user.role === 'admin');
+            // 2. Geofence & Service Logic
+            const inFence = STATE.inGeofence || (STATE.user && STATE.user.role === 'admin');
 
             if (isOpen && inFence) {
-                // Ready to Scan
+                // READY TO SCAN
                 if (btnContainer) {
                     btnContainer.className = 'fingerprint-container active scanning ready-glow';
                     btnContainer.classList.remove('hidden-geo');
                     btnContainer.style.opacity = '1';
                     btnContainer.style.cursor = 'pointer';
-                    btnContainer.style.pointerEvents = 'auto'; // Enable
+                    btnContainer.style.pointerEvents = 'auto';
                 }
                 if (instruction) {
                     instruction.textContent = "PRESIONA PARA REGISTRAR";
@@ -2469,24 +2459,23 @@ document.addEventListener('DOMContentLoaded', () => {
                 if (messageDiv) messageDiv.style.display = 'none';
 
             } else if (isOpen && !inFence) {
-                // Out of Range
+                // OUT OF RANGE
                 if (btnContainer) {
                     btnContainer.className = 'fingerprint-container';
-                    btnContainer.classList.add('hidden-geo'); // Hide button if far
+                    btnContainer.classList.add('hidden-geo');
                 }
                 if (messageDiv) {
                     messageDiv.style.display = 'block';
                     messageDiv.innerHTML = `<i class="ri-map-pin-user-fill"></i> ACÉRCATE AL TEMPLO<br><small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
                 }
-                if (instruction) instruction.classList.add('hidden'); // Hide text if far
+                if (instruction) instruction.classList.add('hidden');
                 if (icon) {
-                    icon.className = "ri-fingerprint-line fingerprint-icon"; // Reset Icon
-                    icon.style.color = ""; // Reset Color
+                    icon.className = "ri-fingerprint-line fingerprint-icon";
+                    icon.style.color = "";
                 }
-                const successMsg = document.getElementById('success-message');
-                if (successMsg) successMsg.classList.add('hidden'); // FORCE HIDE SUCCESS
+
             } else {
-                // Service Closed
+                // CLOSED
                 if (btnContainer) {
                     btnContainer.className = 'fingerprint-container';
                     btnContainer.classList.add('hidden-geo');
@@ -2499,11 +2488,9 @@ document.addEventListener('DOMContentLoaded', () => {
                     instruction.style.color = "var(--text-muted)";
                 }
                 if (icon) {
-                    icon.className = "ri-fingerprint-line fingerprint-icon"; // Reset Icon
-                    icon.style.color = ""; // Reset Color
+                    icon.className = "ri-fingerprint-line fingerprint-icon";
+                    icon.style.color = "";
                 }
-                const successMsg = document.getElementById('success-message');
-                if (successMsg) successMsg.classList.add('hidden'); // FORCE HIDE SUCCESS
             }
         };
 
@@ -2693,20 +2680,24 @@ document.addEventListener('DOMContentLoaded', () => {
     };
     // Append to Register Form container (bottom)
     if (registerForm) registerForm.parentElement.appendChild(debugBtn);
-
     // --- END DEBUG ---
 
     // Init Logic
     try {
         seedScheduleData();
-        initApp().then(() => {
-            // Safe Init after Main App
-            initAdminFeatures();
-
-            // UNSTUCK LOADING
-            const loader = document.getElementById('loading-screen');
-            if (loader) loader.style.display = 'none';
-        });
+        // UNSTUCK LOADING (Always run, even if init fails)
+        initApp()
+            .then(() => {
+                initAdminFeatures();
+            })
+            .catch(err => {
+                console.error("Init Failed:", err);
+                alert("Error iniciando app: " + err.message);
+            })
+            .finally(() => {
+                const loader = document.getElementById('loading-screen');
+                if (loader) loader.style.display = 'none';
+            });
     } catch (e) {
         console.error(e);
         alert("ERROR CRITICO AL INICIAR APP:\n" + e.message);
@@ -3217,10 +3208,10 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.36) ---
+// --- VERSION INDICATOR (v6.52) ---
 window.addEventListener('load', () => {
     const v = document.createElement('div');
-    v.innerText = "v6.41 (Main Stable)";
-    v.style.cssText = "position:fixed; bottom:2px; right:2px; color:#aaa; font-size:9px; z-index:9999; pointer-events:none; background:rgba(255,255,255,0.7); padding:2px; border-radius:3px;";
+    v.innerText = "v6.52 (Duplicate Fix)";
+    v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });

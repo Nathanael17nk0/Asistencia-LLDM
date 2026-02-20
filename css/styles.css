@@ -187,6 +187,7 @@ h4 {
     /* Bigger flame */
     background: var(--primary-gold-gradient);
     -webkit-background-clip: text;
+    background-clip: text;
     -webkit-text-fill-color: transparent;
     display: block;
 }

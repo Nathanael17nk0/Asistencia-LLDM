@@ -84,28 +84,8 @@ const DB = {
         }));
     },
 
-    // --- REALTIME SUBSCRIPTION ---
-    subscribeToChanges(onUserUpdate, onAttendanceUpdate) {
-        if (!window.sbClient) return;
-
-        console.log("🔌 Conectando a Realtime...");
-
-        window.sbClient
-            .channel('public:attendance_users')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_users' }, payload => {
-                console.log('🔔 Realtime User Change:', payload);
-                if (onUserUpdate) onUserUpdate(payload.new);
-            })
-            .subscribe();
-
-        window.sbClient
-            .channel('public:attendance_log')
-            .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_log' }, payload => {
-                console.log('🔔 Realtime Log Change:', payload);
-                if (onAttendanceUpdate) onAttendanceUpdate(payload.new);
-            })
-            .subscribe();
-    },
+    // --- REALTIME SUBSCRIPTION (Consolidated) ---
+    // (See below for actual implementation)
 
     async removeAttendance(userId, slotId, dateStr) {
         if (!window.sbClient) return;
@@ -120,23 +100,21 @@ const DB = {
         if (error) throw error;
     },
 
-    // Realtime Listener
-    subscribeToChanges(onUpdate, onScheduleUpdate) {
+    // Realtime Listener (Consolidated)
+    subscribeToChanges(onUpdate, onConfigUpdate) {
         if (!window.sbClient) return;
 
-        // SINGLETON CHECK
+        // SINGLETON CHECK (Removed for now to force reconnect attempts)
         if (this.currentSubscription) {
-            console.log("⚠️ Already subscribed to Realtime. Skipping.");
-            return;
+            window.sbClient.removeChannel(this.currentSubscription);
         }
 
         this.currentSubscription = window.sbClient
-            .channel('public:attendance')
+            .channel('public:attendance_main')
             .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_log' }, payload => {
                 console.log('Log Change (Raw):', payload);
 
                 // TRANSFORM PAYLOAD (Snake -> Camel)
-                // App.js expects: { userId, name, serviceSlot, serviceName, timestamp, method }
                 if (payload.new && payload.eventType !== 'DELETE') {
                     payload.new = {
                         userId: payload.new.user_phone,
@@ -148,23 +126,23 @@ const DB = {
                         id: payload.new.id
                     };
                 }
-                // Determine event type if not present (Supabase sends it as 'eventType')
-
-                if (onUpdate) onUpdate(payload, true); // Pass FULL PAYLOAD
+                if (onUpdate) onUpdate(payload.new); // Sending payload.new directly to match app.js expectation
             })
-            // Listen for Any Config Changes
+            // Listen for Config Changes (Theme, Location)
             .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_config' }, payload => {
                 console.log('Config Change:', payload);
-                if (onScheduleUpdate) onScheduleUpdate(payload.new); // Pass full row
+                if (onConfigUpdate) onConfigUpdate(payload.new);
             })
-            // Listen for New Users (for Admin Panel Auto-Refresh)
+            // Listen for New Users
             .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_users' }, payload => {
                 console.log('User Change:', payload);
                 if (window.onUserUpdate) window.onUserUpdate(payload.new);
             })
-            .subscribe();
+            .subscribe((status) => {
+                console.log("Realtime Status:", status);
+            });
 
-        console.log("Subscribed to Realtime Changes (Log, Config & Users)");
+        console.log("Subscribed to Realtime Changes (Main Channel)");
     },
 
     // NEW: Remove Attendance with ID support

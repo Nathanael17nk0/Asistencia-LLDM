@@ -11,7 +11,7 @@
     <link
         href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;500;700;900&family=Rajdhani:wght@300;400;500;600;700&display=swap"
         rel="stylesheet">
-    <link rel="stylesheet" href="css/styles.css?v=6.38">
+    <link rel="stylesheet" href="css/styles.css?v=2">
     <link href="https://cdn.jsdelivr.net/npm/remixicon@3.5.0/fonts/remixicon.css" rel="stylesheet">
 
     <!-- PWA Manifest & Icons -->
@@ -84,28 +84,19 @@
                     <p>REGISTRO DE PERSONAL</p>
                 </div>
                 <form id="register-form">
-                    <!-- 1. PHOTO UPLOAD -->
-                    <div style="text-align:center; margin-bottom:15px;">
-                        <div
-                            style="position:relative; width:100px; height:100px; margin:0 auto; border-radius:50%; background:#eee; overflow:hidden; border:2px solid var(--primary-gold);">
-                            <img id="reg-photo-preview" src="https://ui-avatars.com/api/?name=User&background=random"
-                                style="width:100%; height:100%; object-fit:cover;">
-                            <input type="file" id="reg-photo-input" accept="image/*" capture="user"
-                                style="position:absolute; top:0; left:0; width:100%; height:100%; opacity:0; cursor:pointer;">
+                    <div class="input-row">
+                        <div class="input-group">
+                            <i class="ri-user-line"></i>
+                            <input type="text" id="reg-nombre" placeholder="Nombre" required>
                         </div>
-                        <p style="font-size:0.8rem; color:var(--text-muted); margin-top:5px;">Toca para subir foto</p>
-                    </div>
-
-                    <!-- 2. PERSONAL INFO -->
-                    <div class="input-group">
-                        <i class="ri-user-line"></i>
-                        <input type="text" id="reg-nombre" placeholder="Nombre(s)" required>
                     </div>
                     <div class="input-row">
                         <div class="input-group">
+                            <i class="ri-user-3-line"></i>
                             <input type="text" id="reg-paterno" placeholder="Apellido Paterno" required>
                         </div>
                         <div class="input-group">
+                            <i class="ri-user-3-line"></i>
                             <input type="text" id="reg-materno" placeholder="Apellido Materno" required>
                         </div>
                     </div>
@@ -121,55 +112,16 @@
                         </div>
                     </div>
 
-                    <!-- 3. CONTACT & ADDRESS -->
                     <div class="input-group">
                         <i class="ri-map-pin-line"></i>
                         <input type="text" id="reg-colonia" placeholder="Colonia/Barrio" required>
                     </div>
-                    <div class="input-group">
-                        <i class="ri-home-4-line"></i>
-                        <input type="text" id="reg-address" placeholder="Domicilio (Calle y Número)" required>
-                    </div>
+
                     <div class="input-group">
                         <i class="ri-smartphone-line"></i>
                         <input type="tel" id="reg-celular" placeholder="Número Celular" required>
                     </div>
 
-                    <!-- 4. SPIRITUAL DATES -->
-                    <p style="font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-top:10px;">Fechas
-                        Importantes (Opcional)</p>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <span style="font-size:0.7rem; color:#888;">Bautismo Agua</span>
-                            <input type="date" id="reg-baptism-date" title="Fecha Bautismo Agua">
-                        </div>
-                        <div class="input-group">
-                            <span style="font-size:0.7rem; color:#888;">Espíritu Santo</span>
-                            <input type="date" id="reg-holy-spirit-date" title="Fecha Espíritu Santo">
-                        </div>
-                    </div>
-
-                    <!-- 5. PROFESSIONAL INFO -->
-                    <div class="input-row">
-                        <div class="input-group">
-                            <select id="reg-study-level" class="simple-input"
-                                style="width:100%; border:none; background:transparent; outline:none;">
-                                <option value="" disabled selected>Grado de Estudios</option>
-                                <option value="Primaria">Primaria</option>
-                                <option value="Secundaria">Secundaria</option>
-                                <option value="Preparatoria">Preparatoria/Bachillerato</option>
-                                <option value="Universidad">Universidad/Licenciatura</option>
-                                <option value="Posgrado">Posgrado/Maestría</option>
-                                <option value="Otro">Otro</option>
-                            </select>
-                        </div>
-                        <div class="input-group">
-                            <i class="ri-briefcase-line"></i>
-                            <input type="text" id="reg-profession" placeholder="Profesión / Oficio / Negocio">
-                        </div>
-                    </div>
-
-                    <!-- 6. PASSWORD -->
                     <div class="input-group">
                         <i class="ri-lock-2-line"></i>
                         <input type="password" id="reg-password" placeholder="Crear Contraseña" required>
@@ -180,7 +132,9 @@
                         <span class="btn-content">REGISTRARME <i class="ri-arrow-right-line"></i></span>
                     </button>
 
-                    <p class="switch-link">¿Ya tienes cuenta? <a href="#" id="show-login">Iniciar Sesión</a></p>
+                    <p class="switch-link">¿Ya tienes cuenta? <a href="#" id="show-login"
+                            onclick="if(window.appShowLogin) window.appShowLogin(); return false;">Iniciar Sesión</a>
+                    </p>
                 </form>
             </div>
         </section>
@@ -231,13 +185,6 @@
                         alt="User">
                 </div>
                 <button id="logout-btn" class="mini-icon-btn"><i class="ri-shut-down-line"></i></button>
-                <!-- v2.0 NOTIFICATION BELL -->
-                <button id="notices-btn" class="mini-icon-btn" onclick="window.openNotices()"
-                    style="margin-right:5px; position:relative;">
-                    <i class="ri-notification-3-line"></i>
-                    <span id="notice-badge" class="hidden"
-                        style="position:absolute; top:-2px; right:-2px; width:10px; height:10px; background:red; border-radius:50%; border:1px solid white;"></span>
-                </button>
             </div>
 
             <!-- Main Center Action -->
@@ -265,62 +212,6 @@
                     onclick="window.manuallyOpenSchedule()">
                     <i class="ri-calendar-check-line"></i> LISTA DE ORACIONES
                 </button>
-
-                <!-- v2.0 APOSTOLIC LETTERS BUTTON -->
-                <button id="view-library-btn" class="cyber-btn sm gold-btn" style="margin-top:10px;"
-                    onclick="window.openLibrary()">
-                    <i class="ri-book-open-line"></i> CARTAS APOSTÓLICAS
-                </button>
-
-                <!-- v2.0 LIBRARY SECTION -->
-                <div id="library-section" class="hidden-section full-screen-dashboard"
-                    style="background:var(--bg-color);">
-                    <div class="card-header" style="margin-top:20px; position:relative;">
-                        <button onclick="window.closeLibrary()"
-                            style="position:absolute; left:20px; top:0; background:none; border:none; font-size:1.5rem; color:var(--text-main);"><i
-                                class="ri-arrow-left-line"></i></button>
-                        <h2>BIBLIOTECA</h2>
-                        <p>CARTAS APOSTÓLICAS</p>
-                    </div>
-
-                    <div id="library-admin-controls" class="hidden" style="text-align:center; margin-bottom:10px;">
-                        <button onclick="window.promptAddLetter()" class="cyber-btn sm"><i
-                                class="ri-upload-cloud-line"></i> SUBIR CARTA</button>
-                    </div>
-
-                    <div id="library-container" style="padding:20px; overflow-y:auto; padding-bottom:100px;">
-                        <!-- Letters injected here -->
-                        <p style="text-align:center; color:#aaa;">Cargando biblioteca...</p>
-                    </div>
-                </div>
-
-                <!-- v2.0 APOSTOLIC LETTERS BUTTON -->
-                <button id="view-library-btn" class="cyber-btn sm gold-btn" style="margin-top:10px;"
-                    onclick="window.openLibrary()">
-                    <i class="ri-book-open-line"></i> CARTAS APOSTÓLICAS
-                </button>
-
-                <!-- v2.0 LIBRARY SECTION -->
-                <div id="library-section" class="hidden-section full-screen-dashboard"
-                    style="background:var(--bg-color);">
-                    <div class="card-header" style="margin-top:20px; position:relative;">
-                        <button onclick="window.closeLibrary()"
-                            style="position:absolute; left:20px; top:0; background:none; border:none; font-size:1.5rem; color:var(--text-main);"><i
-                                class="ri-arrow-left-line"></i></button>
-                        <h2>BIBLIOTECA</h2>
-                        <p>CARTAS APOSTÓLICAS</p>
-                    </div>
-
-                    <div id="library-admin-controls" class="hidden" style="text-align:center; margin-bottom:10px;">
-                        <button onclick="window.promptAddLetter()" class="cyber-btn sm"><i
-                                class="ri-upload-cloud-line"></i> SUBIR CARTA</button>
-                    </div>
-
-                    <div id="library-container" style="padding:20px; overflow-y:auto; padding-bottom:100px;">
-                        <!-- Letters injected here -->
-                        <p style="text-align:center; color:#aaa;">Cargando biblioteca...</p>
-                    </div>
-                </div>
 
                 <!-- Hidden Success Message Area -->
                 <div id="success-message" class="success-popup hidden">
@@ -622,6 +513,9 @@
 
     <!-- INLINE SUPABASE CONFIG & DEBUG -->
     <script>
+        const SUPABASE_URL = "https://pmdqpkucejctdodmkoym.supabase.co";
+        const SUPABASE_ANON_KEY = "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InBtZHFwa3VjZWpjdGRvZG1rb3ltIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzA0NjM2MzMsImV4cCI6MjA4NjAzOTYzM30.KYOCRTl3y0kIQsCc5QK7uPcsxYfhus_sSuUVzv1mvNU";
+
         // Visual Status Bar
         const statusDiv = document.createElement('div');
         statusDiv.id = 'sys-status';
@@ -642,24 +536,10 @@
             }
         }
 
-        window.onerror = function (msg, url, lineNo, columnNo, error) {
-            const string = msg.toLowerCase();
-            const substring = "script error";
-            if (string.indexOf(substring) > -1) {
-                updateStatus('❌ Error de Script (Ver Consola)', 'red');
-            } else {
-                updateStatus(`❌ Error: ${msg} (Línea ${lineNo})`, 'red');
-            }
-            return false;
-        };
-
         function initSupabaseDirect() {
-            if (window.sbClient) {
-                updateStatus("✅ NUBE CONECTADA", "#2ecc71"); // Green
-                return;
-            }
+            if (window.sbClient) return;
 
-            if (typeof window.supabase !== 'undefined' && typeof SUPABASE_URL !== 'undefined') {
+            if (window.supabase) {
                 try {
                     window.sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
                     console.log("✅ Supabase INIT (Inline)");
@@ -669,7 +549,7 @@
                     updateStatus("❌ ERROR CONFIG NUBE: " + e.message, "red");
                 }
             } else {
-                updateStatus("⏳ CARGANDO CONFIGURACIÓN DE NUBE...", "orange");
+                updateStatus("⚠️ LIBRERÍA SUPABASE NO CARGADA", "orange");
                 setTimeout(initSupabaseDirect, 500);
             }
         }
@@ -679,12 +559,12 @@
         window.addEventListener('load', initSupabaseDirect);
     </script>
 
-    <!-- Service & App (v6.52 Duplicate Fix) -->
-    <script src="js/supabase-config.js?v=6.52"></script>
-    <script src="js/supabase-service.js?v=6.52"></script>
-    <script src="js/app_v6_42.js?v=6.52"></script>
+    <!-- Service & App (v6.40 Nuclear Fix) -->
+    <script src="js/supabase-config.js?v=6.40"></script>
+    <script src="js/supabase-service.js?v=6.40"></script>
+    <script src="js/app_v6_40.js?v=6.40"></script>
 
-    <!-- Version Indicator is handled by JS -->
+    <!-- Version Indicator is handled by JS but fallback here -->
 
     <script>
         // Fallback: If app doesn't init in 2 seconds, force show login
