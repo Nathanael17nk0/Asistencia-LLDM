@@ -2386,7 +2386,9 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (loginForm) loginForm.addEventListener('submit', handleLogin);
 
-    if (showLoginBtn) showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+    if (showLoginBtn) {
+        showLoginBtn.addEventListener('click', (e) => { e.preventDefault(); showLogin(); });
+    }
     if (showRegisterBtn) showRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); showRegister(); });
 
     if (fingerprintBtn) {
