@@ -2393,315 +2393,316 @@ document.addEventListener('DOMContentLoaded', () => {
                 { enableHighAccuracy: true, timeout: 5000 }
             );
         }
+    }
 
-        // CHECK-IN BUTTON LOGIC
-        if (fingerprintBtn) {
-            // UI State Updater
-            // UI State Updater (Rewritten v6.47)
-            window.updateCheckInStatus = function () {
-                if (!STATE.user) return; // Guard: Must be logged in
+    // CHECK-IN BUTTON LOGIC
+    if (fingerprintBtn) {
+        // UI State Updater
+        // UI State Updater (Rewritten v6.47)
+        window.updateCheckInStatus = function () {
+            if (!STATE.user) return; // Guard: Must be logged in
 
-                const now = new Date();
-                const { isOpen, slotId, slotName } = getServiceSlot(now);
+            const now = new Date();
+            const { isOpen, slotId, slotName } = getServiceSlot(now);
 
-                // 1. Persistence Check
-                const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-                const todayISO = now.toISOString().split('T')[0];
+            // 1. Persistence Check
+            const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+            const todayISO = now.toISOString().split('T')[0];
 
-                const hasAttended = log.find(e =>
-                    e.userId === STATE.user.phone &&
-                    e.timestamp.startsWith(todayISO) &&
-                    e.serviceSlot === slotId
-                );
+            const hasAttended = log.find(e =>
+                e.userId === STATE.user.phone &&
+                e.timestamp.startsWith(todayISO) &&
+                e.serviceSlot === slotId
+            );
 
-                const btnContainer = document.querySelector('.fingerprint-container');
-                const instruction = document.querySelector('.instruction-text');
-                const messageDiv = document.querySelector('.geofence-message');
-                const icon = document.querySelector('.fingerprint-icon');
+            const btnContainer = document.querySelector('.fingerprint-container');
+            const instruction = document.querySelector('.instruction-text');
+            const messageDiv = document.querySelector('.geofence-message');
+            const icon = document.querySelector('.fingerprint-icon');
 
-                if (hasAttended && isOpen) {
-                    // SUCCESS STATE
-                    if (btnContainer) {
-                        btnContainer.className = 'fingerprint-container success-state';
-                        btnContainer.classList.remove('hidden-geo');
-                        btnContainer.style.opacity = '1';
-                        btnContainer.style.cursor = 'pointer';
-                    }
-                    if (instruction) {
-                        instruction.innerHTML = `✅ ASISTENCIA REGISTRADA<br><small>${slotName || 'Culto'}</small>`;
-                        instruction.classList.remove('hidden');
-                        instruction.className = "instruction-text success-text";
-                        instruction.style.color = "var(--success)";
-                    }
-                    if (messageDiv) messageDiv.style.display = 'none';
-                    return; // EXIT
+            if (hasAttended && isOpen) {
+                // SUCCESS STATE
+                if (btnContainer) {
+                    btnContainer.className = 'fingerprint-container success-state';
+                    btnContainer.classList.remove('hidden-geo');
+                    btnContainer.style.opacity = '1';
+                    btnContainer.style.cursor = 'pointer';
+                }
+                if (instruction) {
+                    instruction.innerHTML = `✅ ASISTENCIA REGISTRADA<br><small>${slotName || 'Culto'}</small>`;
+                    instruction.classList.remove('hidden');
+                    instruction.className = "instruction-text success-text";
+                    instruction.style.color = "var(--success)";
+                }
+                if (messageDiv) messageDiv.style.display = 'none';
+                return; // EXIT
+            }
+
+            // 2. Geofence & Service Logic
+            const inFence = STATE.inGeofence || (STATE.user && STATE.user.role === 'admin');
+
+            if (isOpen && inFence) {
+                // READY TO SCAN
+                if (btnContainer) {
+                    btnContainer.className = 'fingerprint-container active scanning ready-glow';
+                    btnContainer.classList.remove('hidden-geo');
+                    btnContainer.style.opacity = '1';
+                    btnContainer.style.cursor = 'pointer';
+                    btnContainer.style.pointerEvents = 'auto';
+                }
+                if (instruction) {
+                    instruction.textContent = "PRESIONA PARA REGISTRAR";
+                    instruction.className = "instruction-text";
+                    instruction.classList.remove('hidden');
+                    instruction.style.color = "var(--primary-gold)";
+                }
+                if (messageDiv) messageDiv.style.display = 'none';
+
+            } else if (isOpen && !inFence) {
+                // OUT OF RANGE
+                if (btnContainer) {
+                    btnContainer.className = 'fingerprint-container';
+                    btnContainer.classList.add('hidden-geo');
+                }
+                if (messageDiv) {
+                    messageDiv.style.display = 'block';
+                    messageDiv.innerHTML = `<i class="ri-map-pin-user-fill"></i> ACÉRCATE AL TEMPLO<br><small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
+                }
+                if (instruction) instruction.classList.add('hidden');
+                if (icon) {
+                    icon.className = "ri-fingerprint-line fingerprint-icon";
+                    icon.style.color = "";
                 }
 
-                // 2. Geofence & Service Logic
-                const inFence = STATE.inGeofence || (STATE.user && STATE.user.role === 'admin');
-
-                if (isOpen && inFence) {
-                    // READY TO SCAN
-                    if (btnContainer) {
-                        btnContainer.className = 'fingerprint-container active scanning ready-glow';
-                        btnContainer.classList.remove('hidden-geo');
-                        btnContainer.style.opacity = '1';
-                        btnContainer.style.cursor = 'pointer';
-                        btnContainer.style.pointerEvents = 'auto';
-                    }
-                    if (instruction) {
-                        instruction.textContent = "PRESIONA PARA REGISTRAR";
-                        instruction.className = "instruction-text";
-                        instruction.classList.remove('hidden');
-                        instruction.style.color = "var(--primary-gold)";
-                    }
-                    if (messageDiv) messageDiv.style.display = 'none';
-
-                } else if (isOpen && !inFence) {
-                    // OUT OF RANGE
-                    if (btnContainer) {
-                        btnContainer.className = 'fingerprint-container';
-                        btnContainer.classList.add('hidden-geo');
-                    }
-                    if (messageDiv) {
-                        messageDiv.style.display = 'block';
-                        messageDiv.innerHTML = `<i class="ri-map-pin-user-fill"></i> ACÉRCATE AL TEMPLO<br><small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
-                    }
-                    if (instruction) instruction.classList.add('hidden');
-                    if (icon) {
-                        icon.className = "ri-fingerprint-line fingerprint-icon";
-                        icon.style.color = "";
-                    }
-
-                } else {
-                    // CLOSED
-                    if (btnContainer) {
-                        btnContainer.className = 'fingerprint-container';
-                        btnContainer.classList.add('hidden-geo');
-                    }
-                    if (messageDiv) messageDiv.style.display = 'none';
-                    if (instruction) {
-                        instruction.innerHTML = "No hay servicio activo en este momento.";
-                        instruction.classList.remove('hidden');
-                        instruction.className = "instruction-text";
-                        instruction.style.color = "var(--text-muted)";
-                    }
-                    if (icon) {
-                        icon.className = "ri-fingerprint-line fingerprint-icon";
-                        icon.style.color = "";
-                    }
+            } else {
+                // CLOSED
+                if (btnContainer) {
+                    btnContainer.className = 'fingerprint-container';
+                    btnContainer.classList.add('hidden-geo');
                 }
-            };
-
-            // Run update loop
-            setInterval(updateCheckInStatus, 5000);
-
-            fingerprintBtn.addEventListener('click', () => {
-                // 0. Login Check
-                if (!STATE.user) return showLogin();
-
-                const now = new Date();
-                const { slotId, slotName, isOpen } = getServiceSlot(now);
-
-                // 1. Time Check
-                if (!isOpen) {
-                    alert("⛔ FUERA DE HORARIO\n\nEl registro solo está activo 15 min antes y hasta 20 min después del culto.");
-                    return;
+                if (messageDiv) messageDiv.style.display = 'none';
+                if (instruction) {
+                    instruction.innerHTML = "No hay servicio activo en este momento.";
+                    instruction.classList.remove('hidden');
+                    instruction.className = "instruction-text";
+                    instruction.style.color = "var(--text-muted)";
                 }
-
-                // 2. Geolocation Check
-                // Bypass for Admin if needed? User didn't say. Let's enforce for everyone on this panel logic.
-                if (!STATE.inGeofence) {
-                    // If mocked or 0,0, might be annoying.
-                    // Assuming STATE.inGeofence is correctly calculated in separate watcher.
-                    alert("📍 NO ESTÁS EN EL TEMPLO\n\nDebes estar dentro de las instalaciones para registrar asistencia.");
-                    return;
+                if (icon) {
+                    icon.className = "ri-fingerprint-line fingerprint-icon";
+                    icon.style.color = "";
                 }
-
-                // 3. Check Previous Attendance (For THIS service)
-                const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-                const todayISO = now.toISOString().split('T')[0];
-
-                const hasAttendedService = log.find(e =>
-                    e.userId === STATE.user.phone &&
-                    e.timestamp.startsWith(todayISO) &&
-                    e.serviceSlot === slotId
-                );
-
-                if (hasAttendedService) {
-                    if (confirm(`⚠️ YA REGISTRADO\n\n¿Deseas CANCELAR tu asistencia de hoy para: ${slotName}?`)) {
-                        // REMOVE LOCAL
-                        const idx = log.findIndex(e => e === hasAttendedService);
-                        if (idx > -1) log.splice(idx, 1);
-                        localStorage.setItem('nexus_attendance_log', JSON.stringify(log));
-
-                        // REMOVE CLOUD
-                        if (window.DB) {
-                            const logId = hasAttendedService.id || null;
-                            window.DB.removeAttendance(STATE.user.phone, slotId, todayISO, logId)
-                                .catch(console.error);
-                        }
-
-                        // UI UPDATE
-                        alert("🗑️ Asistencia Cancelada.");
-                        updateCheckInStatus();
-                    }
-                    return;
-                }
-
-                // 4. Register
-                const confirmMsg = `¿Registrar asistencia para ${slotName}?`;
-                if (confirm(confirmMsg)) {
-                    log.push({
-                        userId: STATE.user.phone,
-                        timestamp: new Date().toISOString(),
-                        method: 'fingerprint_scan',
-                        serviceSlot: slotId,
-                        serviceName: slotName
-                    });
-                    // SUPABASE SYNC
-                    if (window.DB) {
-                        try {
-                            window.DB.logAttendance({
-                                userId: STATE.user.phone,
-                                name: STATE.user.full_name || STATE.user.name,
-                                method: 'fingerprint_scan',
-                                serviceSlot: slotId,
-                                serviceName: slotName,
-                                timestamp: new Date().toISOString()
-                            });
-                        } catch (e) {
-                            console.error("Supabase Log Error", e);
-                            // Continue to local storage even if online fails?
-                        }
-                    }
-
-                    localStorage.setItem('nexus_attendance_log', JSON.stringify(log));
-
-                    // Success UI
-                    const successMsg = document.getElementById('success-message');
-                    const timeStamp = document.getElementById('time-stamp');
-                    if (successMsg) {
-                        successMsg.classList.remove('hidden');
-                        if (timeStamp) timeStamp.textContent = new Date().toLocaleTimeString();
-                        setTimeout(() => successMsg.classList.add('hidden'), 3000);
-                    }
-                    alert("✅ ASISTENCIA REGISTRADA EXITOSAMENTE");
-
-                    // Refresh UI immediately
-                    updateCheckInStatus();
-                }
-            });
-        }
-
-
-        // Register Logic
-        if (registerForm) {
-            registerForm.addEventListener('submit', async (e) => {
-                e.preventDefault();
-                const nombre = document.getElementById('reg-nombre').value;
-                const apellidoP = document.getElementById('reg-paterno').value;
-                const apellidoM = document.getElementById('reg-materno').value;
-                const celular = document.getElementById('reg-celular').value;
-                const password = document.getElementById('reg-password').value;
-                const fullName = `${nombre} ${apellidoP} ${apellidoM}`;
-
-                const newUser = {
-                    id: 'user-' + Date.now(),
-                    phone: String(celular).trim(),
-                    password: String(password).trim(),
-                    role: 'user',
-                    full_name: fullName
-                };
-
-                try {
-                    // SUPABASE SYNC
-                    if (window.DB) {
-                        await window.DB.registerUser(newUser);
-                    }
-
-                    localStorage.setItem('nexus_account', JSON.stringify(newUser));
-                    const allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-                    if (!allUsers.find(u => u.phone === newUser.phone)) {
-                        allUsers.push({ ...newUser, createdAt: new Date().toISOString() });
-                        localStorage.setItem('nexus_users', JSON.stringify(allUsers));
-                    }
-                    localStorage.setItem('nexus_session', 'active');
-                    STATE.user = newUser;
-
-                    alert(`REGISTRO EXITOSO\nBienvenido, ${nombre}.`);
-
-                    // Direct Transition without Reload
-                    window.location.hash = ''; // Clear any hash
-                    initApp(); // Re-run init to set up UI
-                } catch (err) {
-                    console.error("Register Error:", err);
-                    // Detailed alert for mobile debugging
-                    const msg = err.message || JSON.stringify(err);
-                    const hint = err.hint || err.details || '';
-                    alert(`❌ ERROR AL GUARDAR:\n\n${msg}\n\n${hint}`);
-                }
-            });
-        }
-
-        // Logout
-        if (logoutBtn) {
-            logoutBtn.addEventListener('click', () => {
-                if (confirm("¿Cerrar sesión?")) {
-                    localStorage.removeItem('nexus_session');
-                    localStorage.removeItem('nexus_account'); // FIXED: prevent auto-login
-                    location.reload();
-                }
-            });
-        }
-
-        // --- DEBUG BUTTON (To diagnose Cloud Sync) ---
-        const debugBtn = document.createElement('button');
-        debugBtn.innerHTML = '☁️ Checar Nube';
-        debugBtn.className = 'cyber-btn sm secondary';
-        debugBtn.style.cssText = "margin-top:10px; width:100%; background:#2c3e50;";
-        debugBtn.onclick = async (e) => {
-            e.preventDefault();
-            debugBtn.innerText = "⏳ Buscando...";
-            try {
-                const users = await window.DB.fetchAllUsers();
-                alert(`🔍 DIAGNÓSTICO NUBE:\n\nUsuarios Encontrados: ${users.length}\n\nSi es 0, hay un error de permisos.`);
-                debugBtn.innerText = `✅ Encontrados: ${users.length}`;
-
-                // If users found, force reload to let initApp handle it
-                if (users.length > 0) {
-                    if (confirm("¡Datos encontrados! ¿Recargar para entrar?")) window.location.reload();
-                }
-            } catch (err) {
-                alert("❌ ERROR CONEXIÓN: " + err.message);
-                debugBtn.innerText = "❌ Error";
             }
         };
-        // Append to Register Form container (bottom)
-        if (registerForm) registerForm.parentElement.appendChild(debugBtn);
-        // --- END DEBUG ---
 
-        // Init Logic
-        try {
-            seedScheduleData();
-            // UNSTUCK LOADING (Always run, even if init fails)
-            initApp()
-                .then(() => {
-                    initAdminFeatures();
-                })
-                .catch(err => {
-                    console.error("Init Failed:", err);
-                    alert("Error iniciando app: " + err.message);
-                })
-                .finally(() => {
-                    const loader = document.getElementById('loading-screen');
-                    if (loader) loader.style.display = 'none';
+        // Run update loop
+        setInterval(updateCheckInStatus, 5000);
+
+        fingerprintBtn.addEventListener('click', () => {
+            // 0. Login Check
+            if (!STATE.user) return showLogin();
+
+            const now = new Date();
+            const { slotId, slotName, isOpen } = getServiceSlot(now);
+
+            // 1. Time Check
+            if (!isOpen) {
+                alert("⛔ FUERA DE HORARIO\n\nEl registro solo está activo 15 min antes y hasta 20 min después del culto.");
+                return;
+            }
+
+            // 2. Geolocation Check
+            // Bypass for Admin if needed? User didn't say. Let's enforce for everyone on this panel logic.
+            if (!STATE.inGeofence) {
+                // If mocked or 0,0, might be annoying.
+                // Assuming STATE.inGeofence is correctly calculated in separate watcher.
+                alert("📍 NO ESTÁS EN EL TEMPLO\n\nDebes estar dentro de las instalaciones para registrar asistencia.");
+                return;
+            }
+
+            // 3. Check Previous Attendance (For THIS service)
+            const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+            const todayISO = now.toISOString().split('T')[0];
+
+            const hasAttendedService = log.find(e =>
+                e.userId === STATE.user.phone &&
+                e.timestamp.startsWith(todayISO) &&
+                e.serviceSlot === slotId
+            );
+
+            if (hasAttendedService) {
+                if (confirm(`⚠️ YA REGISTRADO\n\n¿Deseas CANCELAR tu asistencia de hoy para: ${slotName}?`)) {
+                    // REMOVE LOCAL
+                    const idx = log.findIndex(e => e === hasAttendedService);
+                    if (idx > -1) log.splice(idx, 1);
+                    localStorage.setItem('nexus_attendance_log', JSON.stringify(log));
+
+                    // REMOVE CLOUD
+                    if (window.DB) {
+                        const logId = hasAttendedService.id || null;
+                        window.DB.removeAttendance(STATE.user.phone, slotId, todayISO, logId)
+                            .catch(console.error);
+                    }
+
+                    // UI UPDATE
+                    alert("🗑️ Asistencia Cancelada.");
+                    updateCheckInStatus();
+                }
+                return;
+            }
+
+            // 4. Register
+            const confirmMsg = `¿Registrar asistencia para ${slotName}?`;
+            if (confirm(confirmMsg)) {
+                log.push({
+                    userId: STATE.user.phone,
+                    timestamp: new Date().toISOString(),
+                    method: 'fingerprint_scan',
+                    serviceSlot: slotId,
+                    serviceName: slotName
                 });
-        } catch (e) {
-            console.error(e);
-            alert("ERROR CRITICO AL INICIAR APP:\n" + e.message);
+                // SUPABASE SYNC
+                if (window.DB) {
+                    try {
+                        window.DB.logAttendance({
+                            userId: STATE.user.phone,
+                            name: STATE.user.full_name || STATE.user.name,
+                            method: 'fingerprint_scan',
+                            serviceSlot: slotId,
+                            serviceName: slotName,
+                            timestamp: new Date().toISOString()
+                        });
+                    } catch (e) {
+                        console.error("Supabase Log Error", e);
+                        // Continue to local storage even if online fails?
+                    }
+                }
+
+                localStorage.setItem('nexus_attendance_log', JSON.stringify(log));
+
+                // Success UI
+                const successMsg = document.getElementById('success-message');
+                const timeStamp = document.getElementById('time-stamp');
+                if (successMsg) {
+                    successMsg.classList.remove('hidden');
+                    if (timeStamp) timeStamp.textContent = new Date().toLocaleTimeString();
+                    setTimeout(() => successMsg.classList.add('hidden'), 3000);
+                }
+                alert("✅ ASISTENCIA REGISTRADA EXITOSAMENTE");
+
+                // Refresh UI immediately
+                updateCheckInStatus();
+            }
+        });
+    }
+
+
+    // Register Logic
+    if (registerForm) {
+        registerForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            const nombre = document.getElementById('reg-nombre').value;
+            const apellidoP = document.getElementById('reg-paterno').value;
+            const apellidoM = document.getElementById('reg-materno').value;
+            const celular = document.getElementById('reg-celular').value;
+            const password = document.getElementById('reg-password').value;
+            const fullName = `${nombre} ${apellidoP} ${apellidoM}`;
+
+            const newUser = {
+                id: 'user-' + Date.now(),
+                phone: String(celular).trim(),
+                password: String(password).trim(),
+                role: 'user',
+                full_name: fullName
+            };
+
+            try {
+                // SUPABASE SYNC
+                if (window.DB) {
+                    await window.DB.registerUser(newUser);
+                }
+
+                localStorage.setItem('nexus_account', JSON.stringify(newUser));
+                const allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+                if (!allUsers.find(u => u.phone === newUser.phone)) {
+                    allUsers.push({ ...newUser, createdAt: new Date().toISOString() });
+                    localStorage.setItem('nexus_users', JSON.stringify(allUsers));
+                }
+                localStorage.setItem('nexus_session', 'active');
+                STATE.user = newUser;
+
+                alert(`REGISTRO EXITOSO\nBienvenido, ${nombre}.`);
+
+                // Direct Transition without Reload
+                window.location.hash = ''; // Clear any hash
+                initApp(); // Re-run init to set up UI
+            } catch (err) {
+                console.error("Register Error:", err);
+                // Detailed alert for mobile debugging
+                const msg = err.message || JSON.stringify(err);
+                const hint = err.hint || err.details || '';
+                alert(`❌ ERROR AL GUARDAR:\n\n${msg}\n\n${hint}`);
+            }
+        });
+    }
+
+    // Logout
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (confirm("¿Cerrar sesión?")) {
+                localStorage.removeItem('nexus_session');
+                localStorage.removeItem('nexus_account'); // FIXED: prevent auto-login
+                location.reload();
+            }
+        });
+    }
+
+    // --- DEBUG BUTTON (To diagnose Cloud Sync) ---
+    const debugBtn = document.createElement('button');
+    debugBtn.innerHTML = '☁️ Checar Nube';
+    debugBtn.className = 'cyber-btn sm secondary';
+    debugBtn.style.cssText = "margin-top:10px; width:100%; background:#2c3e50;";
+    debugBtn.onclick = async (e) => {
+        e.preventDefault();
+        debugBtn.innerText = "⏳ Buscando...";
+        try {
+            const users = await window.DB.fetchAllUsers();
+            alert(`🔍 DIAGNÓSTICO NUBE:\n\nUsuarios Encontrados: ${users.length}\n\nSi es 0, hay un error de permisos.`);
+            debugBtn.innerText = `✅ Encontrados: ${users.length}`;
+
+            // If users found, force reload to let initApp handle it
+            if (users.length > 0) {
+                if (confirm("¡Datos encontrados! ¿Recargar para entrar?")) window.location.reload();
+            }
+        } catch (err) {
+            alert("❌ ERROR CONEXIÓN: " + err.message);
+            debugBtn.innerText = "❌ Error";
         }
-    });
+    };
+    // Append to Register Form container (bottom)
+    if (registerForm) registerForm.parentElement.appendChild(debugBtn);
+    // --- END DEBUG ---
+
+    // Init Logic
+    try {
+        seedScheduleData();
+        // UNSTUCK LOADING (Always run, even if init fails)
+        initApp()
+            .then(() => {
+                initAdminFeatures();
+            })
+            .catch(err => {
+                console.error("Init Failed:", err);
+                alert("Error iniciando app: " + err.message);
+            })
+            .finally(() => {
+                const loader = document.getElementById('loading-screen');
+                if (loader) loader.style.display = 'none';
+            });
+    } catch (e) {
+        console.error(e);
+        alert("ERROR CRITICO AL INICIAR APP:\n" + e.message);
+    }
+});
 
 
 
