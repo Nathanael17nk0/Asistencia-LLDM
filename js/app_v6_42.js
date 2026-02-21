@@ -2655,11 +2655,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // Logout
     if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
+        logoutBtn.addEventListener('click', (e) => {
+            e.preventDefault();
+            e.stopPropagation();
             if (confirm("¿Cerrar sesión?")) {
                 localStorage.removeItem('nexus_session');
                 localStorage.removeItem('nexus_account'); // FIXED: prevent auto-login
-                location.reload();
+                STATE.user = null; // Clear state
+                window.location.replace(window.location.pathname); // Hard redirect to force clean state without hash
             }
         });
     }
@@ -3224,7 +3227,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.67 (Modal Cierre Fix)";
+    v.innerText = "v6.68 (Logout Fix)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });

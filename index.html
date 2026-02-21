@@ -231,7 +231,9 @@
                     <img src="https://ui-avatars.com/api/?name=User&background=c5a059&color=fff" id="user-avatar"
                         alt="User">
                 </div>
-                <button id="logout-btn" class="mini-icon-btn"><i class="ri-shut-down-line"></i></button>
+                <button id="logout-btn" class="mini-icon-btn"
+                    onclick="event.stopPropagation(); if(confirm('¿Cerrar sesión?')) { localStorage.removeItem('nexus_session'); localStorage.removeItem('nexus_account'); window.location.replace(window.location.pathname); }"><i
+                        class="ri-shut-down-line"></i></button>
                 <!-- v2.0 NOTIFICATION BELL -->
                 <button id="notices-btn" class="mini-icon-btn" onclick="window.openNotices()"
                     style="margin-right:5px; position:relative;">
@@ -772,10 +774,10 @@
         window.addEventListener('load', initSupabaseDirect);
     </script>
 
-    <!-- Service & App (v6.67 Modal Cierre Fix) -->
-    <script src="js/supabase-config.js?v=6.67"></script>
-    <script src="js/supabase-service.js?v=6.67"></script>
-    <script src="js/app_v6_42.js?v=6.67"></script>
+    <!-- Service & App (v6.68 Logout Fix) -->
+    <script src="js/supabase-config.js?v=6.68"></script>
+    <script src="js/supabase-service.js?v=6.68"></script>
+    <script src="js/app_v6_42.js?v=6.68"></script>
 
     <!-- Version Indicator is handled by JS -->
 
