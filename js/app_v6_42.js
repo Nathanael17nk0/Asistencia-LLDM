@@ -3224,12 +3224,20 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.66 (Sync Completo)";
+    v.innerText = "v6.67 (Modal Cierre Fix)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
 
 // --- USER PROFILE MODAL LOGIC ---
+window.closeProfileModal = function () {
+    const modal = document.getElementById('profile-modal');
+    if (modal) {
+        modal.style.display = 'none';
+        modal.classList.add('hidden');
+    }
+};
+
 window.openProfileModal = function () {
     if (!STATE.user) return;
 
@@ -3354,7 +3362,9 @@ setTimeout(() => {
                     submitBtn.innerText = oldText;
                     alert("¡Perfil actualizado correctamente!");
 
-                    document.getElementById('profile-modal').style.display = 'none';
+                    if (typeof window.closeProfileModal === 'function') window.closeProfileModal();
+                    else document.getElementById('profile-modal').style.display = 'none';
+
                     if (typeof showDashboard === 'function') showDashboard(STATE.user);
 
                 } catch (err) {
@@ -3364,7 +3374,9 @@ setTimeout(() => {
                 }
             } else {
                 alert("¡Perfil actualizado localmente!");
-                document.getElementById('profile-modal').style.display = 'none';
+                if (typeof window.closeProfileModal === 'function') window.closeProfileModal();
+                else document.getElementById('profile-modal').style.display = 'none';
+
                 if (typeof showDashboard === 'function') showDashboard(STATE.user);
             }
         });
