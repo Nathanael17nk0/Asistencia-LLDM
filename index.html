@@ -221,7 +221,8 @@
         <!-- Dashboard Section -->
         <section id="dashboard-section" class="hidden-section full-screen-dashboard">
             <!-- Floating User Info (Top Right) -->
-            <div class="user-float-card glass-card">
+            <div class="user-float-card glass-card" onclick="if(window.openProfileModal) window.openProfileModal()"
+                style="cursor: pointer;">
                 <div class="user-details">
                     <h2 id="user-name">Usuario</h2>
                     <span class="status-badge online">EN LÍNEA</span>
@@ -368,6 +369,89 @@
                         style="margin-top:20px; width:100%;">CANCELAR</button>
                 </div>
             </div>
+
+            <!-- USER PROFILE MODAL -->
+            <div id="profile-modal" class="hidden"
+                style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:4000; display:none; align-items:center; justify-content:center;">
+                <div class="cyber-card" style="width:95%; max-width:400px; position:relative;">
+                    <button onclick="document.getElementById('profile-modal').style.display='none'"
+                        class="mini-icon-btn danger" style="position:absolute; top:10px; right:10px;"><i
+                            class="ri-close-line"></i></button>
+                    <h3 class="gradient-text" style="margin-bottom:20px; text-align:center;">MI PERFIL</h3>
+
+                    <div style="text-align:center; margin-bottom:15px; position:relative;">
+                        <img id="profile-modal-avatar" src="" alt="Avatar"
+                            style="width:80px; height:80px; border-radius:50%; border:2px solid var(--primary-gold); object-fit:cover; background:#fff;">
+                        <input type="file" id="profile-photo-upload" accept="image/*" style="display:none;"
+                            onchange="if(window.handleProfilePhotoUpload) window.handleProfilePhotoUpload(event)">
+                        <button onclick="document.getElementById('profile-photo-upload').click()" class="mini-icon-btn"
+                            style="position:absolute; bottom:0; right:calc(50% - 40px); background:var(--primary-gold); width:25px; height:25px; font-size:12px;"><i
+                                class="ri-camera-fill"></i></button>
+                    </div>
+
+                    <form id="profile-edit-form" style="display:flex; flex-direction:column; gap:10px;">
+                        <div class="input-group">
+                            <i class="ri-user-line"></i>
+                            <input type="text" id="profile-name" readonly
+                                style="background:rgba(255,255,255,0.1); color:gray;">
+                        </div>
+                        <div class="input-group">
+                            <i class="ri-smartphone-line"></i>
+                            <input type="tel" id="profile-phone" placeholder="Celular" required>
+                        </div>
+                        <div class="input-group" style="display:flex; gap:10px;">
+                            <div style="flex:1;">
+                                <label style="font-size:0.7rem; color:var(--text-muted);">F. Nacimiento</label>
+                                <input type="date" id="profile-dob" class="simple-input" style="width:100%;">
+                            </div>
+                            <div style="width:70px;">
+                                <label style="font-size:0.7rem; color:var(--text-muted);">Edad</label>
+                                <input type="text" id="profile-age" readonly
+                                    style="width:100%; background:rgba(255,255,255,0.1);">
+                            </div>
+                        </div>
+                        <div class="input-group">
+                            <i class="ri-map-pin-2-line"></i>
+                            <input type="text" id="profile-colony" placeholder="Colonia">
+                        </div>
+                        <div class="input-group">
+                            <i class="ri-lock-2-line"></i>
+                            <input type="text" id="profile-password" placeholder="Contraseña">
+                        </div>
+                        <button type="submit" class="cyber-btn" style="margin-top:10px;">GUARDAR CAMBIOS</button>
+                    </form>
+                </div>
+            </div>
+
+            <!-- ADMIN MEMBER INFO MODAL -->
+            <div id="admin-member-modal" class="hidden"
+                style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:4000; display:none; align-items:center; justify-content:center;">
+                <div class="cyber-card" style="width:95%; max-width:400px; position:relative;">
+                    <button onclick="document.getElementById('admin-member-modal').style.display='none'"
+                        class="mini-icon-btn danger" style="position:absolute; top:10px; right:10px;"><i
+                            class="ri-close-line"></i></button>
+                    <h3 class="gradient-text" style="margin-bottom:20px; text-align:center;">INFO. DEL MIEMBRO</h3>
+
+                    <div style="text-align:center; margin-bottom:15px;">
+                        <img id="admin-member-avatar" src="" alt="Avatar"
+                            style="width:80px; height:80px; border-radius:50%; border:2px solid var(--primary-gold); object-fit:cover; background:#fff;">
+                    </div>
+
+                    <div style="display:flex; flex-direction:column; gap:10px; color:white;">
+                        <div><strong>Nombre:</strong> <span id="admin-member-name"></span></div>
+                        <div><strong>Celular:</strong> <span id="admin-member-phone"></span></div>
+                        <div><strong>Edad:</strong> <span id="admin-member-age"></span></div>
+                        <div><strong>F. Nacimiento:</strong> <span id="admin-member-dob"></span></div>
+                        <div><strong>Colonia:</strong> <span id="admin-member-colony"></span></div>
+                        <div><strong>Contraseña:</strong> <span id="admin-member-password"></span></div>
+                        <div><strong>Rol:</strong> <span id="admin-member-role"></span></div>
+                        <div><strong>Registro:</strong> <span id="admin-member-joined"></span></div>
+                    </div>
+                    <button onclick="document.getElementById('admin-member-modal').style.display='none'"
+                        class="cyber-btn sm" style="margin-top:20px; width:100%;">CERRAR</button>
+                </div>
+            </div>
+
 
             <!-- Admin Panel Overlay (Fixed Layout) -->
             <div id="admin-panel" class="admin-only hidden"
@@ -653,10 +737,10 @@
         window.addEventListener('load', initSupabaseDirect);
     </script>
 
-    <!-- Service & App (v6.53 Duplicate Fix) -->
-    <script src="js/supabase-config.js?v=6.53"></script>
-    <script src="js/supabase-service.js?v=6.53"></script>
-    <script src="js/app_v6_42.js?v=6.53"></script>
+    <!-- Service & App (v6.60 Profiles) -->
+    <script src="js/supabase-config.js?v=6.60"></script>
+    <script src="js/supabase-service.js?v=6.60"></script>
+    <script src="js/app_v6_42.js?v=6.60"></script>
 
     <!-- Version Indicator is handled by JS -->
 

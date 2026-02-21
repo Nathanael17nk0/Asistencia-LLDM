@@ -56,7 +56,7 @@ function showDashboard(user) {
     const avatarName = user.full_name ? user.full_name.replace(/ /g, '+') : 'User';
     const avatarEl = document.getElementById('user-avatar');
     if (avatarEl) {
-        avatarEl.src = `https://ui-avatars.com/api/?name=${avatarName}&background=c5a059&color=fff&bold=true`;
+        avatarEl.src = user.photo_url || `https://ui-avatars.com/api/?name=${avatarName}&background=c5a059&color=fff&bold=true`;
     }
 
     if (user.role === 'admin') {
@@ -1915,12 +1915,14 @@ function renderAdminUserList() {
                 `<span style="color:#bbb; font-size:0.75rem;">Falta</span>`;
 
             div.innerHTML = `
-                    <div style="width:28px; height:28px; background:${isPresent ? 'var(--success)' : '#ddd'}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:8px; font-size:0.75rem;">
-                        ${initials}
-                    </div>
-                    <div style="flex:1;">
-                        <h4 style="margin:0; font-size:0.85rem; line-height:1.2;">${u.full_name || u.name}</h4>
-                        <small style="color:#888; font-size:0.75rem;">ID: ${u.phone}</small>
+                    <div onclick="if(window.openAdminMemberModal) window.openAdminMemberModal('${uid}')" style="display:flex; align-items:center; flex:1; cursor:pointer;" title="Ver Perfil">
+                        <div style="width:28px; height:28px; background:${isPresent ? 'var(--success)' : '#ddd'}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:8px; font-size:0.75rem;">
+                            ${initials}
+                        </div>
+                        <div style="flex:1;">
+                            <h4 style="margin:0; font-size:0.85rem; line-height:1.2;">${u.full_name || u.name}</h4>
+                            <small style="color:#888; font-size:0.75rem;">ID: ${u.phone}</small>
+                        </div>
                     </div>
                     <div style="text-align:right;">
                         ${statusText}
@@ -3204,7 +3206,159 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.53 (Duplicate Fix)";
+    v.innerText = "v6.60 (Perfiles)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
+
+// --- USER PROFILE MODAL LOGIC ---
+window.openProfileModal = function () {
+    if (!STATE.user) return;
+    const user = STATE.user;
+
+    document.getElementById('profile-name').value = user.full_name || '';
+    document.getElementById('profile-phone').value = user.phone || '';
+    document.getElementById('profile-dob').value = user.dob || '';
+    document.getElementById('profile-age').value = user.age_label || '';
+    document.getElementById('profile-colony').value = user.colonia || user.colony || '';
+    document.getElementById('profile-password').value = user.password || '';
+
+    const avatarName = user.full_name ? user.full_name.replace(/ /g, '+') : 'User';
+    const defaultAvatar = `https://ui-avatars.com/api/?name=${avatarName}&background=c5a059&color=fff&bold=true`;
+    document.getElementById('profile-modal-avatar').src = user.photo_url || defaultAvatar;
+
+    document.getElementById('profile-modal').style.display = 'flex';
+    document.getElementById('profile-modal').classList.remove('hidden');
+};
+
+// Handle Photo Upload (Base64 + Resize)
+window.handleProfilePhotoUpload = function (event) {
+    const file = event.target.files[0];
+    if (!file) return;
+
+    const reader = new FileReader();
+    reader.onload = function (e) {
+        const img = new Image();
+        img.onload = function () {
+            const canvas = document.createElement('canvas');
+            const MAX_SIZE = 250;
+            let width = img.width;
+            let height = img.height;
+
+            if (width > height) {
+                if (width > MAX_SIZE) {
+                    height *= MAX_SIZE / width;
+                    width = MAX_SIZE;
+                }
+            } else {
+                if (height > MAX_SIZE) {
+                    width *= MAX_SIZE / height;
+                    height = MAX_SIZE;
+                }
+            }
+            canvas.width = width;
+            canvas.height = height;
+            const ctx = canvas.getContext('2d');
+            ctx.drawImage(img, 0, 0, width, height);
+
+            const dataUrl = canvas.toDataURL('image/jpeg', 0.8);
+            document.getElementById('profile-modal-avatar').src = dataUrl;
+
+            if (STATE.user) {
+                STATE.user.photo_url = dataUrl;
+            }
+        };
+        img.src = e.target.result;
+    };
+    reader.readAsDataURL(file);
+};
+
+// Form Save
+setTimeout(() => {
+    const profileForm = document.getElementById('profile-edit-form');
+    if (profileForm) {
+        profileForm.addEventListener('submit', async (e) => {
+            e.preventDefault();
+            if (!STATE.user) return;
+
+            STATE.user.phone = document.getElementById('profile-phone').value.trim();
+            STATE.user.dob = document.getElementById('profile-dob').value;
+
+            if (STATE.user.dob) {
+                const dob = new Date(STATE.user.dob);
+                const today = new Date();
+                let age = today.getFullYear() - dob.getFullYear();
+                if (today.getMonth() < dob.getMonth() || (today.getMonth() === dob.getMonth() && today.getDate() < dob.getDate())) {
+                    age--;
+                }
+                STATE.user.age_label = age + " años";
+                document.getElementById('profile-age').value = STATE.user.age_label;
+            }
+
+            STATE.user.colonia = document.getElementById('profile-colony').value.trim();
+            STATE.user.password = document.getElementById('profile-password').value.trim();
+
+            localStorage.setItem('nexus_account', JSON.stringify(STATE.user));
+
+            const allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+            const userIndex = allUsers.findIndex(u => u.id === STATE.user.id);
+            if (userIndex !== -1) {
+                allUsers[userIndex] = STATE.user;
+                localStorage.setItem('nexus_users', JSON.stringify(allUsers));
+            }
+
+            if (window.DB) {
+                try {
+                    const submitBtn = profileForm.querySelector('button[type="submit"]');
+                    const oldText = submitBtn.innerText;
+                    submitBtn.innerText = "GUARDANDO...";
+                    await window.DB.registerUser(STATE.user);
+                    submitBtn.innerText = oldText;
+                    alert("¡Perfil actualizado correctamente!");
+
+                    document.getElementById('profile-modal').style.display = 'none';
+                    if (typeof showDashboard === 'function') showDashboard(STATE.user);
+
+                } catch (err) {
+                    console.error("Profile save error:", err);
+                    alert("Guardado localmente. Error al sincronizar con la nube: " + err.message);
+                }
+            } else {
+                alert("¡Perfil actualizado localmente!");
+                document.getElementById('profile-modal').style.display = 'none';
+                if (typeof showDashboard === 'function') showDashboard(STATE.user);
+            }
+        });
+    }
+}, 1000);
+
+// --- ADMIN MEMBER MODAL LOGIC ---
+window.openAdminMemberModal = function (uid) {
+    const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+    const user = users.find(u => String(u.id) === String(uid) || String(u.phone) === String(uid));
+    if (!user) {
+        alert("Usuario no encontrado.");
+        return;
+    }
+
+    document.getElementById('admin-member-name').innerText = user.full_name || user.name || 'N/A';
+    document.getElementById('admin-member-phone').innerText = user.phone || 'N/A';
+    document.getElementById('admin-member-dob').innerText = user.dob || 'No especificada';
+    document.getElementById('admin-member-age').innerText = user.age_label || user.age || 'N/A';
+    document.getElementById('admin-member-colony').innerText = user.colony || user.colonia || 'N/A';
+    document.getElementById('admin-member-password').innerText = user.password || 'N/A';
+    document.getElementById('admin-member-role').innerText = user.role || 'user';
+
+    let joined = 'N/A';
+    if (user.created_at || user.createdAt) {
+        joined = new Date(user.created_at || user.createdAt).toLocaleDateString('es-MX');
+    }
+    document.getElementById('admin-member-joined').innerText = joined;
+
+    const avatarName = (user.full_name || 'U').replace(/ /g, '+');
+    const defaultAvatar = `https://ui-avatars.com/api/?name=${avatarName}&background=c5a059&color=fff&bold=true`;
+    document.getElementById('admin-member-avatar').src = user.photo_url || defaultAvatar;
+
+    document.getElementById('admin-member-modal').style.display = 'flex';
+    document.getElementById('admin-member-modal').classList.remove('hidden');
+};
