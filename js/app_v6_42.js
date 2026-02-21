@@ -1820,15 +1820,9 @@ function renderAdminUserList() {
                 // Manual filter active: Show whomever attended that specific slot
                 if (entry.serviceSlot !== currentFilter) return;
             } else {
-                // Default 'All' view:
-                if (isOpen) {
-                    // OPEN: Strict check for CURRENT slot.
-                    if (entry.serviceSlot !== currentSlotId) return;
-                } else {
-                    // CLOSED: "Clean List" preference vs "See Manual" preference.
-                    // Compromise: Match the Target (Upcoming) slot.
-                    if (entry.serviceSlot !== targetSlotId) return;
-                }
+                // If 'All (Horarios)' is selected, we want to see ANYONE who checked in TODAY, 
+                // regardless of the exact timeslot. This allows the admin to manually check someone 
+                // into a future or past slot and instantly see them turn green.
             }
 
             attendeesMap.set(String(entry.userId), entry);
@@ -2301,15 +2295,15 @@ async function initApp() {
                             console.log("🔔 Realtime Attendance:", newLog);
                             // 1. Update Local Log (to match report)
                             const currentLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-                            // Avoid dupes
-                            if (!currentLog.find(e => e.id === newLog.id || (e.timestamp === newLog.timestamp && e.userId === newLog.user_phone))) {
+                            // Avoid dupes using newLog.userId
+                            if (!currentLog.find(e => e.id === newLog.id || (e.timestamp === newLog.timestamp && e.userId === newLog.userId))) {
                                 currentLog.push({
-                                    userId: newLog.user_phone,
-                                    name: newLog.user_name,
+                                    userId: newLog.userId,
+                                    name: newLog.name,
                                     timestamp: newLog.timestamp,
                                     method: newLog.method,
-                                    serviceSlot: newLog.service_slot,
-                                    serviceName: newLog.service_name,
+                                    serviceSlot: newLog.serviceSlot,
+                                    serviceName: newLog.serviceName,
                                     id: newLog.id
                                 });
                                 localStorage.setItem('nexus_attendance_log', JSON.stringify(currentLog));
@@ -3162,7 +3156,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.72 (Admin Tabs & Filters)";
+    v.innerText = "v6.73 (Admin Sync+Filter Fix)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
