@@ -141,6 +141,13 @@ if (registerForm) {
         const celular = document.getElementById('reg-celular').value;
         const password = document.getElementById('reg-password').value;
 
+        const dob = document.getElementById('reg-dob')?.value || '';
+        const age = document.getElementById('reg-edad')?.value || '';
+        const colonia = document.getElementById('reg-colonia')?.value || '';
+        const direccion = document.getElementById('reg-address')?.value || '';
+        const profesion = document.getElementById('reg-profession')?.value || '';
+        const grado_estudios = document.getElementById('reg-study-level')?.value || '';
+
         const fullName = `${nombre} ${apellidoP} ${apellidoM}`;
 
         const newUser = {
@@ -148,7 +155,13 @@ if (registerForm) {
             phone: String(celular).trim(),
             password: String(password).trim(),
             role: 'user',
-            full_name: fullName
+            full_name: fullName,
+            dob: dob,
+            age_label: age,
+            colonia: colonia,
+            direccion: direccion,
+            profesion: profesion,
+            grado_estudios: grado_estudios
         };
 
         try {
@@ -180,12 +193,7 @@ if (registerForm) {
             // 4. CLOUD SYNC (Critical for Admin Visibility)
             if (window.DB) {
                 try {
-                    await window.DB.registerUser({
-                        ...newUser,
-                        colonia: '',
-                        dob: '',
-                        age_label: ''
-                    });
+                    await window.DB.registerUser(newUser);
                     console.log("✅ Self-Registration Synced to Cloud");
                 } catch (dbErr) {
                     console.error("⚠️ Cloud Register Error:", dbErr);
@@ -3206,7 +3214,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.62 (Scroll Fixes)";
+    v.innerText = "v6.63 (Reg Data Fix)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
