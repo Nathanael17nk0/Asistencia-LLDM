@@ -18,6 +18,7 @@ const DB = {
                 direccion: user.direccion || null,
                 profesion: user.profesion || null,
                 grado_estudios: user.grado_estudios || null,
+                photo_url: user.photo_url || null,
                 created_at: new Date().toISOString()
             }, { onConflict: 'phone' }); // FIX: Key on Phone to prevent duplicate constraint violation
 
