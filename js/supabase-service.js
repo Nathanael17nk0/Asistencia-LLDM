@@ -15,8 +15,11 @@ const DB = {
                 dob: user.dob || null,
                 age: user.age_label || null,
                 colony: user.colonia || null,
+                direccion: user.direccion || null,
+                profesion: user.profesion || null,
+                grado_estudios: user.grado_estudios || null,
                 created_at: new Date().toISOString()
-            }, { onConflict: 'id' }); // CRITICAL FIX: Key on ID, not Phone
+            }, { onConflict: 'phone' }); // FIX: Key on Phone to prevent duplicate constraint violation
 
         if (error) throw error;
     },

@@ -3206,7 +3206,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.60 (Perfiles)";
+    v.innerText = "v6.61 (Nuevos campos y arreglo de bug)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3220,7 +3220,10 @@ window.openProfileModal = function () {
     document.getElementById('profile-phone').value = user.phone || '';
     document.getElementById('profile-dob').value = user.dob || '';
     document.getElementById('profile-age').value = user.age_label || '';
+    document.getElementById('profile-address').value = user.direccion || '';
     document.getElementById('profile-colony').value = user.colonia || user.colony || '';
+    document.getElementById('profile-profession').value = user.profesion || '';
+    document.getElementById('profile-education').value = user.grado_estudios || '';
     document.getElementById('profile-password').value = user.password || '';
 
     const avatarName = user.full_name ? user.full_name.replace(/ /g, '+') : 'User';
@@ -3295,7 +3298,10 @@ setTimeout(() => {
                 document.getElementById('profile-age').value = STATE.user.age_label;
             }
 
+            STATE.user.direccion = document.getElementById('profile-address').value.trim();
             STATE.user.colonia = document.getElementById('profile-colony').value.trim();
+            STATE.user.profesion = document.getElementById('profile-profession').value.trim();
+            STATE.user.grado_estudios = document.getElementById('profile-education').value.trim();
             STATE.user.password = document.getElementById('profile-password').value.trim();
 
             localStorage.setItem('nexus_account', JSON.stringify(STATE.user));
@@ -3308,9 +3314,9 @@ setTimeout(() => {
             }
 
             if (window.DB) {
+                const submitBtn = profileForm.querySelector('button[type="submit"]');
+                const oldText = submitBtn.innerText;
                 try {
-                    const submitBtn = profileForm.querySelector('button[type="submit"]');
-                    const oldText = submitBtn.innerText;
                     submitBtn.innerText = "GUARDANDO...";
                     await window.DB.registerUser(STATE.user);
                     submitBtn.innerText = oldText;
@@ -3320,6 +3326,7 @@ setTimeout(() => {
                     if (typeof showDashboard === 'function') showDashboard(STATE.user);
 
                 } catch (err) {
+                    submitBtn.innerText = oldText;
                     console.error("Profile save error:", err);
                     alert("Guardado localmente. Error al sincronizar con la nube: " + err.message);
                 }
@@ -3345,7 +3352,10 @@ window.openAdminMemberModal = function (uid) {
     document.getElementById('admin-member-phone').innerText = user.phone || 'N/A';
     document.getElementById('admin-member-dob').innerText = user.dob || 'No especificada';
     document.getElementById('admin-member-age').innerText = user.age_label || user.age || 'N/A';
+    document.getElementById('admin-member-address').innerText = user.direccion || 'N/A';
     document.getElementById('admin-member-colony').innerText = user.colony || user.colonia || 'N/A';
+    document.getElementById('admin-member-profession').innerText = user.profesion || 'N/A';
+    document.getElementById('admin-member-education').innerText = user.grado_estudios || 'N/A';
     document.getElementById('admin-member-password').innerText = user.password || 'N/A';
     document.getElementById('admin-member-role').innerText = user.role || 'user';
 

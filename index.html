@@ -402,17 +402,30 @@
                         <div class="input-group" style="display:flex; gap:10px;">
                             <div style="flex:1;">
                                 <label style="font-size:0.7rem; color:var(--text-muted);">F. Nacimiento</label>
-                                <input type="date" id="profile-dob" class="simple-input" style="width:100%;">
+                                <input type="text" id="profile-dob" readonly
+                                    style="width:100%; background:rgba(255,255,255,0.1); color:gray;">
                             </div>
                             <div style="width:70px;">
                                 <label style="font-size:0.7rem; color:var(--text-muted);">Edad</label>
                                 <input type="text" id="profile-age" readonly
-                                    style="width:100%; background:rgba(255,255,255,0.1);">
+                                    style="width:100%; background:rgba(255,255,255,0.1); color:gray;">
                             </div>
                         </div>
                         <div class="input-group">
                             <i class="ri-map-pin-2-line"></i>
+                            <input type="text" id="profile-address" placeholder="Dirección">
+                        </div>
+                        <div class="input-group">
+                            <i class="ri-community-line"></i>
                             <input type="text" id="profile-colony" placeholder="Colonia">
+                        </div>
+                        <div class="input-group">
+                            <i class="ri-briefcase-4-line"></i>
+                            <input type="text" id="profile-profession" placeholder="Profesión">
+                        </div>
+                        <div class="input-group">
+                            <i class="ri-book-read-line"></i>
+                            <input type="text" id="profile-education" placeholder="Grado de Estudios">
                         </div>
                         <div class="input-group">
                             <i class="ri-lock-2-line"></i>
@@ -442,7 +455,10 @@
                         <div><strong>Celular:</strong> <span id="admin-member-phone"></span></div>
                         <div><strong>Edad:</strong> <span id="admin-member-age"></span></div>
                         <div><strong>F. Nacimiento:</strong> <span id="admin-member-dob"></span></div>
+                        <div><strong>Dirección:</strong> <span id="admin-member-address"></span></div>
                         <div><strong>Colonia:</strong> <span id="admin-member-colony"></span></div>
+                        <div><strong>Profesión:</strong> <span id="admin-member-profession"></span></div>
+                        <div><strong>G. Estudios:</strong> <span id="admin-member-education"></span></div>
                         <div><strong>Contraseña:</strong> <span id="admin-member-password"></span></div>
                         <div><strong>Rol:</strong> <span id="admin-member-role"></span></div>
                         <div><strong>Registro:</strong> <span id="admin-member-joined"></span></div>
@@ -737,10 +753,10 @@
         window.addEventListener('load', initSupabaseDirect);
     </script>
 
-    <!-- Service & App (v6.60 Profiles) -->
-    <script src="js/supabase-config.js?v=6.60"></script>
-    <script src="js/supabase-service.js?v=6.60"></script>
-    <script src="js/app_v6_42.js?v=6.60"></script>
+    <!-- Service & App (v6.61 Profiles Fix) -->
+    <script src="js/supabase-config.js?v=6.61"></script>
+    <script src="js/supabase-service.js?v=6.61"></script>
+    <script src="js/app_v6_42.js?v=6.61"></script>
 
     <!-- Version Indicator is handled by JS -->
 
