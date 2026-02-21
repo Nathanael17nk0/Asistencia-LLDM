@@ -1680,10 +1680,12 @@ function handleManualRegister() {
 
 // 3. Attendance Manager Logic
 const serviceFilterSelect = document.getElementById('admin-service-filter');
+const statusFilterSelect = document.getElementById('admin-status-filter');
 const searchInput = document.getElementById('admin-search-user');
 
 if (serviceFilterSelect) {
     serviceFilterSelect.addEventListener('change', renderAdminUserList);
+    if (statusFilterSelect) statusFilterSelect.addEventListener('change', renderAdminUserList);
     searchInput.addEventListener('input', renderAdminUserList);
 
     // AUTO-SELECT CURRENT SLOT
@@ -1846,40 +1848,14 @@ function renderAdminUserList() {
             return matchesSearch;
         });
 
-        // Update Count
-        // Count depends on FILTER. If filter is active, we want to know how many attended THAT service vs total active users?
-        // Actually, users count is always total. Attendance count is for current view.
-        const userCount = users.filter(u => u.role !== 'admin').length;
-        if (countSpan) countSpan.textContent = `${attendedIds.size}/${userCount}`;
+        // UPDATE DOM COUNT
+        // In order to get the correct view count, we need to count how many elements we ACTUALLY rendered vs total users.
+        // We defer count update to the end, but wait, count is total attendees vs total members today.
+        const totalAttendeesForFilter = attendedIds.size;
+        const totalUserCount = users.filter(u => u.role !== 'admin').length;
+        if (countSpan) countSpan.textContent = `${totalAttendeesForFilter}/${totalUserCount}`;
 
-        listContainer.innerHTML = '';
-
-        // --- DEBUG HEADER START ---
-        const dbgHeader = document.createElement('div');
-        dbgHeader.style.padding = "10px";
-        dbgHeader.style.background = "#f0f0f0";
-        dbgHeader.style.marginBottom = "10px";
-        dbgHeader.style.display = "flex";
-        dbgHeader.style.justifyContent = "space-between";
-        dbgHeader.style.alignItems = "center"; // Align vertically
-
-        dbgHeader.innerHTML = `
-            <div style="font-size:0.9rem;">
-                <strong>📊 Usuarios:</strong> ${filteredUsers.length} / ${userCount} (Total DB)<br>
-                <small>Filtro: ${currentFilter}</small>
-            </div>
-            <div id="debug-sync-info" style="font-size:0.75rem; color:#666; margin-top:2px;">
-                Última carga: ${new Date().toLocaleTimeString()}
-            </div>
-        `;
-
-        // CLEAN UI: Debug buttons removed (v6.13)
-        // dbgHeader legacy cleanup
-
-        listContainer.appendChild(dbgHeader);
-        // --- DEBUG HEADER END ---
-
-        if (userCount === 0) {
+        if (totalUserCount === 0) {
             listContainer.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">No hay hermanos registrados.</p>';
             return;
         }
@@ -1915,6 +1891,10 @@ function renderAdminUserList() {
                 // If user has NO ID and NO PHONE, they cannot be tracked. Skip log matching.
                 // console.warn("User without ID or Phone found in list", u);
             }
+
+            // Apply Status Filter
+            if (currentStatusFilter === 'present' && !isPresent) return;
+            if (currentStatusFilter === 'absent' && isPresent) return;
 
             const div = document.createElement('div');
             div.className = 'user-list-item';
@@ -3180,7 +3160,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.71 (Runtime Age Calc)";
+    v.innerText = "v6.72 (Admin Tabs & Filters)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3191,6 +3171,32 @@ window.closeProfileModal = function () {
     if (modal) {
         modal.style.display = 'none';
         modal.classList.add('hidden');
+    }
+};
+
+// --- ADMIN TABS LOGIC ---
+window.switchAdminTab = function (tabName) {
+    const tabAsistencia = document.getElementById('admin-tab-asistencia');
+    const tabSuperAdmin = document.getElementById('admin-tab-superadmin');
+    const btnAsistencia = document.getElementById('tab-btn-asistencia');
+    const btnSuperAdmin = document.getElementById('tab-btn-superadmin');
+
+    if (!tabAsistencia || !tabSuperAdmin) return;
+
+    if (tabName === 'asistencia') {
+        tabAsistencia.style.display = 'flex';
+        tabSuperAdmin.style.display = 'none';
+        tabAsistencia.classList.remove('hidden');
+        tabSuperAdmin.classList.add('hidden');
+        btnAsistencia.classList.add('active');
+        btnSuperAdmin.classList.remove('active');
+    } else if (tabName === 'superadmin') {
+        tabAsistencia.style.display = 'none';
+        tabSuperAdmin.style.display = 'flex';
+        tabAsistencia.classList.add('hidden');
+        tabSuperAdmin.classList.remove('hidden');
+        btnSuperAdmin.classList.add('active');
+        btnAsistencia.classList.remove('active');
     }
 };
 
