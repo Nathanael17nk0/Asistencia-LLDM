@@ -1925,7 +1925,9 @@ function renderAdminUserList() {
             div.style.background = isPresent ? '#f0fff4' : '#fff';
 
             // Avatar (Smaller)
-            const initials = (u.full_name || 'U').split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+            const avatarName = (u.full_name || 'U').replace(/ /g, '+');
+            const isPresentColor = isPresent ? '2ecc71' : 'dddddd'; // Hex without #
+            const avatarSrc = u.photo_url || `https://ui-avatars.com/api/?name=${avatarName}&background=${isPresentColor}&color=fff&bold=true`;
 
             // Status Text (Smaller)
             const statusText = isPresent ?
@@ -1934,9 +1936,7 @@ function renderAdminUserList() {
 
             div.innerHTML = `
                     <div onclick="if(window.openAdminMemberModal) window.openAdminMemberModal('${uid}')" style="display:flex; align-items:center; flex:1; cursor:pointer;" title="Ver Perfil">
-                        <div style="width:28px; height:28px; background:${isPresent ? 'var(--success)' : '#ddd'}; color:white; border-radius:50%; display:flex; align-items:center; justify-content:center; font-weight:bold; margin-right:8px; font-size:0.75rem;">
-                            ${initials}
-                        </div>
+                        <img src="${avatarSrc}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid ${isPresent ? 'var(--success)' : '#ddd'}; margin-right:8px; background:#fff;" alt="Avatar">
                         <div style="flex:1;">
                             <h4 style="margin:0; font-size:0.85rem; line-height:1.2;">${u.full_name || u.name}</h4>
                             <small style="color:#888; font-size:0.75rem;">ID: ${u.phone}</small>
@@ -2604,54 +2604,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 
 
-    // Register Logic
-    if (registerForm) {
-        registerForm.addEventListener('submit', async (e) => {
-            e.preventDefault();
-            const nombre = document.getElementById('reg-nombre').value;
-            const apellidoP = document.getElementById('reg-paterno').value;
-            const apellidoM = document.getElementById('reg-materno').value;
-            const celular = document.getElementById('reg-celular').value;
-            const password = document.getElementById('reg-password').value;
-            const fullName = `${nombre} ${apellidoP} ${apellidoM}`;
-
-            const newUser = {
-                id: 'user-' + Date.now(),
-                phone: String(celular).trim(),
-                password: String(password).trim(),
-                role: 'user',
-                full_name: fullName
-            };
-
-            try {
-                // SUPABASE SYNC
-                if (window.DB) {
-                    await window.DB.registerUser(newUser);
-                }
-
-                localStorage.setItem('nexus_account', JSON.stringify(newUser));
-                const allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
-                if (!allUsers.find(u => u.phone === newUser.phone)) {
-                    allUsers.push({ ...newUser, createdAt: new Date().toISOString() });
-                    localStorage.setItem('nexus_users', JSON.stringify(allUsers));
-                }
-                localStorage.setItem('nexus_session', 'active');
-                STATE.user = newUser;
-
-                alert(`REGISTRO EXITOSO\nBienvenido, ${nombre}.`);
-
-                // Direct Transition without Reload
-                window.location.hash = ''; // Clear any hash
-                initApp(); // Re-run init to set up UI
-            } catch (err) {
-                console.error("Register Error:", err);
-                // Detailed alert for mobile debugging
-                const msg = err.message || JSON.stringify(err);
-                const hint = err.hint || err.details || '';
-                alert(`❌ ERROR AL GUARDAR:\n\n${msg}\n\n${hint}`);
-            }
-        });
-    }
+    // Duplicate Register Logic Removed to Prevent Data Loss
 
     // Logout
     if (logoutBtn) {
@@ -3227,7 +3180,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.68 (Logout Fix)";
+    v.innerText = "v6.69 (Data Loss Fix)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
