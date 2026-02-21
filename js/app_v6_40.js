@@ -399,18 +399,6 @@ if (loginForm) {
     loginForm.addEventListener('submit', handleLogin);
 }
 
-// Logout
-const logoutBtn = document.getElementById('logout-btn');
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-        if (confirm("¿Cerrar sesión?")) {
-            // FULL LOGOUT (Clear Session & Account)
-            localStorage.removeItem('nexus_session');
-            localStorage.removeItem('nexus_account');
-            location.reload();
-        }
-    });
-}
 
 // --- FINGERPRINT CHECK-IN ---
 if (fingerprintBtn) {
@@ -2391,15 +2379,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (showRegisterBtn) showRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); showRegister(); });
 
-    if (logoutBtn) {
-        logoutBtn.addEventListener('click', () => {
-            if (confirm("¿Cerrar sesión?")) {
-                localStorage.removeItem('nexus_session');
-                localStorage.removeItem('nexus_account');
-                location.reload();
-            }
-        });
-    }
+
 
     if (fingerprintBtn) {
         // GPS Permission Nudge

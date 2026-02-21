@@ -399,18 +399,6 @@ if (loginForm) {
     loginForm.addEventListener('submit', handleLogin);
 }
 
-// Logout
-const logoutBtn = document.getElementById('logout-btn');
-if (logoutBtn) {
-    logoutBtn.addEventListener('click', () => {
-        if (confirm("¿Cerrar sesión?")) {
-            // FULL LOGOUT (Clear Session & Account)
-            localStorage.removeItem('nexus_session');
-            localStorage.removeItem('nexus_account');
-            location.reload();
-        }
-    });
-}
 
 // --- FINGERPRINT CHECK-IN ---
 if (fingerprintBtn) {
