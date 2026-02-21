@@ -1722,9 +1722,11 @@ function renderAdminUserList() {
         const countSpan = document.getElementById('attendance-count');
         const searchInput = document.getElementById('admin-search-user');
         const serviceProps = document.getElementById('admin-service-filter');
+        const statusProps = document.getElementById('admin-status-filter');
 
         const searchVal = searchInput ? searchInput.value.toLowerCase() : '';
         const filterVal = serviceProps ? serviceProps.value : 'all';
+        const currentStatusFilter = statusProps ? statusProps.value : 'all';
 
         if (!listContainer) return;
 
@@ -3164,6 +3166,32 @@ setTimeout(() => {
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
+
+// --- ADMIN TABS LOGIC ---
+window.switchAdminTab = function (tabName) {
+    const tabAsistencia = document.getElementById('admin-tab-asistencia');
+    const tabSuperAdmin = document.getElementById('admin-tab-superadmin');
+    const btnAsistencia = document.getElementById('tab-btn-asistencia');
+    const btnSuperAdmin = document.getElementById('tab-btn-superadmin');
+
+    if (!tabAsistencia || !tabSuperAdmin) return;
+
+    if (tabName === 'asistencia') {
+        tabAsistencia.style.display = 'flex';
+        tabSuperAdmin.style.display = 'none';
+        tabAsistencia.classList.remove('hidden');
+        tabSuperAdmin.classList.add('hidden');
+        btnAsistencia.classList.add('active');
+        btnSuperAdmin.classList.remove('active');
+    } else if (tabName === 'superadmin') {
+        tabAsistencia.style.display = 'none';
+        tabSuperAdmin.style.display = 'flex';
+        tabAsistencia.classList.add('hidden');
+        tabSuperAdmin.classList.remove('hidden');
+        btnSuperAdmin.classList.add('active');
+        btnAsistencia.classList.remove('active');
+    }
+};
 
 // --- USER PROFILE MODAL LOGIC ---
 window.closeProfileModal = function () {
