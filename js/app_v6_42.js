@@ -3196,10 +3196,15 @@ document.addEventListener('DOMContentLoaded', () => {
 });
 
 // --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.52) ---
-window.addEventListener('load', () => {
-    const v = document.createElement('div');
-    v.innerText = "v6.52 (Duplicate Fix)";
+// --- VERSION INDICATOR (v6.53) ---
+setTimeout(() => {
+    let v = document.getElementById('app-version');
+    if (!v) {
+        v = document.createElement('div');
+        v.id = 'app-version';
+        document.body.appendChild(v);
+    }
+    v.innerText = "v6.53 (Duplicate Fix)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
