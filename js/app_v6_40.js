@@ -2391,6 +2391,16 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     if (showRegisterBtn) showRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); showRegister(); });
 
+    if (logoutBtn) {
+        logoutBtn.addEventListener('click', () => {
+            if (confirm("¿Cerrar sesión?")) {
+                localStorage.removeItem('nexus_session');
+                localStorage.removeItem('nexus_account');
+                location.reload();
+            }
+        });
+    }
+
     if (fingerprintBtn) {
         // GPS Permission Nudge
         if (navigator.geolocation) {
