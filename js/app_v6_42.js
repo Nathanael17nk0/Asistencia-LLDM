@@ -3180,7 +3180,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.70 (UI Age Fix)";
+    v.innerText = "v6.71 (Runtime Age Calc)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3211,7 +3211,21 @@ window.openProfileModal = function () {
     document.getElementById('profile-name').value = user.full_name || '';
     document.getElementById('profile-phone').value = user.phone || '';
     document.getElementById('profile-dob').value = user.dob || '';
-    document.getElementById('profile-age').value = user.age_label || '';
+
+    // Calculate Age on the fly in case age_label is missing or outdated
+    let displayAge = user.age_label || user.age || '';
+    if (user.dob) {
+        const dobDate = new Date(user.dob);
+        if (!isNaN(dobDate.getTime())) {
+            const today = new Date();
+            let ageNum = today.getFullYear() - dobDate.getFullYear();
+            if (today.getMonth() < dobDate.getMonth() || (today.getMonth() === dobDate.getMonth() && today.getDate() < dobDate.getDate())) {
+                ageNum--;
+            }
+            displayAge = ageNum + " años";
+        }
+    }
+    document.getElementById('profile-age').value = displayAge;
     document.getElementById('profile-baptism-date').value = user.baptism_date || '';
     document.getElementById('profile-holy-spirit-date').value = user.holy_spirit_date || '';
     document.getElementById('profile-address').value = user.direccion || '';
