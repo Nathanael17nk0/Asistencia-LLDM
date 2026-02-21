@@ -147,6 +147,8 @@ if (registerForm) {
         const direccion = document.getElementById('reg-address')?.value || '';
         const profesion = document.getElementById('reg-profession')?.value || '';
         const grado_estudios = document.getElementById('reg-study-level')?.value || '';
+        const baptism_date = document.getElementById('reg-baptism-date')?.value || '';
+        const holy_spirit_date = document.getElementById('reg-holy-spirit-date')?.value || '';
 
         const fullName = `${nombre} ${apellidoP} ${apellidoM}`;
 
@@ -161,7 +163,9 @@ if (registerForm) {
             colonia: colonia,
             direccion: direccion,
             profesion: profesion,
-            grado_estudios: grado_estudios
+            grado_estudios: grado_estudios,
+            baptism_date: baptism_date,
+            holy_spirit_date: holy_spirit_date
         };
 
         try {
@@ -3214,7 +3218,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.64 (FOTO FIX)";
+    v.innerText = "v6.65 (Fechas Espirituales)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3228,6 +3232,8 @@ window.openProfileModal = function () {
     document.getElementById('profile-phone').value = user.phone || '';
     document.getElementById('profile-dob').value = user.dob || '';
     document.getElementById('profile-age').value = user.age_label || '';
+    document.getElementById('profile-baptism-date').value = user.baptism_date || '';
+    document.getElementById('profile-holy-spirit-date').value = user.holy_spirit_date || '';
     document.getElementById('profile-address').value = user.direccion || '';
     document.getElementById('profile-colony').value = user.colonia || user.colony || '';
     document.getElementById('profile-profession').value = user.profesion || '';
@@ -3311,6 +3317,8 @@ setTimeout(() => {
             STATE.user.profesion = document.getElementById('profile-profession').value.trim();
             STATE.user.grado_estudios = document.getElementById('profile-education').value.trim();
             STATE.user.password = document.getElementById('profile-password').value.trim();
+            STATE.user.baptism_date = document.getElementById('profile-baptism-date').value || '';
+            STATE.user.holy_spirit_date = document.getElementById('profile-holy-spirit-date').value || '';
 
             localStorage.setItem('nexus_account', JSON.stringify(STATE.user));
 
@@ -3360,6 +3368,12 @@ window.openAdminMemberModal = function (uid) {
     document.getElementById('admin-member-phone').innerText = user.phone || 'N/A';
     document.getElementById('admin-member-dob').innerText = user.dob || 'No especificada';
     document.getElementById('admin-member-age').innerText = user.age_label || user.age || 'N/A';
+
+    // Format dates to be more readable
+    const formatDate = (dateString) => dateString ? new Date(dateString + 'T12:00:00Z').toLocaleDateString('es-MX') : 'N/A';
+    document.getElementById('admin-member-baptism').innerText = formatDate(user.baptism_date);
+    document.getElementById('admin-member-holy-spirit').innerText = formatDate(user.holy_spirit_date);
+
     document.getElementById('admin-member-address').innerText = user.direccion || 'N/A';
     document.getElementById('admin-member-colony').innerText = user.colony || user.colonia || 'N/A';
     document.getElementById('admin-member-profession').innerText = user.profesion || 'N/A';

@@ -428,6 +428,20 @@
                             <i class="ri-book-read-line"></i>
                             <input type="text" id="profile-education" placeholder="Grado de Estudios">
                         </div>
+                        <p
+                            style="font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-top:5px; text-align:left;">
+                            Fechas Importantes</p>
+                        <div class="input-row" style="display:flex; gap:10px;">
+                            <div class="input-group" style="flex:1;">
+                                <span style="font-size:0.7rem; color:#888;">Bautismo Agua</span>
+                                <input type="date" id="profile-baptism-date" class="simple-input" style="width:100%;">
+                            </div>
+                            <div class="input-group" style="flex:1;">
+                                <span style="font-size:0.7rem; color:#888;">Espíritu Santo</span>
+                                <input type="date" id="profile-holy-spirit-date" class="simple-input"
+                                    style="width:100%;">
+                            </div>
+                        </div>
                         <div class="input-group">
                             <i class="ri-lock-2-line"></i>
                             <input type="text" id="profile-password" placeholder="Contraseña">
@@ -457,6 +471,8 @@
                         <div><strong>Celular:</strong> <span id="admin-member-phone"></span></div>
                         <div><strong>Edad:</strong> <span id="admin-member-age"></span></div>
                         <div><strong>F. Nacimiento:</strong> <span id="admin-member-dob"></span></div>
+                        <div><strong>Bautismo:</strong> <span id="admin-member-baptism"></span></div>
+                        <div><strong>E. Santo:</strong> <span id="admin-member-holy-spirit"></span></div>
                         <div><strong>Dirección:</strong> <span id="admin-member-address"></span></div>
                         <div><strong>Colonia:</strong> <span id="admin-member-colony"></span></div>
                         <div><strong>Profesión:</strong> <span id="admin-member-profession"></span></div>
@@ -755,10 +771,10 @@
         window.addEventListener('load', initSupabaseDirect);
     </script>
 
-    <!-- Service & App (v6.64 Photo Fix) -->
-    <script src="js/supabase-config.js?v=6.64"></script>
-    <script src="js/supabase-service.js?v=6.64"></script>
-    <script src="js/app_v6_42.js?v=6.64"></script>
+    <!-- Service & App (v6.65 Fechas Espirituales) -->
+    <script src="js/supabase-config.js?v=6.65"></script>
+    <script src="js/supabase-service.js?v=6.65"></script>
+    <script src="js/app_v6_42.js?v=6.65"></script>
 
     <!-- Version Indicator is handled by JS -->
 
