@@ -334,7 +334,13 @@ async function handleLogin(e) {
                         role: u.role,
                         age_label: u.age || '',
                         dob: u.dob || '',
-                        colonia: u.colony || '',
+                        colonia: u.colony || u.colonia || '',
+                        direccion: u.direccion || '',
+                        profesion: u.profesion || '',
+                        grado_estudios: u.grado_estudios || '',
+                        baptism_date: u.baptism_date || '',
+                        holy_spirit_date: u.holy_spirit_date || '',
+                        photo_url: u.photo_url || null,
                         password: u.password,
                         createdAt: u.created_at
                     }))));
@@ -3218,7 +3224,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.65 (Fechas Espirituales)";
+    v.innerText = "v6.66 (Sync Completo)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3226,6 +3232,16 @@ setTimeout(() => {
 // --- USER PROFILE MODAL LOGIC ---
 window.openProfileModal = function () {
     if (!STATE.user) return;
+
+    // FORCED RE-SYNC from local users list in case STATE.user is stale
+    const allUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+    const latestUser = allUsers.find(u => String(u.id) === String(STATE.user.id) || String(u.phone) === String(STATE.user.phone));
+    if (latestUser) {
+        STATE.user = { ...STATE.user, ...latestUser }; // Merge to ensure no missing fields
+        // Also update the session cache to stay consistent
+        localStorage.setItem('nexus_account', JSON.stringify(STATE.user));
+    }
+
     const user = STATE.user;
 
     document.getElementById('profile-name').value = user.full_name || '';
