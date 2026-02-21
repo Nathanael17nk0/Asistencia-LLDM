@@ -403,16 +403,20 @@
                             <i class="ri-smartphone-line"></i>
                             <input type="tel" id="profile-phone" placeholder="Celular" required>
                         </div>
-                        <div class="input-group" style="display:flex; gap:10px;">
+                        <div class="input-group"
+                            style="display:flex; justify-content:space-between; padding:10px 15px; align-items:center;">
                             <div style="flex:1;">
-                                <label style="font-size:0.7rem; color:var(--text-muted);">F. Nacimiento</label>
+                                <label
+                                    style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:2px;">F.
+                                    Nacimiento</label>
                                 <input type="text" id="profile-dob" readonly
-                                    style="width:100%; background:rgba(255,255,255,0.1); color:gray;">
+                                    style="width:100%; background:transparent; color:gray; padding:0 !important; font-size:1.1rem; border:none; outline:none;">
                             </div>
-                            <div style="width:70px;">
-                                <label style="font-size:0.7rem; color:var(--text-muted);">Edad</label>
+                            <div style="text-align:right; width:90px;">
+                                <label
+                                    style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:2px;">Edad</label>
                                 <input type="text" id="profile-age" readonly
-                                    style="width:100%; background:rgba(255,255,255,0.1); color:gray;">
+                                    style="width:100%; background:transparent; color:gray; padding:0 !important; font-size:1.1rem; border:none; outline:none; text-align:right;">
                             </div>
                         </div>
                         <div class="input-group">
@@ -774,10 +778,10 @@
         window.addEventListener('load', initSupabaseDirect);
     </script>
 
-    <!-- Service & App (v6.69 Data Loss Fix) -->
-    <script src="js/supabase-config.js?v=6.69"></script>
-    <script src="js/supabase-service.js?v=6.69"></script>
-    <script src="js/app_v6_42.js?v=6.69"></script>
+    <!-- Service & App (v6.70 UI Age Fix) -->
+    <script src="js/supabase-config.js?v=6.70"></script>
+    <script src="js/supabase-service.js?v=6.70"></script>
+    <script src="js/app_v6_42.js?v=6.70"></script>
 
     <!-- Version Indicator is handled by JS -->
 
