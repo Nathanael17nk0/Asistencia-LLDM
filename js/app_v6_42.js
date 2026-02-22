@@ -3199,7 +3199,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.92 (Control Total de Cartas)";
+    v.innerText = "v6.93 (Arreglo Botón Library)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3561,11 +3561,10 @@ window.openLibrary = async function () {
     const adminControls = document.getElementById('library-admin-controls');
     if (adminControls) adminControls.classList.add('hidden');
 
-    if (typeof window.loadLibrary === 'function') await window.loadLibrary();
+    if (typeof window.loadLibrary === 'function') await window.loadLibrary(false);
 };
 
 window.openLibraryAsSuperAdmin = async function () {
-    window.isSuperAdminMode = true;
     const dash = document.getElementById('dashboard-section');
     const lib = document.getElementById('library-section');
 
@@ -3579,11 +3578,10 @@ window.openLibraryAsSuperAdmin = async function () {
     const adminControls = document.getElementById('library-admin-controls');
     if (adminControls) adminControls.classList.remove('hidden');
 
-    if (typeof window.loadLibrary === 'function') await window.loadLibrary();
+    if (typeof window.loadLibrary === 'function') await window.loadLibrary(true);
 };
 
 window.closeLibrary = function () {
-    window.isSuperAdminMode = false; // Reset security flag
     const dash = document.getElementById('dashboard-section');
     const lib = document.getElementById('library-section');
 
@@ -3594,7 +3592,7 @@ window.closeLibrary = function () {
     }
 };
 
-window.loadLibrary = async function () {
+window.loadLibrary = async function (isSuperAdmin = false) {
     const container = document.getElementById('library-container');
     if (!container) return;
 
