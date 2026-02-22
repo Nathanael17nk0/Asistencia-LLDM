@@ -3199,7 +3199,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.94 (Arreglo Super Admin)";
+    v.innerText = "v6.95 (Visor de PDF Seguro)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3570,8 +3570,12 @@ window.openLibrary = async function () {
 window.openLibraryAsSuperAdmin = async function () {
     const dash = document.getElementById('dashboard-section');
     const lib = document.getElementById('library-section');
+    const adminPanel = document.getElementById('admin-panel');
 
     if (dash) dash.classList.add('hidden-section');
+    // CRITICAL: Hide the admin overlay so we can see the library behind it
+    if (adminPanel) adminPanel.classList.add('hidden');
+
     if (lib) {
         lib.classList.remove('hidden-section');
         lib.style.display = 'flex';
@@ -3640,9 +3644,9 @@ window.loadLibrary = async function (isSuperAdmin = false) {
                     <p style="margin:5px 0 0 0; font-size:0.85rem; color:#dddddd;">${l.description || 'Sin descripción'}</p>
                     <small style="color:var(--primary-gold); font-size:0.75rem; opacity:0.8; display:block; margin-top:5px;"><i class="ri-calendar-line"></i> ${new Date(l.created_at).toLocaleDateString()}</small>
                 </div>
-                <a href="${l.pdf_url}" target="_blank" class="cyber-btn sm" style="padding:8px 15px; text-decoration:none; display:inline-block; text-align:center; background:rgba(197,160,89,0.15); border-color:var(--primary-gold); color:var(--primary-gold);">
+                <button onclick="window.viewPDF('${l.pdf_url}')" class="cyber-btn sm" style="padding:8px 15px; text-decoration:none; display:inline-block; text-align:center; background:rgba(197,160,89,0.15); border-color:var(--primary-gold); color:var(--primary-gold);">
                     <i class="ri-external-link-line"></i> LEER
-                </a>
+                </button>
                 ${deleteBtn}
             `;
             container.appendChild(card);
@@ -3651,6 +3655,20 @@ window.loadLibrary = async function (isSuperAdmin = false) {
     } catch (e) {
         console.error(e);
         container.innerHTML = '<p style="text-align:center; color:red;">Error al cargar.</p>';
+    }
+};
+
+window.viewPDF = function (url) {
+    const overlay = document.getElementById('pdf-viewer-overlay');
+    const iframe = document.getElementById('pdf-iframe');
+
+    if (overlay && iframe) {
+        // Enforce Google Docs Viewer for cross-platform iframe support
+        iframe.src = `https://docs.google.com/viewer?url=${encodeURIComponent(url)}&embedded=true`;
+        overlay.classList.remove('hidden');
+    } else {
+        // Fallback
+        window.open(url, '_blank');
     }
 };
 
