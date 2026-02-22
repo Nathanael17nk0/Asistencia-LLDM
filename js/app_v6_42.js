@@ -3199,7 +3199,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.95 (Visor de PDF Seguro)";
+    v.innerText = "v6.96 (Borrador Listo)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3632,8 +3632,7 @@ window.loadLibrary = async function (isSuperAdmin = false) {
             card.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
             card.style.borderRadius = '15px';
 
-            const isSuperAdmin = (window.isSuperAdminMode === true);
-            const deleteBtn = isSuperAdmin ? `<button onclick="window.deleteLetter('${l.id}')" style="margin-left:15px; color:#ff4d4d; border:none; background:rgba(255,0,0,0.1); width:35px; height:35px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="ri-delete-bin-line"></i></button>` : '';
+            const deleteBtn = (isSuperAdmin === true) ? `<button onclick="window.deleteLetter('${l.id}')" style="margin-left:15px; color:#ff4d4d; border:none; background:rgba(255,0,0,0.1); width:35px; height:35px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="ri-delete-bin-line"></i></button>` : '';
 
             card.innerHTML = `
                 <div style="font-size:2.5rem; color:var(--primary-gold); margin-right:20px; animation: pulse-gold 3s infinite ease-in-out; filter:drop-shadow(0 0 10px rgba(197,160,89,0.5));">
