@@ -619,10 +619,10 @@
 
                         <!-- SCROLLABLE LIST -->
                         <div class="admin-scrollable-content"
-                            style="padding:0; flex:1; display:flex; flex-direction:column;">
+                            style="padding:0; overflow-y:auto; -webkit-overflow-scrolling:touch;">
 
                             <!-- TAB 1: ASISTENCIA -->
-                            <div id="admin-tab-asistencia" style="display:flex; flex-direction:column; flex:1;">
+                            <div id="admin-tab-asistencia" style="display:block;">
                                 <div id="admin-user-list" style="min-height:200px;">
                                     <!-- Users injected here -->
                                 </div>
@@ -630,8 +630,7 @@
                             </div>
 
                             <!-- TAB 2: SUPER ADMIN -->
-                            <div id="admin-tab-superadmin" class="hidden"
-                                style="display:flex; flex-direction:column; flex:1; background:#fafafa;">
+                            <div id="admin-tab-superadmin" class="hidden" style="background:#fafafa;">
                                 <div
                                     style="padding:15px; padding-bottom:100px; display:flex; flex-direction:column; gap:15px;">
 
@@ -856,10 +855,10 @@
                         window.addEventListener('load', initSupabaseDirect);
                     </script>
 
-                    <!-- Service & App (v6.74 Admin Fixes) -->
-                    <script src="js/supabase-config.js?v=6.74"></script>
-                    <script src="js/supabase-service.js?v=6.74"></script>
-                    <script src="js/app_v6_42.js?v=6.74"></script>
+                    <!-- Service & App (v6.75 Scroll & GPS Fixes) -->
+                    <script src="js/supabase-config.js?v=6.75"></script>
+                    <script src="js/supabase-service.js?v=6.75"></script>
+                    <script src="js/app_v6_42.js?v=6.75"></script>
 
                     <!-- Version Indicator is handled by JS -->
 

@@ -11,9 +11,10 @@ const STATE = {
     targetLocation: {
         lat: 26.096836,
         lng: -98.291939,
-        radius: 35
+        radius: 150 // Increased from 35m to 150m for indoor GPS drift
     },
-    inGeofence: false
+    inGeofence: false,
+    distance: null
 };
 
 // --- DOM ELEMENTS ---
@@ -2502,9 +2503,18 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 2. Geolocation Check
             // Bypass for Admin
-            if (!STATE.inGeofence && STATE.user.role !== 'admin') {
-                alert("📍 NO ESTÁS EN EL TEMPLO\n\nDebes estar dentro de las instalaciones para registrar asistencia.");
-                return;
+            if (STATE.user.role !== 'admin') {
+                if (STATE.currentLocation.lat === 0) {
+                    alert("📍 Obteniendo ubicación...\n\nPor favor, asegúrate de permitir el acceso a tu ubicación y espera unos segundos.");
+                    if (window.checkLocationStatus) window.checkLocationStatus();
+                    return;
+                }
+
+                if (!STATE.inGeofence) {
+                    const distInfo = STATE.distance ? ` (Aprox ${Math.round(STATE.distance)}m del templo)` : '';
+                    alert(`📍 NO ESTÁS EN EL TEMPLO${distInfo}\n\nDebes estar dentro de las instalaciones para registrar asistencia. Si estás en el edificio, acércate a una ventana para mejorar tu señal GPS.`);
+                    return;
+                }
             }
 
             // 3. Check Previous Attendance (For THIS service)
@@ -3160,7 +3170,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.74 (Admin UI & Geofence Fixes)";
+    v.innerText = "v6.75 (Admin UI & Geofence Fixes)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3185,7 +3195,7 @@ window.switchAdminTab = function (tabName) {
     if (!tabAsistencia || !tabSuperAdmin) return;
 
     if (tabName === 'asistencia') {
-        tabAsistencia.style.display = 'flex';
+        tabAsistencia.style.display = 'block';
         tabSuperAdmin.style.display = 'none';
         if (toolsAsistencia) toolsAsistencia.style.display = 'block';
         tabAsistencia.classList.remove('hidden');
@@ -3194,7 +3204,7 @@ window.switchAdminTab = function (tabName) {
         btnSuperAdmin.classList.remove('active');
     } else if (tabName === 'superadmin') {
         tabAsistencia.style.display = 'none';
-        tabSuperAdmin.style.display = 'flex';
+        tabSuperAdmin.style.display = 'block';
         if (toolsAsistencia) toolsAsistencia.style.display = 'none';
         tabAsistencia.classList.add('hidden');
         tabSuperAdmin.classList.remove('hidden');
