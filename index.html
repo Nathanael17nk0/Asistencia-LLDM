@@ -236,7 +236,7 @@
                     onclick="event.stopPropagation(); if(confirm('¿Cerrar sesión?')) { localStorage.removeItem('nexus_session'); localStorage.removeItem('nexus_account'); window.location.replace(window.location.pathname); }"><i
                         class="ri-shut-down-line"></i></button>
                 <!-- v2.0 NOTIFICATION BELL -->
-                <button id="notices-btn" class="mini-icon-btn" onclick="window.openNotices()"
+                <button id="notices-btn" class="mini-icon-btn" onclick="window.openGlobalNotificationModal()"
                     style="margin-right:5px; position:relative;">
                     <i class="ri-notification-3-line"></i>
                     <span id="notice-badge" class="hidden"
@@ -639,7 +639,26 @@
                 <div id="admin-tab-superadmin" class="hidden" style="background:#fafafa;">
                     <div style="padding:15px; padding-bottom:100px; display:flex; flex-direction:column; gap:15px;">
 
-                        <!-- A. Cartas Apostólicas -->
+                        <!-- A. Mensaje Global -->
+                        <div class="admin-section"
+                            style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
+                            <h5
+                                style="margin-bottom:10px; font-weight:bold; font-size:0.9rem; color:var(--primary-gold);">
+                                <i class="ri-broadcast-line"></i> Mensaje Global para la Iglesia
+                            </h5>
+                            <textarea id="admin-global-message-input" rows="3"
+                                placeholder="Escribe un anuncio o mensaje importante para todos los hermanos..."
+                                class="simple-input"
+                                style="width:100%; border:1px solid #ccc; padding:10px; font-size:0.8rem; margin-bottom:10px; border-radius:8px; resize:vertical;"></textarea>
+                            <button id="broadcast-message-btn" class="cyber-btn sm"
+                                style="width:100%; background:var(--primary-gold); color:black;">
+                                <i class="ri-send-plane-fill"></i> ENVIAR MENSAJE
+                            </button>
+                            <p style="font-size:0.75rem; color:var(--text-muted); margin-top:5px; text-align:center;">
+                                Al enviarlo, saltará flotando en la pantalla de todos los que abran la aplicación.</p>
+                        </div>
+
+                        <!-- B. Cartas Apostólicas -->
                         <div class="admin-section"
                             style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
                             <h5
@@ -774,6 +793,37 @@
 
                 <button id="view-weekly-btn" class="cyber-btn" style="margin-top:30px; border: 1px solid white;">VER
                     SEMANA COMPLETA</button>
+            </div>
+        </div>
+
+        <!-- GLOBAL NOTIFICATION MODAL (New) -->
+        <div id="global-notification-modal" class="hidden"
+            style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(10, 25, 47, 0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:9000; display:none; align-items:center; justify-content:center; animation: fadeIn 0.4s ease;">
+
+            <div class="cyber-card floating-entry"
+                style="width:90%; max-width:400px; padding:30px 20px; background:linear-gradient(145deg, rgba(23,42,70,0.95) 0%, rgba(10,25,47,0.95) 100%); border:2px solid var(--primary-gold); box-shadow:0 15px 35px rgba(0,0,0,0.5), inset 0 0 20px rgba(197, 160, 89, 0.1); border-radius:20px; text-align:center; position:relative;">
+
+                <div
+                    style="position:absolute; top:-25px; left:50%; transform:translateX(-50%); background:var(--primary-gold); width:50px; height:50px; border-radius:50%; display:flex; align-items:center; justify-content:center; box-shadow:0 4px 10px rgba(197, 160, 89, 0.4); border:3px solid #0a192f;">
+                    <i class="ri-broadcast-line" style="color:black; font-size:1.5rem;"></i>
+                </div>
+
+                <h2
+                    style="color:var(--primary-gold); margin-top:10px; margin-bottom:15px; font-size:1.4rem; font-family:'Orbitron', sans-serif;">
+                    AVISO IMPORTANTE</h2>
+
+                <div id="global-notification-content"
+                    style="color:white; font-size:1.05rem; line-height:1.5; margin-bottom:25px; min-height:60px; word-wrap:break-word;">
+                    <!-- Message content goes here -->
+                </div>
+
+                <p id="global-notification-date"
+                    style="font-size:0.75rem; color:var(--text-muted); margin-bottom:20px;">--</p>
+
+                <button onclick="window.dismissGlobalNotification()" class="cyber-btn"
+                    style="width:100%; border:1px solid var(--primary-gold); background:rgba(197, 160, 89, 0.1);">
+                    <i class="ri-check-double-line"></i> LEÍDO / ENTERADO
+                </button>
             </div>
         </div>
 

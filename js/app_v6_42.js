@@ -86,6 +86,11 @@ function showDashboard(user) {
     } else {
         console.log("📍 Location Watch Skipped for Admin");
     }
+
+    // NEW: Check for Global Notifications
+    if (typeof window.fetchAndCheckGlobalNotification === 'function') {
+        window.fetchAndCheckGlobalNotification();
+    }
 }
 
 function showRegister() {
@@ -3194,7 +3199,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.85 (Flexbox Strict Closure)";
+    v.innerText = "v6.86 (Mensaje Global)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3428,10 +3433,103 @@ window.openAdminMemberModal = function (uid) {
     }
     document.getElementById('admin-member-joined').innerText = joined;
 
-    const avatarName = (user.full_name || 'U').replace(/ /g, '+');
-    const defaultAvatar = `https://ui-avatars.com/api/?name=${avatarName}&background=c5a059&color=fff&bold=true`;
     document.getElementById('admin-member-avatar').src = user.photo_url || defaultAvatar;
 
     document.getElementById('admin-member-modal').style.display = 'flex';
     document.getElementById('admin-member-modal').classList.remove('hidden');
 };
+
+// ==========================================
+// GLOBAL BROADCAST NOTIFICATION SYSTEM
+// ==========================================
+let currentGlobalMessage = null;
+
+window.sendGlobalNotification = async function () {
+    const input = document.getElementById('admin-global-message-input');
+    if (!input || !input.value.trim()) {
+        alert("Escribe un mensaje primero.");
+        return;
+    }
+
+    if (!window.DB) {
+        alert("Sin conexión a la base de datos.");
+        return;
+    }
+
+    const payload = {
+        text: input.value.trim(),
+        timestamp: Date.now()
+    };
+
+    const btn = document.getElementById('broadcast-message-btn');
+    const oldText = btn.innerHTML;
+    try {
+        btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> ENVIANDO...";
+        await window.DB.saveConfig('global_message', JSON.stringify(payload));
+        input.value = '';
+        btn.innerHTML = "<i class='ri-check-line'></i> ENVIADO A TODOS";
+        setTimeout(() => btn.innerHTML = oldText, 3000);
+    } catch (e) {
+        console.error("Broadcast Error", e);
+        alert("Error al enviar mensaje: " + e.message);
+        btn.innerHTML = oldText;
+    }
+};
+
+window.fetchAndCheckGlobalNotification = async function () {
+    if (!window.DB) return;
+    try {
+        const raw = await window.DB.fetchConfig('global_message');
+        if (raw) {
+            currentGlobalMessage = JSON.parse(raw);
+            const lastRead = localStorage.getItem('nexus_last_read_message');
+            const bellBadge = document.getElementById('notice-badge');
+
+            // If message is newer than what user last read, showing warning dot
+            if (!lastRead || parseInt(lastRead) < currentGlobalMessage.timestamp) {
+                if (bellBadge) bellBadge.classList.remove('hidden');
+                // Auto-open modal if it's new
+                setTimeout(() => window.openGlobalNotificationModal(), 1000);
+            } else {
+                if (bellBadge) bellBadge.classList.add('hidden');
+            }
+        }
+    } catch (e) {
+        console.error("Error fetching global message", e);
+    }
+};
+
+window.openGlobalNotificationModal = function () {
+    if (!currentGlobalMessage) {
+        alert("No hay avisos recientes.");
+        return;
+    }
+    const modal = document.getElementById('global-notification-modal');
+    const content = document.getElementById('global-notification-content');
+    const dateE = document.getElementById('global-notification-date');
+    if (modal && content) {
+        content.innerText = currentGlobalMessage.text;
+        dateE.innerText = new Date(currentGlobalMessage.timestamp).toLocaleString('es-MX', { dateStyle: 'long', timeStyle: 'short' });
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+    }
+};
+
+window.dismissGlobalNotification = function () {
+    const modal = document.getElementById('global-notification-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+        if (currentGlobalMessage) {
+            localStorage.setItem('nexus_last_read_message', currentGlobalMessage.timestamp);
+            const bellBadge = document.getElementById('notice-badge');
+            if (bellBadge) bellBadge.classList.add('hidden');
+        }
+    }
+};
+
+// Bind Admin Send Button
+setTimeout(() => {
+    const broadcastBtn = document.getElementById('broadcast-message-btn');
+    if (broadcastBtn) broadcastBtn.onclick = window.sendGlobalNotification;
+}, 1500);
