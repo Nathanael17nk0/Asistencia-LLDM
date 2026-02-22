@@ -595,8 +595,22 @@
                                 <input type="date" id="admin-reg-dob" class="simple-input" style="flex:1;">
                             </div>
                             <div style="display:flex; gap:5px; margin-bottom:5px;">
-                                <input type="text" id="admin-reg-edad" placeholder="Edad" readonly class="simple-input"
-                                    style="width:60px; background:#eee;">
+                                <input type="number" id="admin-reg-edad" placeholder="Edad" class="simple-input"
+                                    style="width:60px;">
+                                <select id="admin-reg-gender" class="simple-input" style="flex:1;">
+                                    <option value="">Género...</option>
+                                    <option value="H">Hombre</option>
+                                    <option value="M">Mujer</option>
+                                </select>
+                                <select id="admin-reg-marital" class="simple-input" style="flex:1;">
+                                    <option value="">Estado Civil...</option>
+                                    <option value="Soltero">Soltero/a</option>
+                                    <option value="Casado">Casado/a</option>
+                                    <option value="Viudo">Viudo/a</option>
+                                    <option value="Union">Unión Libre</option>
+                                </select>
+                            </div>
+                            <div style="display:flex; gap:5px; margin-bottom:5px;">
                                 <input type="text" id="admin-reg-pass" placeholder="Pass (Opcional)"
                                     class="simple-input" style="flex:1;">
                                 <input type="hidden" id="editing-user-id">

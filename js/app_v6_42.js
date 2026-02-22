@@ -1572,12 +1572,9 @@ function initAdminFeatures() {
         document.getElementById('admin-reg-celular').value = user.phone;
         document.getElementById('admin-reg-colonia').value = user.colonia || '';
         document.getElementById('admin-reg-dob').value = user.dob || '';
-        const ageEl = document.getElementById('admin-reg-edad');
-        if (ageEl) {
-            ageEl.value = user.age_label || '';
-            // Trigger calc if needed
-            document.getElementById('admin-reg-dob').dispatchEvent(new Event('change'));
-        }
+        document.getElementById('admin-reg-edad').value = user.age || user.age_label || '';
+        document.getElementById('admin-reg-gender').value = user.gender || '';
+        document.getElementById('admin-reg-marital').value = user.marital_status || '';
 
         document.getElementById('editing-user-id').value = user.id;
         document.getElementById('manual-register-btn').textContent = "GUARDAR CAMBIOS";
@@ -1610,7 +1607,9 @@ function handleManualRegister() {
     const celular = document.getElementById('admin-reg-celular').value.trim();
     const colonia = document.getElementById('admin-reg-colonia').value.trim();
     const dobVal = document.getElementById('admin-reg-dob').value;
-    const ageLabel = document.getElementById('admin-reg-edad').value;
+    const ageVal = document.getElementById('admin-reg-edad').value;
+    const genderVal = document.getElementById('admin-reg-gender').value;
+    const maritalVal = document.getElementById('admin-reg-marital').value;
     let password = document.getElementById('admin-reg-pass').value.trim();
 
     const editingId = document.getElementById('editing-user-id').value;
@@ -1632,7 +1631,9 @@ function handleManualRegister() {
             users[userIndex].phone = celular;
             users[userIndex].colonia = colonia;
             users[userIndex].dob = dobVal;
-            users[userIndex].age_label = ageLabel;
+            users[userIndex].age = ageVal;
+            users[userIndex].gender = genderVal;
+            users[userIndex].marital_status = maritalVal;
             if (password !== '1234') users[userIndex].password = password;
 
             alert(`✅ Usuario actualizado: ${fullName}`);
@@ -1653,7 +1654,9 @@ function handleManualRegister() {
             role: 'user',
             full_name: fullName,
             colonia: colonia,
-            age_label: ageLabel,
+            age: ageVal,
+            gender: genderVal,
+            marital_status: maritalVal,
             dob: dobVal,
             createdAt: new Date().toISOString()
         };
@@ -1914,7 +1917,7 @@ function renderAdminUserList() {
             div.className = 'user-list-item';
             div.style.display = 'flex';
             div.style.alignItems = 'center';
-            div.style.padding = '4px 8px'; // Reduced Padding
+            div.style.padding = '2px 5px'; // Ultra Compact
             div.style.borderBottom = '1px solid #eee';
             div.style.background = isPresent ? '#f0fff4' : '#fff';
 
@@ -1925,15 +1928,15 @@ function renderAdminUserList() {
 
             // Status Text (Smaller)
             const statusText = isPresent ?
-                `<span style="color:green; font-weight:bold; font-size:0.75rem;">✅ ${entry.serviceName || 'Asistió'}</span>` :
-                `<span style="color:#bbb; font-size:0.75rem;">Falta</span>`;
+                `<span style="color:green; font-weight:bold; font-size:0.6rem;">✅ ${entry.serviceName || 'Asistió'}</span>` :
+                `<span style="color:#bbb; font-size:0.6rem;">Falta</span>`;
 
             div.innerHTML = `
                     <div onclick="if(window.openAdminMemberModal) window.openAdminMemberModal('${uid}')" style="display:flex; align-items:center; flex:1; cursor:pointer;" title="Ver Perfil">
-                        <img src="${avatarSrc}" style="width:28px; height:28px; border-radius:50%; object-fit:cover; border:1px solid ${isPresent ? 'var(--success)' : '#ddd'}; margin-right:8px; background:#fff;" alt="Avatar">
+                        <img src="${avatarSrc}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; border:1px solid ${isPresent ? 'var(--success)' : '#ddd'}; margin-right:6px; background:#fff;" alt="Avatar">
                         <div style="flex:1;">
-                            <h4 style="margin:0; font-size:0.85rem; line-height:1.2;">${u.full_name || u.name}</h4>
-                            <small style="color:#888; font-size:0.75rem;">ID: ${u.phone}</small>
+                            <h4 style="margin:0; font-size:0.75rem; line-height:1;">${u.full_name || u.name}</h4>
+                            <small style="color:#888; font-size:0.65rem;">ID: ${u.phone}</small>
                         </div>
                     </div>
                     <div style="text-align:right;">
@@ -3199,7 +3202,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.96 (Borrador Listo)";
+    v.innerText = "v6.97 (Lista Compacta + Registro Extendido)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
