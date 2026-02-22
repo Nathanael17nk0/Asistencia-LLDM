@@ -3199,7 +3199,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.87 (Biblioteca de Cartas)";
+    v.innerText = "v6.88 (Subida Directa PDF)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3624,25 +3624,75 @@ window.openPDF = function (url) {
     window.open(url, '_blank');
 };
 
-window.promptAddLetter = async function () {
-    const title = prompt("Título de la Carta:");
-    if (!title) return;
+window.promptAddLetter = function () {
+    const modal = document.getElementById('upload-letter-modal');
+    if (modal) {
+        modal.classList.remove('hidden');
+        modal.style.display = 'flex';
+    }
+};
 
-    const desc = prompt("Descripción corta (opcional):");
+window.closeUploadLetterModal = function () {
+    const modal = document.getElementById('upload-letter-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
 
-    const url = prompt("URL del PDF Directo (ej: https://.../carta.pdf):");
-    if (!url) return alert("URL requerida");
+        // Clear inputs
+        document.getElementById('upload-letter-title').value = '';
+        document.getElementById('upload-letter-desc').value = '';
+        document.getElementById('upload-letter-file').value = '';
+    }
+};
 
-    if (!window.DB || typeof window.DB.addLetter !== 'function') {
-        alert("La función de base de datos para subir cartas no está disponible."); return;
+window.submitLetterUpload = async function () {
+    const titleInput = document.getElementById('upload-letter-title');
+    const descInput = document.getElementById('upload-letter-desc');
+    const fileInput = document.getElementById('upload-letter-file');
+    const btn = document.getElementById('upload-letter-submit-btn');
+
+    if (!titleInput.value.trim()) {
+        alert("Por favor, ingresa el título de la carta.");
+        return;
     }
 
+    if (!fileInput.files || fileInput.files.length === 0) {
+        alert("Por favor, selecciona un archivo PDF.");
+        return;
+    }
+
+    const file = fileInput.files[0];
+    if (file.type !== "application/pdf") {
+        alert("El archivo debe ser un PDF.");
+        return;
+    }
+
+    if (!window.DB || typeof window.DB.uploadLetterPDF !== 'function') {
+        alert("Error: Conexión con la base de datos no disponible.");
+        return;
+    }
+
+    const oldBtnText = btn.innerHTML;
     try {
-        await window.DB.addLetter(title, desc, url);
-        alert("Carta agregada");
-        if (typeof window.loadLibrary === 'function') loadLibrary();
+        btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> SUBIENDO...";
+        btn.disabled = true;
+
+        // 1. Upload the PDF to Supabase Storage
+        const fileUrl = await window.DB.uploadLetterPDF(file);
+
+        // 2. Save the metadata to the attendance_letters table
+        await window.DB.addLetter(titleInput.value.trim(), descInput.value.trim(), fileUrl);
+
+        alert("¡Carta subida exitosamente!");
+        window.closeUploadLetterModal();
+        if (typeof window.loadLibrary === 'function') window.loadLibrary();
+
     } catch (e) {
-        alert("Error al subir: " + e.message);
+        console.error("Upload Error:", e);
+        alert("Ocurrió un error al subir la carta: " + e.message);
+    } finally {
+        btn.innerHTML = oldBtnText;
+        btn.disabled = false;
     }
 };
 

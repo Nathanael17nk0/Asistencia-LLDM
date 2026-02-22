@@ -827,6 +827,39 @@
             </div>
         </div>
 
+        <!-- UPLOAD LETTER MODAL (New) -->
+        <div id="upload-letter-modal" class="hidden"
+            style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(10, 25, 47, 0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:9000; display:none; align-items:center; justify-content:center; animation: fadeIn 0.4s ease;">
+
+            <div class="cyber-card floating-entry"
+                style="width:90%; max-width:400px; padding:30px 20px; background:linear-gradient(145deg, rgba(23,42,70,0.95) 0%, rgba(10,25,47,0.95) 100%); border:2px solid var(--primary-gold); box-shadow:0 15px 35px rgba(0,0,0,0.5), inset 0 0 20px rgba(197, 160, 89, 0.1); border-radius:20px; position:relative;">
+
+                <button onclick="window.closeUploadLetterModal()"
+                    style="position:absolute; top:15px; right:20px; background:none; border:none; color:var(--text-muted); font-size:1.5rem;">&times;</button>
+
+                <h2
+                    style="color:var(--primary-gold); margin-top:0; margin-bottom:20px; font-size:1.2rem; font-family:'Orbitron', sans-serif; text-align:center;">
+                    SUBIR CARTA APOSTÓLICA</h2>
+
+                <input type="text" id="upload-letter-title" class="simple-input" placeholder="Título de la Carta"
+                    style="width:100%; border:1px solid #ccc; padding:10px; font-size:0.9rem; margin-bottom:15px; border-radius:8px;">
+
+                <textarea id="upload-letter-desc" class="simple-input" rows="2"
+                    placeholder="Descripción breve (Opcional)"
+                    style="width:100%; border:1px solid #ccc; padding:10px; font-size:0.9rem; margin-bottom:15px; border-radius:8px; resize:vertical;"></textarea>
+
+                <label style="display:block; margin-bottom:5px; color:var(--text-main); font-size:0.9rem;">Archivo
+                    PDF:</label>
+                <input type="file" id="upload-letter-file" accept="application/pdf"
+                    style="width:100%; margin-bottom:20px; color:var(--text-muted); font-size:0.8rem;">
+
+                <button id="upload-letter-submit-btn" onclick="window.submitLetterUpload()" class="cyber-btn"
+                    style="width:100%; border:1px solid var(--primary-gold); background:rgba(197, 160, 89, 0.1);">
+                    <i class="ri-upload-cloud-line"></i> SUBIR A LA BIBLIOTECA
+                </button>
+            </div>
+        </div>
+
         <!-- HISTORY MODAL (New) -->
         <div id="history-modal" class="hidden"
             style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:4000; display:none; align-items:center; justify-content:center;">

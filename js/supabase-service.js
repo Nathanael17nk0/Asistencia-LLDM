@@ -314,6 +314,38 @@ const DB = {
         if (error) throw error;
     },
 
+    async uploadLetterPDF(file) {
+        if (!window.sbClient) throw new Error("No DB Connection");
+
+        // Generate a unique filename using timestamp and safe characters
+        const safeName = file.name.replace(/[^a-zA-Z0-9.\-_]/g, '_');
+        const fileName = `${Date.now()}_${safeName}`;
+
+        // Upload to the 'cartas' bucket
+        const { data, error } = await window.sbClient.storage
+            .from('cartas')
+            .upload(fileName, file, {
+                cacheControl: '3600',
+                upsert: false
+            });
+
+        if (error) {
+            console.error("Storage upload error:", error);
+            throw error;
+        }
+
+        // Get the public URL for the uploaded file
+        const { data: publicUrlData } = window.sbClient.storage
+            .from('cartas')
+            .getPublicUrl(fileName);
+
+        if (!publicUrlData || !publicUrlData.publicUrl) {
+            throw new Error("No se pudo obtener la URL pública del archivo.");
+        }
+
+        return publicUrlData.publicUrl;
+    },
+
     async deleteLetter(id) {
         if (!window.sbClient) throw new Error("No DB Connection");
         const { error } = await window.sbClient
