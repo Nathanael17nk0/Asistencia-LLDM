@@ -3199,7 +3199,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.90 (Biblioteca Premium)";
+    v.innerText = "v6.91 (Seguridad Super Admin)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3222,6 +3222,16 @@ window.switchAdminTab = function (tabName) {
     const toolsAsistencia = document.getElementById('tools-asistencia');
 
     if (!tabAsistencia || !tabSuperAdmin) return;
+
+    if (tabName === 'superadmin') {
+        const pwd = prompt("🔑 Introduce la contraseña de Super Admin:");
+        if (pwd !== 'spadmin') {
+            alert("Contraseña incorrecta.");
+            // Force return to Asistencia visually
+            tabName = 'asistencia';
+            return;
+        }
+    }
 
     if (tabName === 'asistencia') {
         tabAsistencia.style.display = 'block';

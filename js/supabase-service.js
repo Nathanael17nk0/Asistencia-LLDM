@@ -348,12 +348,39 @@ const DB = {
 
     async deleteLetter(id) {
         if (!window.sbClient) throw new Error("No DB Connection");
+
+        // 1. Fetch the pdf_url so we can delete the file from storage
+        const { data: letterData } = await window.sbClient
+            .from('attendance_letters')
+            .select('pdf_url')
+            .eq('id', id)
+            .single();
+
+        // 2. Delete the row from the database
         const { error } = await window.sbClient
             .from('attendance_letters')
             .delete()
             .eq('id', id);
 
         if (error) throw error;
+
+        // 3. Try to delete the physical file from the 'cartas' storage bucket
+        if (letterData && letterData.pdf_url) {
+            try {
+                // Extract filename from the standard Supabase public URL
+                const urlParts = letterData.pdf_url.split('/');
+                const fileName = urlParts[urlParts.length - 1];
+
+                if (fileName) {
+                    await window.sbClient.storage
+                        .from('cartas')
+                        .remove([fileName]);
+                }
+            } catch (storageErr) {
+                // Only warn, don't crash since the DB row is already gone
+                console.warn("Storage cleanup warning:", storageErr);
+            }
+        }
     }
 };
 
