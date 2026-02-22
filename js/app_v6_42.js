@@ -2985,20 +2985,7 @@ console.log("App.js loaded successfully.");
 document.addEventListener('DOMContentLoaded', () => {
     console.log("🚀 App Launching via EventListener");
 
-    // REALTIME STATUS INDICATOR (DEBUG)
-    const statusDiv = document.createElement('div');
-    statusDiv.id = 'realtime-status';
-    statusDiv.style.cssText = "position:fixed; bottom:10px; left:10px; background:rgba(0,0,0,0.8); color:white; padding:5px 10px; border-radius:20px; font-size:10px; z-index:9999; pointer-events:none;";
-    statusDiv.innerHTML = "🔴 Conectando...";
-    document.body.appendChild(statusDiv);
-
-    // FORCE SUBSCRIBE NOW
-    // FORCE SUBSCRIBE REMOVED - It was blocking the real logic due to Singleton check.
-    // Realtime logic is now strictly handled in initApp().
-
-    // Initial Status
-    const st = document.getElementById('realtime-status');
-    if (st) st.innerHTML = "⏳ Iniciando...";
+    // Removed realtime-status init since it was lingering empty
 
     if (typeof initApp === 'function') {
         setTimeout(initApp, 500); // Small delay to let Supabase Init
@@ -3035,7 +3022,13 @@ window.manuallyOpenSchedule = function () {
     // console.log("🟢 Manual Open Schedule Triggered");
 
     // 1. Check Data
-    const schedule = JSON.parse(localStorage.getItem('nexus_schedule_db') || '{}');
+    let schedule = {};
+    try {
+        schedule = JSON.parse(localStorage.getItem('nexus_schedule_db') || '{}');
+    } catch (e) {
+        console.error("Local schedule corrupted", e);
+        localStorage.removeItem('nexus_schedule_db');
+    }
     const keys = Object.keys(schedule);
 
     if (keys.length === 0) {
@@ -3180,7 +3173,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.76 (Strict Geofence & Admin Override)";
+    v.innerText = "v6.77 (UI & GPS Message Restorations)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
