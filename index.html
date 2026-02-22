@@ -24,6 +24,7 @@
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-title" content="Asistencia">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#1b2a4e">
 
     <!-- SheetJS for Excel Export -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
@@ -709,6 +710,10 @@
                         </div> <!-- Closes admin-scrollable-content -->
                     </div> <!-- Closes admin-panel -->
 
+
+
+                    <!-- ======================= MODALS AND OVERLAYS (Root Level) ======================= -->
+
                     <!-- Schedule/Image Overlay -->
                     <div id="schedule-overlay" class="glass-overlay hidden" style="z-index:3000; overflow-y:auto;">
                         <button id="close-schedule"
@@ -796,12 +801,12 @@
 
                     <!-- INLINE SUPABASE CONFIG & DEBUG -->
                     <script>
-                        // Visual Status Bar
+                        // Visual Status Bar as Bottom Toast
                         const statusDiv = document.createElement('div');
                         statusDiv.id = 'sys-status';
-                        statusDiv.style.cssText = "position:fixed; top:0; left:0; width:100%; padding:5px; text-align:center; color:white; font-size:12px; z-index:9999; font-family:monospace; pointer-events:none;";
+                        statusDiv.style.cssText = "position:fixed; bottom:30px; left:50%; transform:translateX(-50%); padding:5px 15px; border-radius:20px; text-align:center; color:white; font-size:10px; z-index:9999; font-family:monospace; pointer-events:none; box-shadow:0 4px 10px rgba(0,0,0,0.5); font-weight:bold;";
                         statusDiv.style.background = "rgba(255, 0, 0, 0.8)"; // Default Red
-                        statusDiv.innerHTML = "⏳ CONECTANDO A LA NUBE...";
+                        statusDiv.innerHTML = "⏳ NUBE...";
                         document.body.appendChild(statusDiv);
 
                         function updateStatus(msg, color) {
@@ -853,10 +858,10 @@
                         window.addEventListener('load', initSupabaseDirect);
                     </script>
 
-                    <!-- Service & App (v6.80 Critical DOM Nesting Fix) -->
-                    <script src="js/supabase-config.js?v=6.80"></script>
-                    <script src="js/supabase-service.js?v=6.80"></script>
-                    <script src="js/app_v6_42.js?v=6.80"></script>
+                    <!-- Service & App (v6.84 Surgical Modal Root Extraction) -->
+                    <script src="js/supabase-config.js?v=6.84"></script>
+                    <script src="js/supabase-service.js?v=6.84"></script>
+                    <script src="js/app_v6_42.js?v=6.84"></script>
 
                     <!-- Version Indicator is handled by JS -->
 
