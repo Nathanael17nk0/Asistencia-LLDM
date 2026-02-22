@@ -11,7 +11,7 @@ const STATE = {
     targetLocation: {
         lat: 26.096836,
         lng: -98.291939,
-        radius: 150 // Increased from 35m to 150m for indoor GPS drift
+        radius: 40 // Strict 40m per user request
     },
     inGeofence: false,
     distance: null
@@ -2417,10 +2417,15 @@ document.addEventListener('DOMContentLoaded', () => {
                     btnContainer.className = 'fingerprint-container success-state';
                     btnContainer.classList.remove('hidden-geo');
                     btnContainer.style.opacity = '1';
-                    btnContainer.style.cursor = 'pointer';
+                    btnContainer.style.cursor = 'default';
+                    btnContainer.style.pointerEvents = 'none';
                 }
                 if (instruction) {
-                    instruction.innerHTML = `✅ ASISTENCIA REGISTRADA<br><small>${slotName || 'Culto'}</small>`;
+                    if (hasAttended.method && hasAttended.method.includes('Admin')) {
+                        instruction.innerHTML = `✅ TU ASISTENCIA YA FUE REGISTRADA POR EL ADMINISTRADOR<br><small>${slotName || 'Culto'}</small>`;
+                    } else {
+                        instruction.innerHTML = `✅ ASISTENCIA REGISTRADA<br><small>${slotName || 'Culto'}</small>`;
+                    }
                     instruction.classList.remove('hidden');
                     instruction.className = "instruction-text success-text";
                     instruction.style.color = "var(--success)";
@@ -2432,8 +2437,42 @@ document.addEventListener('DOMContentLoaded', () => {
             // 2. Geofence & Service Logic
             const inFence = STATE.inGeofence || (STATE.user && STATE.user.role === 'admin');
 
-            if (isOpen && inFence) {
-                // READY TO SCAN
+            if (!isOpen) {
+                // CLOSED
+                if (btnContainer) {
+                    btnContainer.className = 'fingerprint-container';
+                    btnContainer.classList.add('hidden-geo');
+                    btnContainer.style.pointerEvents = 'none';
+                }
+                if (messageDiv) messageDiv.style.display = 'none';
+                if (instruction) {
+                    instruction.innerHTML = "Fuera de Horario de Oración.";
+                    instruction.classList.remove('hidden');
+                    instruction.className = "instruction-text";
+                    instruction.style.color = "var(--text-muted)";
+                }
+                if (icon) {
+                    icon.className = "ri-fingerprint-line fingerprint-icon";
+                    icon.style.color = "";
+                }
+            } else if (!inFence) {
+                // OUT OF RANGE
+                if (btnContainer) {
+                    btnContainer.className = 'fingerprint-container';
+                    btnContainer.classList.add('hidden-geo');
+                    btnContainer.style.pointerEvents = 'none';
+                }
+                if (messageDiv) {
+                    messageDiv.style.display = 'block';
+                    messageDiv.innerHTML = `<i class="ri-map-pin-user-fill"></i> APRÓXIMATE AL TEMPLO<br><small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
+                }
+                if (instruction) instruction.classList.add('hidden');
+                if (icon) {
+                    icon.className = "ri-fingerprint-line fingerprint-icon";
+                    icon.style.color = "";
+                }
+            } else {
+                // READY TO SCAN (OPEN AND IN RANGE)
                 if (btnContainer) {
                     btnContainer.className = 'fingerprint-container active scanning ready-glow';
                     btnContainer.classList.remove('hidden-geo');
@@ -2448,40 +2487,6 @@ document.addEventListener('DOMContentLoaded', () => {
                     instruction.style.color = "var(--primary-gold)";
                 }
                 if (messageDiv) messageDiv.style.display = 'none';
-
-            } else if (isOpen && !inFence) {
-                // OUT OF RANGE
-                if (btnContainer) {
-                    btnContainer.className = 'fingerprint-container';
-                    btnContainer.classList.add('hidden-geo');
-                }
-                if (messageDiv) {
-                    messageDiv.style.display = 'block';
-                    messageDiv.innerHTML = `<i class="ri-map-pin-user-fill"></i> ACÉRCATE AL TEMPLO<br><small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
-                }
-                if (instruction) instruction.classList.add('hidden');
-                if (icon) {
-                    icon.className = "ri-fingerprint-line fingerprint-icon";
-                    icon.style.color = "";
-                }
-
-            } else {
-                // CLOSED
-                if (btnContainer) {
-                    btnContainer.className = 'fingerprint-container';
-                    btnContainer.classList.add('hidden-geo');
-                }
-                if (messageDiv) messageDiv.style.display = 'none';
-                if (instruction) {
-                    instruction.innerHTML = "No hay servicio activo en este momento.";
-                    instruction.classList.remove('hidden');
-                    instruction.className = "instruction-text";
-                    instruction.style.color = "var(--text-muted)";
-                }
-                if (icon) {
-                    icon.className = "ri-fingerprint-line fingerprint-icon";
-                    icon.style.color = "";
-                }
             }
         };
 
@@ -2528,6 +2533,11 @@ document.addEventListener('DOMContentLoaded', () => {
             );
 
             if (hasAttendedService) {
+                if (hasAttendedService.method && hasAttendedService.method.includes('Admin')) {
+                    alert(`✅ TU ASISTENCIA YA FUE REGISTRADA POR EL ADMINISTRADOR\n\nNo puedes cancelarla desde aquí. Si fue un error, repórtalo en administración.`);
+                    return;
+                }
+
                 if (confirm(`⚠️ YA REGISTRADO\n\n¿Deseas CANCELAR tu asistencia de hoy para: ${slotName}?`)) {
                     // REMOVE LOCAL
                     const idx = log.findIndex(e => e === hasAttendedService);
@@ -3170,7 +3180,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.75 (Admin UI & Geofence Fixes)";
+    v.innerText = "v6.76 (Strict Geofence & Admin Override)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
