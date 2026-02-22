@@ -3199,7 +3199,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.91 (Seguridad Super Admin)";
+    v.innerText = "v6.92 (Control Total de Cartas)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3557,16 +3557,33 @@ window.openLibrary = async function () {
         lib.style.display = 'flex';
     }
 
-    // Show Admin Controls?
+    // Always hide admin controls for normal view
     const adminControls = document.getElementById('library-admin-controls');
-    if (STATE.user && STATE.user.role === 'admin' && adminControls) {
-        adminControls.classList.remove('hidden');
+    if (adminControls) adminControls.classList.add('hidden');
+
+    if (typeof window.loadLibrary === 'function') await window.loadLibrary();
+};
+
+window.openLibraryAsSuperAdmin = async function () {
+    window.isSuperAdminMode = true;
+    const dash = document.getElementById('dashboard-section');
+    const lib = document.getElementById('library-section');
+
+    if (dash) dash.classList.add('hidden-section');
+    if (lib) {
+        lib.classList.remove('hidden-section');
+        lib.style.display = 'flex';
     }
+
+    // Show admin controls ONLY in this mode
+    const adminControls = document.getElementById('library-admin-controls');
+    if (adminControls) adminControls.classList.remove('hidden');
 
     if (typeof window.loadLibrary === 'function') await window.loadLibrary();
 };
 
 window.closeLibrary = function () {
+    window.isSuperAdminMode = false; // Reset security flag
     const dash = document.getElementById('dashboard-section');
     const lib = document.getElementById('library-section');
 
@@ -3610,16 +3627,16 @@ window.loadLibrary = async function () {
             card.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
             card.style.borderRadius = '15px';
 
-            const isAdmin = (STATE.user && STATE.user.role === 'admin');
-            const deleteBtn = isAdmin ? `<button onclick="window.deleteLetter('${l.id}')" style="margin-left:15px; color:#ff4d4d; border:none; background:rgba(255,0,0,0.1); width:35px; height:35px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="ri-delete-bin-line"></i></button>` : '';
+            const isSuperAdmin = (window.isSuperAdminMode === true);
+            const deleteBtn = isSuperAdmin ? `<button onclick="window.deleteLetter('${l.id}')" style="margin-left:15px; color:#ff4d4d; border:none; background:rgba(255,0,0,0.1); width:35px; height:35px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="ri-delete-bin-line"></i></button>` : '';
 
             card.innerHTML = `
                 <div style="font-size:2.5rem; color:var(--primary-gold); margin-right:20px; animation: pulse-gold 3s infinite ease-in-out; filter:drop-shadow(0 0 10px rgba(197,160,89,0.5));">
                     <i class="ri-fire-fill"></i>
                 </div>
                 <div style="flex:1;">
-                    <h4 style="margin:0; font-size:1.1rem; color:var(--text-main); font-family:'Orbitron', sans-serif; letter-spacing:1px;">${l.title}</h4>
-                    <p style="margin:5px 0 0 0; font-size:0.85rem; color:var(--text-muted);">${l.description || 'Sin descripción'}</p>
+                    <h4 style="margin:0; font-size:1.1rem; color:#ffffff; font-family:'Orbitron', sans-serif; letter-spacing:1px; text-shadow:0 0 5px rgba(255,255,255,0.3);">${l.title}</h4>
+                    <p style="margin:5px 0 0 0; font-size:0.85rem; color:#dddddd;">${l.description || 'Sin descripción'}</p>
                     <small style="color:var(--primary-gold); font-size:0.75rem; opacity:0.8; display:block; margin-top:5px;"><i class="ri-calendar-line"></i> ${new Date(l.created_at).toLocaleDateString()}</small>
                 </div>
                 <a href="${l.pdf_url}" target="_blank" class="cyber-btn sm" style="padding:8px 15px; text-decoration:none; display:inline-block; text-align:center; background:rgba(197,160,89,0.15); border-color:var(--primary-gold); color:var(--primary-gold);">
