@@ -3199,7 +3199,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.89 (Arreglo Biblioteca)";
+    v.innerText = "v6.90 (Biblioteca Premium)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3589,25 +3589,32 @@ window.loadLibrary = async function () {
         container.innerHTML = '';
         letters.forEach(l => {
             const card = document.createElement('div');
-            card.className = 'glass-card';
+            // Use the premium cyber card style with gold borders
+            card.className = 'cyber-card floating-entry';
             card.style.marginBottom = '15px';
             card.style.display = 'flex';
             card.style.alignItems = 'center';
-            card.style.padding = '15px';
+            card.style.padding = '15px 20px';
+            card.style.background = 'linear-gradient(145deg, rgba(23,42,70,0.8) 0%, rgba(10,25,47,0.9) 100%)';
+            card.style.border = '1px solid rgba(197, 160, 89, 0.4)';
+            card.style.boxShadow = '0 5px 15px rgba(0,0,0,0.3)';
+            card.style.borderRadius = '15px';
 
             const isAdmin = (STATE.user && STATE.user.role === 'admin');
-            const deleteBtn = isAdmin ? `<button onclick="window.deleteLetter('${l.id}')" style="margin-left:10px; color:red; border:none; background:none;"><i class="ri-delete-bin-line"></i></button>` : '';
+            const deleteBtn = isAdmin ? `<button onclick="window.deleteLetter('${l.id}')" style="margin-left:15px; color:#ff4d4d; border:none; background:rgba(255,0,0,0.1); width:35px; height:35px; border-radius:8px; display:flex; align-items:center; justify-content:center;"><i class="ri-delete-bin-line"></i></button>` : '';
 
             card.innerHTML = `
-                <div style="font-size:2rem; color:var(--secondary-navy); margin-right:15px;">
-                    <i class="ri-file-pdf-2-line"></i>
+                <div style="font-size:2.5rem; color:var(--primary-gold); margin-right:20px; animation: pulse-gold 3s infinite ease-in-out; filter:drop-shadow(0 0 10px rgba(197,160,89,0.5));">
+                    <i class="ri-fire-fill"></i>
                 </div>
                 <div style="flex:1;">
-                    <h4 style="margin:0; font-size:1rem; color:var(--text-main);">${l.title}</h4>
-                    <p style="margin:0; font-size:0.8rem; color:var(--text-muted);">${l.description || 'Sin descripción'}</p>
-                    <small style="color:#aaa;">${new Date(l.created_at).toLocaleDateString()}</small>
+                    <h4 style="margin:0; font-size:1.1rem; color:var(--text-main); font-family:'Orbitron', sans-serif; letter-spacing:1px;">${l.title}</h4>
+                    <p style="margin:5px 0 0 0; font-size:0.85rem; color:var(--text-muted);">${l.description || 'Sin descripción'}</p>
+                    <small style="color:var(--primary-gold); font-size:0.75rem; opacity:0.8; display:block; margin-top:5px;"><i class="ri-calendar-line"></i> ${new Date(l.created_at).toLocaleDateString()}</small>
                 </div>
-                <a href="${l.pdf_url}" target="_blank" class="cyber-btn sm" style="padding:5px 10px; text-decoration:none; display:inline-block; text-align:center;">LEER</a>
+                <a href="${l.pdf_url}" target="_blank" class="cyber-btn sm" style="padding:8px 15px; text-decoration:none; display:inline-block; text-align:center; background:rgba(197,160,89,0.15); border-color:var(--primary-gold); color:var(--primary-gold);">
+                    <i class="ri-external-link-line"></i> LEER
+                </a>
                 ${deleteBtn}
             `;
             container.appendChild(card);

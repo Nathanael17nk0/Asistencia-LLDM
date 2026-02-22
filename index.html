@@ -297,25 +297,43 @@
 
         <!-- ======================= MODALS AND OVERLAYS (Root Level) ======================= -->
 
-        <!-- v2.0 LIBRARY SECTION -->
+        <!-- v2.0 LIBRARY SECTION (Premium Redesign) -->
         <div id="library-section" class="hidden-section full-screen-dashboard"
-            style="background:var(--bg-color); flex-direction:column; justify-content:flex-start; align-items:stretch; padding-top:20px;">
-            <div class="card-header" style="margin-top:20px; position:relative;">
+            style="background:linear-gradient(145deg, rgba(10,25,47,0.95) 0%, rgba(2,12,27,0.98) 100%); flex-direction:column; justify-content:flex-start; align-items:stretch; padding-top:40px; position:relative; overflow:hidden;">
+
+            <!-- Decorative Background Element -->
+            <div
+                style="position:absolute; top:-100px; left:-100px; width:300px; height:300px; background:radial-gradient(circle, rgba(197,160,89,0.15) 0%, rgba(0,0,0,0) 70%); border-radius:50%; pointer-events:none;">
+            </div>
+
+            <div class="card-header"
+                style="position:relative; z-index:10; display:flex; flex-direction:column; align-items:center; margin-bottom:10px;">
                 <button onclick="window.closeLibrary()"
-                    style="position:absolute; left:20px; top:0; background:none; border:none; font-size:1.5rem; color:var(--text-main);"><i
+                    style="position:absolute; left:20px; top:0; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:10px; padding:8px 12px; font-size:1.2rem; color:var(--primary-gold); backdrop-filter:blur(5px);"><i
                         class="ri-arrow-left-line"></i></button>
-                <h2>BIBLIOTECA</h2>
-                <p>CARTAS APOSTÓLICAS</p>
+
+                <!-- Animated Golden Flame -->
+                <i class="ri-fire-fill"
+                    style="font-size:3.5rem; color:var(--primary-gold); animation: pulse-gold 3s infinite ease-in-out; filter:drop-shadow(0 0 15px rgba(197,160,89,0.6)); margin-bottom:5px;"></i>
+                <h2
+                    style="color:white; font-family:'Orbitron', sans-serif; letter-spacing:2px; margin:0; font-size:1.8rem;">
+                    BIBLIOTECA</h2>
+                <p
+                    style="color:var(--primary-gold); font-size:0.9rem; letter-spacing:1px; margin-top:5px; text-transform:uppercase;">
+                    Cartas Apostólicas</p>
             </div>
 
-            <div id="library-admin-controls" class="hidden" style="text-align:center; margin-bottom:10px;">
-                <button onclick="window.promptAddLetter()" class="cyber-btn sm"><i class="ri-upload-cloud-line"></i>
-                    SUBIR CARTA</button>
+            <div id="library-admin-controls" class="hidden" style="text-align:center; margin-bottom:20px; z-index:10;">
+                <button onclick="window.promptAddLetter()" class="cyber-btn sm gold-btn"
+                    style="box-shadow:0 0 15px rgba(197,160,89,0.3);"><i class="ri-upload-cloud-line"></i>
+                    SUBIR CARTA NUEVA</button>
             </div>
 
-            <div id="library-container" style="padding:20px; overflow-y:auto; padding-bottom:100px;">
+            <div id="library-container"
+                style="padding:0 20px 100px 20px; overflow-y:auto; z-index:10; display:flex; flex-direction:column; gap:15px;">
                 <!-- Letters injected here -->
-                <p style="text-align:center; color:#aaa;">Cargando biblioteca...</p>
+                <p style="text-align:center; color:var(--primary-gold);"><i class="ri-loader-4-line ri-spin"></i>
+                    Cargando biblioteca...</p>
             </div>
         </div>
 
