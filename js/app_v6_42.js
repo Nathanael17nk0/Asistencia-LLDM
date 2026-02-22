@@ -3199,7 +3199,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.93 (Arreglo Botón Library)";
+    v.innerText = "v6.94 (Arreglo Super Admin)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3538,10 +3538,13 @@ window.dismissGlobalNotification = function () {
     }
 };
 
-// Bind Admin Send Button
+// Bind Admin Send Button & Super Admin Library Button
 setTimeout(() => {
     const broadcastBtn = document.getElementById('broadcast-message-btn');
     if (broadcastBtn) broadcastBtn.onclick = window.sendGlobalNotification;
+
+    const saLibraryBtn = document.getElementById('btn-open-library-superadmin');
+    if (saLibraryBtn) saLibraryBtn.onclick = window.openLibraryAsSuperAdmin;
 }, 1500);
 
 // ==========================================
