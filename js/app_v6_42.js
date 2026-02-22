@@ -529,10 +529,24 @@ function formatDate(date) {
     return date.toLocaleDateString('es-ES', options).toUpperCase();
 }
 
+window.getSafeSchedule = function () {
+    try {
+        const raw = localStorage.getItem('nexus_schedule_db');
+        if (raw && raw !== 'null' && raw !== 'undefined') {
+            const parsed = JSON.parse(raw);
+            if (typeof parsed === 'object' && parsed !== null) return parsed;
+        }
+    } catch (e) {
+        console.warn("Cleared corrupted schedule DB");
+    }
+    localStorage.removeItem('nexus_schedule_db');
+    return {};
+};
+
 function loadTodaySchedule() {
     const today = new Date();
     const dateKey = getStorageKey(today);
-    const fullSchedule = JSON.parse(localStorage.getItem('nexus_schedule_db') || '{}');
+    const fullSchedule = window.getSafeSchedule();
     const todayData = fullSchedule[dateKey] || {};
 
     ['5am', '9am', '7pm', 'special'].forEach(slot => {
@@ -571,7 +585,7 @@ function loadWeeklyTable() {
     tbody.innerHTML = '';
 
     const todayStr = new Date().toISOString().split('T')[0]; // Moved to top
-    const fullSchedule = JSON.parse(localStorage.getItem('nexus_schedule_db') || '{}');
+    const fullSchedule = window.getSafeSchedule();
     const sortedDates = Object.keys(fullSchedule).sort();
 
     // DEBUG INFO REMOVED FOR PRODUCTION
@@ -1043,7 +1057,7 @@ function initAdminFeatures() {
                         // Get JSON (array of arrays)
                         const rows = XLSX.utils.sheet_to_json(worksheet, { header: 1 });
 
-                        let newSchedule = JSON.parse(localStorage.getItem('nexus_schedule_db') || '{}');
+                        let newSchedule = window.getSafeSchedule();
 
                         // CRITICAL FIX: Ensure it is an Object, not an Array.
                         // Arrays with named properties evaluate to JSON "[]" or "[{}]", losing data.
@@ -1259,7 +1273,7 @@ function initAdminFeatures() {
                 const lines = text.split('\n');
 
                 let currentDateKey = null;
-                const newSchedule = JSON.parse(localStorage.getItem('nexus_schedule_db') || '{}');
+                const newSchedule = window.getSafeSchedule();
                 let updatesCount = 0;
                 let foundDates = [];
 
@@ -3024,10 +3038,17 @@ window.manuallyOpenSchedule = function () {
     // 1. Check Data
     let schedule = {};
     try {
-        schedule = JSON.parse(localStorage.getItem('nexus_schedule_db') || '{}');
+        const raw = localStorage.getItem('nexus_schedule_db');
+        if (raw && raw !== 'null' && raw !== 'undefined') {
+            schedule = JSON.parse(raw);
+        }
+        if (typeof schedule !== 'object' || schedule === null) {
+            schedule = {};
+        }
     } catch (e) {
         console.error("Local schedule corrupted", e);
         localStorage.removeItem('nexus_schedule_db');
+        schedule = {};
     }
     const keys = Object.keys(schedule);
 
@@ -3173,7 +3194,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.78 (iOS Scroll Chaining & Modal Toggles Fixed)";
+    v.innerText = "v6.79 (Safe Parse & iOS Lists)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });

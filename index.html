@@ -502,7 +502,7 @@
                 style="position:fixed; top:0; bottom:0; left:0; right:0; width:100vw; height:100%; z-index:2001; background: rgba(255,255,255,0.98); display:flex; flex-direction:column; overflow:hidden; overscroll-behavior:none;">
 
                 <!-- FIXED HEADER CONTAINER -->
-                <div class="admin-fixed-header">
+                <div class="admin-fixed-header" style="flex-shrink:0;">
                     <!-- HEADER & REPORTS -->
                     <div
                         style="padding: 10px; border-bottom: 1px solid #eee; background: linear-gradient(135deg, #4169E1 0%, #0047AB 100%); display:flex; flex-direction:column; gap:5px;">
@@ -533,7 +533,7 @@
 
                     <!-- FIXED TOOLS HEADER (Always visible under main tabs, adjusts per tab) -->
                     <div id="admin-tools-header" class="admin-fixed-header"
-                        style="box-shadow:none; border-bottom:1px solid #eee;">
+                        style="box-shadow:none; border-bottom:1px solid #eee; flex-shrink:0;">
 
                         <!-- Tools specifically for Asistencia -->
                         <div id="tools-asistencia">
@@ -856,10 +856,10 @@
                             window.addEventListener('load', initSupabaseDirect);
                         </script>
 
-                        <!-- Service & App (v6.77 UI Restorations) -->
-                        <script src="js/supabase-config.js?v=6.77"></script>
-                        <script src="js/supabase-service.js?v=6.77"></script>
-                        <script src="js/app_v6_42.js?v=6.77"></script>
+                        <!-- Service & App (v6.79 Safe Parsing + iOS Bounds) -->
+                        <script src="js/supabase-config.js?v=6.79"></script>
+                        <script src="js/supabase-service.js?v=6.79"></script>
+                        <script src="js/app_v6_42.js?v=6.79"></script>
 
                         <!-- Version Indicator is handled by JS -->
 
