@@ -3199,7 +3199,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.86 (Mensaje Global)";
+    v.innerText = "v6.87 (Biblioteca de Cartas)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3533,3 +3533,127 @@ setTimeout(() => {
     const broadcastBtn = document.getElementById('broadcast-message-btn');
     if (broadcastBtn) broadcastBtn.onclick = window.sendGlobalNotification;
 }, 1500);
+
+// ==========================================
+// APOSTOLIC LETTERS (LIBRARY) SYSTEM
+// ==========================================
+window.openLibrary = async function () {
+    const dash = document.getElementById('dashboard-section');
+    const lib = document.getElementById('library-section');
+
+    if (dash) dash.classList.add('hidden-section');
+    if (lib) {
+        lib.classList.remove('hidden-section');
+        lib.style.display = 'flex';
+    }
+
+    // Show Admin Controls?
+    const adminControls = document.getElementById('library-admin-controls');
+    if (STATE.user && STATE.user.role === 'admin' && adminControls) {
+        adminControls.classList.remove('hidden');
+    }
+
+    if (typeof window.loadLibrary === 'function') await window.loadLibrary();
+};
+
+window.closeLibrary = function () {
+    const dash = document.getElementById('dashboard-section');
+    const lib = document.getElementById('library-section');
+
+    if (lib) lib.classList.add('hidden-section');
+    if (dash) {
+        dash.classList.remove('hidden-section');
+        dash.style.display = 'flex'; // Ensure flex layout
+    }
+};
+
+window.loadLibrary = async function () {
+    const container = document.getElementById('library-container');
+    if (!container) return;
+
+    container.innerHTML = '<p style="text-align:center; color:#aaa;"><i class="ri-loader-4-line ri-spin"></i> Cargando...</p>';
+
+    if (!window.DB || typeof window.DB.getLetters !== 'function') {
+        container.innerHTML = '<p style="text-align:center; color:red;">La base de datos (letters) no está disponible en este momento.</p>';
+        return;
+    }
+
+    try {
+        const letters = await window.DB.getLetters();
+
+        if (!letters || letters.length === 0) {
+            container.innerHTML = '<p style="text-align:center; color:#aaa;">No hay cartas disponibles aún.</p>';
+            return;
+        }
+
+        container.innerHTML = '';
+        letters.forEach(l => {
+            const card = document.createElement('div');
+            card.className = 'glass-card';
+            card.style.marginBottom = '15px';
+            card.style.display = 'flex';
+            card.style.alignItems = 'center';
+            card.style.padding = '15px';
+
+            const isAdmin = (STATE.user && STATE.user.role === 'admin');
+            const deleteBtn = isAdmin ? `<button onclick="window.deleteLetter('${l.id}')" style="margin-left:10px; color:red; border:none; background:none;"><i class="ri-delete-bin-line"></i></button>` : '';
+
+            card.innerHTML = `
+                <div style="font-size:2rem; color:var(--secondary-navy); margin-right:15px;">
+                    <i class="ri-file-pdf-2-line"></i>
+                </div>
+                <div style="flex:1;">
+                    <h4 style="margin:0; font-size:1rem; color:var(--text-main);">${l.title}</h4>
+                    <p style="margin:0; font-size:0.8rem; color:var(--text-muted);">${l.description || 'Sin descripción'}</p>
+                    <small style="color:#aaa;">${new Date(l.created_at).toLocaleDateString()}</small>
+                </div>
+                <button onclick="window.openPDF('${l.pdf_url}')" class="cyber-btn sm" style="padding:5px 10px;">LEER</button>
+                ${deleteBtn}
+            `;
+            container.appendChild(card);
+        });
+
+    } catch (e) {
+        console.error(e);
+        container.innerHTML = '<p style="text-align:center; color:red;">Error al cargar.</p>';
+    }
+};
+
+window.openPDF = function (url) {
+    if (!url) return;
+    window.open(url, '_blank');
+};
+
+window.promptAddLetter = async function () {
+    const title = prompt("Título de la Carta:");
+    if (!title) return;
+
+    const desc = prompt("Descripción corta (opcional):");
+
+    const url = prompt("URL del PDF Directo (ej: https://.../carta.pdf):");
+    if (!url) return alert("URL requerida");
+
+    if (!window.DB || typeof window.DB.addLetter !== 'function') {
+        alert("La función de base de datos para subir cartas no está disponible."); return;
+    }
+
+    try {
+        await window.DB.addLetter(title, desc, url);
+        alert("Carta agregada");
+        if (typeof window.loadLibrary === 'function') loadLibrary();
+    } catch (e) {
+        alert("Error al subir: " + e.message);
+    }
+};
+
+window.deleteLetter = async function (id) {
+    if (!confirm("¿Borrar esta carta para todos?")) return;
+    if (!window.DB || typeof window.DB.deleteLetter !== 'function') return;
+
+    try {
+        await window.DB.deleteLetter(id);
+        if (typeof window.loadLibrary === 'function') loadLibrary();
+    } catch (e) {
+        alert("Error: " + e.message);
+    }
+};

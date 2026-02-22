@@ -284,8 +284,45 @@ const DB = {
     },
 
     // Legacy Wrappers
-    async saveSchedule(scheduleData) { return this.saveConfig('weekly_schedule', scheduleData); },
-    async fetchSchedule() { return this.fetchConfig('weekly_schedule'); }
+    async fetchSchedule() { return this.fetchConfig('weekly_schedule'); },
+
+    // --- APOSTOLIC LETTERS ---
+    async getLetters() {
+        if (!window.sbClient) return [];
+        const { data, error } = await window.sbClient
+            .from('attendance_letters')
+            .select('*')
+            .order('created_at', { ascending: false });
+
+        if (error) {
+            console.error("Error fetching letters:", error);
+            return [];
+        }
+        return data || [];
+    },
+
+    async addLetter(title, description, pdf_url) {
+        if (!window.sbClient) throw new Error("No DB Connection");
+        const { error } = await window.sbClient
+            .from('attendance_letters')
+            .insert([{
+                title: title,
+                description: description || '',
+                pdf_url: pdf_url
+            }]);
+
+        if (error) throw error;
+    },
+
+    async deleteLetter(id) {
+        if (!window.sbClient) throw new Error("No DB Connection");
+        const { error } = await window.sbClient
+            .from('attendance_letters')
+            .delete()
+            .eq('id', id);
+
+        if (error) throw error;
+    }
 };
 
 window.DB = DB;
