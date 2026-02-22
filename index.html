@@ -528,11 +528,12 @@
                         </div>
                     </div>
 
-                    <!-- TAB 1: ASISTENCIA -->
-                    <div id="admin-tab-asistencia"
-                        style="display:flex; flex-direction:column; flex:1; overflow:hidden; background:#fff;">
-                        <!-- FIXED HEADER FOR ASISTENCIA -->
-                        <div class="admin-fixed-header" style="box-shadow:none;">
+                    <!-- FIXED TOOLS HEADER (Always visible under main tabs, adjusts per tab) -->
+                    <div id="admin-tools-header" class="admin-fixed-header"
+                        style="box-shadow:none; border-bottom:1px solid #eee;">
+
+                        <!-- Tools specifically for Asistencia -->
+                        <div id="tools-asistencia">
                             <div class="admin-section" style="padding: 10px; border-bottom: 1px solid #eee;">
                                 <div style="display:flex; gap:5px; width:100%;">
                                     <button onclick="if(window.toggleReportsModal) window.toggleReportsModal()"
@@ -582,7 +583,6 @@
                                         style="width:100%; margin-top:5px;">CANCELAR EDICIÓN</button>
                                 </div>
                             </div>
-
                             <!-- 4. Filter Section (Sticky) -->
                             <div class="admin-section"
                                 style="padding: 10px 15px; background:white; border-bottom:1px solid #eee;">
@@ -615,260 +615,275 @@
                                     </select>
                                 </div>
                             </div>
-                        </div> <!-- end fixed header -->
+                        </div>
 
                         <!-- SCROLLABLE LIST -->
-                        <div class="admin-scrollable-content" style="padding:0;">
-                            <div id="admin-user-list" style="min-height:200px;">
-                                <!-- Users injected here -->
-                            </div>
-                            <div style="height:150px;"></div> <!-- Extra padding for scroll -->
-                        </div>
-                    </div>
+                        <div class="admin-scrollable-content"
+                            style="padding:0; flex:1; display:flex; flex-direction:column;">
 
-                    <!-- TAB 2: SUPER ADMIN -->
-                    <div id="admin-tab-superadmin" class="hidden"
-                        style="display:flex; flex-direction:column; flex:1; overflow-y:auto; background:#fafafa;">
-                        <div style="padding:15px; padding-bottom:100px; display:flex; flex-direction:column; gap:15px;">
-
-                            <!-- A. Cartas Apostólicas -->
-                            <div class="admin-section"
-                                style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
-                                <h5
-                                    style="margin-bottom:10px; font-weight:bold; font-size:0.9rem; color:var(--primary-gold);">
-                                    <i class="ri-book-open-line"></i> Cartas Apostólicas
-                                </h5>
-                                <button onclick="if(window.promptAddLetter) window.promptAddLetter()"
-                                    class="cyber-btn sm" style="width:100%;">
-                                    <i class="ri-upload-cloud-line"></i> SUBIR CARTA / GESTIONAR
-                                </button>
-                                <p
-                                    style="font-size:0.75rem; color:var(--text-muted); margin-top:5px; text-align:center;">
-                                    Las cartas estarán disponibles en la Biblioteca general.</p>
-                            </div>
-
-                            <!-- B. Roles de Servicio -->
-                            <div class="admin-section"
-                                style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
-                                <h5 style="margin-bottom:10px; font-weight:bold; font-size:0.9rem;"><i
-                                        class="ri-calendar-event-line"></i> Roles de Servicio</h5>
-                                <div style="display:flex; gap:10px; align-items:center;">
-                                    <input type="file" id="schedule-file-input" accept="image/*, .xlsx, .xls"
-                                        style="display:none;">
-                                    <button id="upload-schedule-btn" class="cyber-btn sm"
-                                        style="font-size:0.8rem; padding: 5px 15px; flex:1;">
-                                        <i class="ri-upload-cloud-line"></i> Subir Foto de Roles
-                                    </button>
-                                    <button id="admin-view-schedule-btn-force" class="cyber-btn sm secondary"
-                                        onclick="if(window.manuallyOpenSchedule) window.manuallyOpenSchedule();"
-                                        style="flex:1;">
-                                        <i class="ri-eye-line"></i> Ver Roles Activos
-                                    </button>
+                            <!-- TAB 1: ASISTENCIA -->
+                            <div id="admin-tab-asistencia" style="display:flex; flex-direction:column; flex:1;">
+                                <div id="admin-user-list" style="min-height:200px;">
+                                    <!-- Users injected here -->
                                 </div>
-                                <div id="ocr-status" class="hidden"
-                                    style="font-size:0.8rem; color:#0066cc; margin-top:5px;"></div>
+                                <div style="height:150px;"></div> <!-- Extra padding for scroll -->
                             </div>
 
-                            <!-- C. Tema de la Semana -->
-                            <div class="admin-section"
-                                style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
-                                <h5 style="margin-bottom:10px; font-weight:bold; font-size:0.9rem;"><i
-                                        class="ri-text"></i> Tema de la Semana</h5>
-                                <div class="input-group" style="display:flex; gap:5px; margin-top:0;">
-                                    <input type="text" id="admin-theme-input" placeholder="Tema Semanal..."
-                                        class="simple-input"
-                                        style="border:1px solid #ccc; flex:1; padding: 5px; font-size:0.8rem;">
-                                    <button id="save-theme-btn" class="cyber-btn sm"
-                                        style="font-size:0.75rem; padding:0 10px;">GUARDAR</button>
+                            <!-- TAB 2: SUPER ADMIN -->
+                            <div id="admin-tab-superadmin" class="hidden"
+                                style="display:flex; flex-direction:column; flex:1; background:#fafafa;">
+                                <div
+                                    style="padding:15px; padding-bottom:100px; display:flex; flex-direction:column; gap:15px;">
+
+                                    <!-- A. Cartas Apostólicas -->
+                                    <div class="admin-section"
+                                        style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
+                                        <h5
+                                            style="margin-bottom:10px; font-weight:bold; font-size:0.9rem; color:var(--primary-gold);">
+                                            <i class="ri-book-open-line"></i> Cartas Apostólicas
+                                        </h5>
+                                        <button onclick="if(window.promptAddLetter) window.promptAddLetter()"
+                                            class="cyber-btn sm" style="width:100%;">
+                                            <i class="ri-upload-cloud-line"></i> SUBIR CARTA / GESTIONAR
+                                        </button>
+                                        <p
+                                            style="font-size:0.75rem; color:var(--text-muted); margin-top:5px; text-align:center;">
+                                            Las cartas estarán disponibles en la Biblioteca general.</p>
+                                    </div>
+
+                                    <!-- B. Roles de Servicio -->
+                                    <div class="admin-section"
+                                        style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
+                                        <h5 style="margin-bottom:10px; font-weight:bold; font-size:0.9rem;"><i
+                                                class="ri-calendar-event-line"></i> Roles de Servicio</h5>
+                                        <div style="display:flex; gap:10px; align-items:center;">
+                                            <input type="file" id="schedule-file-input" accept="image/*, .xlsx, .xls"
+                                                style="display:none;">
+                                            <button id="upload-schedule-btn" class="cyber-btn sm"
+                                                style="font-size:0.8rem; padding: 5px 15px; flex:1;">
+                                                <i class="ri-upload-cloud-line"></i> Subir Foto de Roles
+                                            </button>
+                                            <button id="admin-view-schedule-btn-force" class="cyber-btn sm secondary"
+                                                onclick="if(window.manuallyOpenSchedule) window.manuallyOpenSchedule();"
+                                                style="flex:1;">
+                                                <i class="ri-eye-line"></i> Ver Roles Activos
+                                            </button>
+                                        </div>
+                                        <div id="ocr-status" class="hidden"
+                                            style="font-size:0.8rem; color:#0066cc; margin-top:5px;"></div>
+                                    </div>
+
+                                    <!-- C. Tema de la Semana -->
+                                    <div class="admin-section"
+                                        style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
+                                        <h5 style="margin-bottom:10px; font-weight:bold; font-size:0.9rem;"><i
+                                                class="ri-text"></i> Tema de la Semana</h5>
+                                        <div class="input-group" style="display:flex; gap:5px; margin-top:0;">
+                                            <input type="text" id="admin-theme-input" placeholder="Tema Semanal..."
+                                                class="simple-input"
+                                                style="border:1px solid #ccc; flex:1; padding: 5px; font-size:0.8rem;">
+                                            <button id="save-theme-btn" class="cyber-btn sm"
+                                                style="font-size:0.75rem; padding:0 10px;">GUARDAR</button>
+                                        </div>
+                                    </div>
+
+                                    <!-- D. Ubicación (Geofence) -->
+                                    <div class="admin-section"
+                                        style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
+                                        <h5 style="margin-bottom:10px; font-weight:bold;"><i
+                                                class="ri-map-pin-user-line"></i>
+                                            Ubicación Iglesia</h5>
+                                        <div style="display:flex; justify-content:space-between; align-items:center;">
+                                            <span id="location-status-admin"
+                                                style="font-size:0.7rem; font-family:monospace; color:var(--text-muted);">--</span>
+                                            <button id="set-location-btn" class="cyber-btn sm danger"
+                                                style="font-size:0.7rem;">FIJAR AQUÍ</button>
+                                        </div>
+                                        <p
+                                            style="font-size:0.7rem; color:var(--error); margin-top:5px; text-align:center;">
+                                            Solo
+                                            pulsar si estás en el templo.</p>
+                                    </div>
                                 </div>
                             </div>
+                        </div>
 
-                            <!-- D. Ubicación (Geofence) -->
-                            <div class="admin-section"
-                                style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
-                                <h5 style="margin-bottom:10px; font-weight:bold;"><i class="ri-map-pin-user-line"></i>
-                                    Ubicación Iglesia</h5>
-                                <div style="display:flex; justify-content:space-between; align-items:center;">
-                                    <span id="location-status-admin"
-                                        style="font-size:0.7rem; font-family:monospace; color:var(--text-muted);">--</span>
-                                    <button id="set-location-btn" class="cyber-btn sm danger"
-                                        style="font-size:0.7rem;">FIJAR AQUÍ</button>
+                        <!-- Schedule/Image Overlay -->
+                        <div id="schedule-overlay" class="glass-overlay hidden" style="z-index:3000; overflow-y:auto;">
+                            <button id="close-schedule"
+                                style="position:absolute; top:20px; right:20px; font-size:2rem; background:none; border:none; color:white;">&times;</button>
+
+                            <div style="padding:20px; color:white; text-align:center;">
+                                <h2 class="gradient-text">ROLES DE SERVICIO</h2>
+
+                                <!-- Weekly Table Container -->
+                                <div id="weekly-table-container" class="hidden"
+                                    style="margin-top:20px; overflow-x:auto;">
+                                    <table
+                                        style="width:100%; border-collapse:collapse; min-width:600px; background:rgba(255,255,255,0.1); border-radius:10px;">
+                                        <thead>
+                                            <tr style="background:var(--primary-gold); color:black;">
+                                                <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">DÍA
+                                                </th>
+                                                <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">5:00
+                                                    AM</th>
+                                                <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">9:00
+                                                    AM</th>
+                                                <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">7:00
+                                                    PM</th>
+                                                <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">
+                                                    ESPECIAL</th>
+                                            </tr>
+                                        </thead>
+                                        <tbody id="weekly-tbody">
+                                            <!-- JS fills this -->
+                                        </tbody>
+                                    </table>
+                                    <button id="back-to-today" class="cyber-btn sm" style="margin-top:20px;">VER
+                                        HOY</button>
                                 </div>
-                                <p style="font-size:0.7rem; color:var(--error); margin-top:5px; text-align:center;">Solo
-                                    pulsar si estás en el templo.</p>
+
+                                <div class="schedule-grid">
+                                    <!-- Cards for Today -->
+                                    <div class="schedule-card" data-slot="5am">
+                                        <h4>ORACIÓN 5:00 AM</h4>
+                                        <p class="assigned-name">--</p>
+                                        <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
+                                    </div>
+                                    <div class="schedule-card" data-slot="9am">
+                                        <h4>ORACIÓN 9:00 AM</h4>
+                                        <p class="assigned-name">--</p>
+                                        <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
+                                    </div>
+                                    <div class="schedule-card" data-slot="7pm">
+                                        <h4>ORACIÓN 7:00 PM</h4>
+                                        <p class="assigned-name">--</p>
+                                        <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
+                                    </div>
+                                    <div class="schedule-card" data-slot="special">
+                                        <h4>CONSAGRACIÓN ESPECIAL</h4>
+                                        <p class="assigned-name">--</p>
+                                        <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
+                                    </div>
+                                </div>
+
+                                <button id="view-weekly-btn" class="cyber-btn"
+                                    style="margin-top:30px; border: 1px solid white;">VER
+                                    SEMANA COMPLETA</button>
                             </div>
                         </div>
+
+                        <!-- HISTORY MODAL (New) -->
+                        <div id="history-modal" class="hidden"
+                            style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:4000; display:none; align-items:center; justify-content:center;">
+                            <div class="cyber-card"
+                                style="width:90%; max-width:400px; max-height:80vh; overflow-y:auto;">
+                                <div
+                                    style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                                    <h3 class="gradient-text" style="margin:0;">HISTORIAL</h3>
+                                    <button
+                                        onclick="document.getElementById('history-modal').classList.add('hidden'); document.getElementById('history-modal').style.display='none';"
+                                        style="background:none; border:none; color:var(--text-muted); font-size:1.5rem;">&times;</button>
+                                </div>
+                                <div id="history-content" style="font-size:0.9rem;">
+                                    <!-- Content Injected Here -->
+                                </div>
+                            </div>
+                        </div>
+
                     </div>
-                </div>
 
-                <!-- Schedule/Image Overlay -->
-                <div id="schedule-overlay" class="glass-overlay hidden" style="z-index:3000; overflow-y:auto;">
-                    <button id="close-schedule"
-                        style="position:absolute; top:20px; right:20px; font-size:2rem; background:none; border:none; color:white;">&times;</button>
+                    <!-- Scripts -->
+                    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+                    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
 
-                    <div style="padding:20px; color:white; text-align:center;">
-                        <h2 class="gradient-text">ROLES DE SERVICIO</h2>
+                    <!-- INLINE SUPABASE CONFIG & DEBUG -->
+                    <script>
+                        // Visual Status Bar
+                        const statusDiv = document.createElement('div');
+                        statusDiv.id = 'sys-status';
+                        statusDiv.style.cssText = "position:fixed; top:0; left:0; width:100%; padding:5px; text-align:center; color:white; font-size:12px; z-index:9999; font-family:monospace; pointer-events:none;";
+                        statusDiv.style.background = "rgba(255, 0, 0, 0.8)"; // Default Red
+                        statusDiv.innerHTML = "⏳ CONECTANDO A LA NUBE...";
+                        document.body.appendChild(statusDiv);
 
-                        <!-- Weekly Table Container -->
-                        <div id="weekly-table-container" class="hidden" style="margin-top:20px; overflow-x:auto;">
-                            <table
-                                style="width:100%; border-collapse:collapse; min-width:600px; background:rgba(255,255,255,0.1); border-radius:10px;">
-                                <thead>
-                                    <tr style="background:var(--primary-gold); color:black;">
-                                        <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">DÍA</th>
-                                        <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">5:00 AM</th>
-                                        <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">9:00 AM</th>
-                                        <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">7:00 PM</th>
-                                        <th style="padding:15px; border-bottom:2px solid rgba(0,0,0,0.2);">ESPECIAL</th>
-                                    </tr>
-                                </thead>
-                                <tbody id="weekly-tbody">
-                                    <!-- JS fills this -->
-                                </tbody>
-                            </table>
-                            <button id="back-to-today" class="cyber-btn sm" style="margin-top:20px;">VER HOY</button>
-                        </div>
-
-                        <div class="schedule-grid">
-                            <!-- Cards for Today -->
-                            <div class="schedule-card" data-slot="5am">
-                                <h4>ORACIÓN 5:00 AM</h4>
-                                <p class="assigned-name">--</p>
-                                <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
-                            </div>
-                            <div class="schedule-card" data-slot="9am">
-                                <h4>ORACIÓN 9:00 AM</h4>
-                                <p class="assigned-name">--</p>
-                                <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
-                            </div>
-                            <div class="schedule-card" data-slot="7pm">
-                                <h4>ORACIÓN 7:00 PM</h4>
-                                <p class="assigned-name">--</p>
-                                <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
-                            </div>
-                            <div class="schedule-card" data-slot="special">
-                                <h4>CONSAGRACIÓN ESPECIAL</h4>
-                                <p class="assigned-name">--</p>
-                                <button class="edit-role-btn hidden"><i class="ri-pencil-line"></i></button>
-                            </div>
-                        </div>
-
-                        <button id="view-weekly-btn" class="cyber-btn"
-                            style="margin-top:30px; border: 1px solid white;">VER
-                            SEMANA COMPLETA</button>
-                    </div>
-                </div>
-
-                <!-- HISTORY MODAL (New) -->
-                <div id="history-modal" class="hidden"
-                    style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:4000; display:none; align-items:center; justify-content:center;">
-                    <div class="cyber-card" style="width:90%; max-width:400px; max-height:80vh; overflow-y:auto;">
-                        <div
-                            style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
-                            <h3 class="gradient-text" style="margin:0;">HISTORIAL</h3>
-                            <button
-                                onclick="document.getElementById('history-modal').classList.add('hidden'); document.getElementById('history-modal').style.display='none';"
-                                style="background:none; border:none; color:var(--text-muted); font-size:1.5rem;">&times;</button>
-                        </div>
-                        <div id="history-content" style="font-size:0.9rem;">
-                            <!-- Content Injected Here -->
-                        </div>
-                    </div>
-                </div>
-
-            </div>
-
-            <!-- Scripts -->
-            <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
-            <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
-
-            <!-- INLINE SUPABASE CONFIG & DEBUG -->
-            <script>
-                // Visual Status Bar
-                const statusDiv = document.createElement('div');
-                statusDiv.id = 'sys-status';
-                statusDiv.style.cssText = "position:fixed; top:0; left:0; width:100%; padding:5px; text-align:center; color:white; font-size:12px; z-index:9999; font-family:monospace; pointer-events:none;";
-                statusDiv.style.background = "rgba(255, 0, 0, 0.8)"; // Default Red
-                statusDiv.innerHTML = "⏳ CONECTANDO A LA NUBE...";
-                document.body.appendChild(statusDiv);
-
-                function updateStatus(msg, color) {
-                    const el = document.getElementById('sys-status');
-                    if (el) {
-                        el.innerHTML = msg;
-                        el.style.background = color;
-                        // Auto hide if green
-                        if (color.includes('green') || color.includes('#2ecc71')) {
-                            setTimeout(() => el.style.display = 'none', 5000);
+                        function updateStatus(msg, color) {
+                            const el = document.getElementById('sys-status');
+                            if (el) {
+                                el.innerHTML = msg;
+                                el.style.background = color;
+                                // Auto hide if green
+                                if (color.includes('green') || color.includes('#2ecc71')) {
+                                    setTimeout(() => el.style.display = 'none', 5000);
+                                }
+                            }
                         }
-                    }
-                }
 
-                window.onerror = function (msg, url, lineNo, columnNo, error) {
-                    const string = msg.toLowerCase();
-                    const substring = "script error";
-                    if (string.indexOf(substring) > -1) {
-                        updateStatus('❌ Error de Script (Ver Consola)', 'red');
-                    } else {
-                        updateStatus(`❌ Error: ${msg} (Línea ${lineNo})`, 'red');
-                    }
-                    return false;
-                };
+                        window.onerror = function (msg, url, lineNo, columnNo, error) {
+                            const string = msg.toLowerCase();
+                            const substring = "script error";
+                            if (string.indexOf(substring) > -1) {
+                                updateStatus('❌ Error de Script (Ver Consola)', 'red');
+                            } else {
+                                updateStatus(`❌ Error: ${msg} (Línea ${lineNo})`, 'red');
+                            }
+                            return false;
+                        };
 
-                function initSupabaseDirect() {
-                    if (window.sbClient) {
-                        updateStatus("✅ NUBE CONECTADA", "#2ecc71"); // Green
-                        return;
-                    }
+                        function initSupabaseDirect() {
+                            if (window.sbClient) {
+                                updateStatus("✅ NUBE CONECTADA", "#2ecc71"); // Green
+                                return;
+                            }
 
-                    if (typeof window.supabase !== 'undefined' && typeof SUPABASE_URL !== 'undefined') {
-                        try {
-                            window.sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
-                            console.log("✅ Supabase INIT (Inline)");
-                            updateStatus("✅ NUBE CONECTADA", "#2ecc71"); // Green
-                        } catch (e) {
-                            console.error("Supabase Init Error:", e);
-                            updateStatus("❌ ERROR CONFIG NUBE: " + e.message, "red");
+                            if (typeof window.supabase !== 'undefined' && typeof SUPABASE_URL !== 'undefined') {
+                                try {
+                                    window.sbClient = window.supabase.createClient(SUPABASE_URL, SUPABASE_ANON_KEY);
+                                    console.log("✅ Supabase INIT (Inline)");
+                                    updateStatus("✅ NUBE CONECTADA", "#2ecc71"); // Green
+                                } catch (e) {
+                                    console.error("Supabase Init Error:", e);
+                                    updateStatus("❌ ERROR CONFIG NUBE: " + e.message, "red");
+                                }
+                            } else {
+                                updateStatus("⏳ CARGANDO CONFIGURACIÓN DE NUBE...", "orange");
+                                setTimeout(initSupabaseDirect, 500);
+                            }
                         }
-                    } else {
-                        updateStatus("⏳ CARGANDO CONFIGURACIÓN DE NUBE...", "orange");
-                        setTimeout(initSupabaseDirect, 500);
-                    }
-                }
 
-                // Run immediately and on load
-                initSupabaseDirect();
-                window.addEventListener('load', initSupabaseDirect);
-            </script>
+                        // Run immediately and on load
+                        initSupabaseDirect();
+                        window.addEventListener('load', initSupabaseDirect);
+                    </script>
 
-            <!-- Service & App (v6.73 Sync+Filter Fix) -->
-            <script src="js/supabase-config.js?v=6.73"></script>
-            <script src="js/supabase-service.js?v=6.73"></script>
-            <script src="js/app_v6_42.js?v=6.73"></script>
+                    <!-- Service & App (v6.74 Admin Fixes) -->
+                    <script src="js/supabase-config.js?v=6.74"></script>
+                    <script src="js/supabase-service.js?v=6.74"></script>
+                    <script src="js/app_v6_42.js?v=6.74"></script>
 
-            <!-- Version Indicator is handled by JS -->
+                    <!-- Version Indicator is handled by JS -->
 
-            <script>
-                // Fallback: If app doesn't init in 2 seconds, force show login
-                setTimeout(() => {
-                    const login = document.getElementById('login-section');
-                    const dash = document.getElementById('dashboard-section');
-                    const reg = document.getElementById('register-section');
-                    const loading = document.getElementById('loading-screen');
+                    <script>
+                        // Fallback: If app doesn't init in 2 seconds, force show login
+                        setTimeout(() => {
+                            const login = document.getElementById('login-section');
+                            const dash = document.getElementById('dashboard-section');
+                            const reg = document.getElementById('register-section');
+                            const loading = document.getElementById('loading-screen');
 
-                    // Check if any main section is visible
-                    const isAnyVisible = [login, dash, reg].some(el => el && !el.classList.contains('hidden-section'));
+                            // Check if any main section is visible
+                            const isAnyVisible = [login, dash, reg].some(el => el && !el.classList.contains('hidden-section'));
 
-                    if (!isAnyVisible) {
-                        console.warn("App init timeout - Forcing Login View");
-                        if (loading) loading.style.display = 'none';
-                        if (login) {
-                            login.classList.remove('hidden-section');
-                            login.style.display = 'flex';
-                        }
-                    }
-                }, 2000);
-            </script>
+                            if (!isAnyVisible) {
+                                console.warn("App init timeout - Forcing Login View");
+                                if (loading) loading.style.display = 'none';
+                                if (login) {
+                                    login.classList.remove('hidden-section');
+                                    login.style.display = 'flex';
+                                }
+                            }
+                        }, 2000);
+                    </script>
 </body>
 
 </html>

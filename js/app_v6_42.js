@@ -1845,21 +1845,19 @@ function renderAdminUserList() {
         });
 
         // UPDATE DOM COUNT
-        // In order to get the correct view count, we need to count how many elements we ACTUALLY rendered vs total users.
-        // We defer count update to the end, but wait, count is total attendees vs total members today.
         const totalAttendeesForFilter = attendedIds.size;
         const totalUserCount = users.filter(u => u.role !== 'admin').length;
         if (countSpan) countSpan.textContent = `${totalAttendeesForFilter}/${totalUserCount}`;
+
+        // Clear the list before rendering
+        listContainer.innerHTML = '';
 
         if (totalUserCount === 0) {
             listContainer.innerHTML = '<p style="text-align:center; color:#666; padding:20px;">No hay hermanos registrados.</p>';
             return;
         }
 
-        if (filteredUsers.length === 0) {
-            listContainer.innerHTML = '<p style="text-align:center; color:#999; padding:20px;">Sin resultados de búsqueda.</p>';
-            return;
-        }
+        let renderedCount = 0;
 
         filteredUsers.forEach(u => {
             // CRITICAL FIX: Use ID if available, fallback to phone (legacy), but ID is safer for manual users without phone.
@@ -2069,7 +2067,15 @@ function renderAdminUserList() {
             div.appendChild(delBtn);
 
             listContainer.appendChild(div);
+            renderedCount++;
         });
+
+        if (renderedCount === 0) {
+            const noRes = document.createElement('p');
+            noRes.style.cssText = "text-align:center; color:#999; padding:20px;";
+            noRes.textContent = "Sin resultados.";
+            listContainer.appendChild(noRes);
+        }
     } catch (e) {
         console.error(e);
         alert("Error cargando lista admin: " + e.message);
@@ -2495,10 +2501,8 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 2. Geolocation Check
-            // Bypass for Admin if needed? User didn't say. Let's enforce for everyone on this panel logic.
-            if (!STATE.inGeofence) {
-                // If mocked or 0,0, might be annoying.
-                // Assuming STATE.inGeofence is correctly calculated in separate watcher.
+            // Bypass for Admin
+            if (!STATE.inGeofence && STATE.user.role !== 'admin') {
                 alert("📍 NO ESTÁS EN EL TEMPLO\n\nDebes estar dentro de las instalaciones para registrar asistencia.");
                 return;
             }
@@ -3156,36 +3160,10 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.73 (Admin Sync+Filter Fix)";
+    v.innerText = "v6.74 (Admin UI & Geofence Fixes)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
-
-// --- ADMIN TABS LOGIC ---
-window.switchAdminTab = function (tabName) {
-    const tabAsistencia = document.getElementById('admin-tab-asistencia');
-    const tabSuperAdmin = document.getElementById('admin-tab-superadmin');
-    const btnAsistencia = document.getElementById('tab-btn-asistencia');
-    const btnSuperAdmin = document.getElementById('tab-btn-superadmin');
-
-    if (!tabAsistencia || !tabSuperAdmin) return;
-
-    if (tabName === 'asistencia') {
-        tabAsistencia.style.display = 'flex';
-        tabSuperAdmin.style.display = 'none';
-        tabAsistencia.classList.remove('hidden');
-        tabSuperAdmin.classList.add('hidden');
-        btnAsistencia.classList.add('active');
-        btnSuperAdmin.classList.remove('active');
-    } else if (tabName === 'superadmin') {
-        tabAsistencia.style.display = 'none';
-        tabSuperAdmin.style.display = 'flex';
-        tabAsistencia.classList.add('hidden');
-        tabSuperAdmin.classList.remove('hidden');
-        btnSuperAdmin.classList.add('active');
-        btnAsistencia.classList.remove('active');
-    }
-};
 
 // --- USER PROFILE MODAL LOGIC ---
 window.closeProfileModal = function () {
@@ -3202,12 +3180,14 @@ window.switchAdminTab = function (tabName) {
     const tabSuperAdmin = document.getElementById('admin-tab-superadmin');
     const btnAsistencia = document.getElementById('tab-btn-asistencia');
     const btnSuperAdmin = document.getElementById('tab-btn-superadmin');
+    const toolsAsistencia = document.getElementById('tools-asistencia');
 
     if (!tabAsistencia || !tabSuperAdmin) return;
 
     if (tabName === 'asistencia') {
         tabAsistencia.style.display = 'flex';
         tabSuperAdmin.style.display = 'none';
+        if (toolsAsistencia) toolsAsistencia.style.display = 'block';
         tabAsistencia.classList.remove('hidden');
         tabSuperAdmin.classList.add('hidden');
         btnAsistencia.classList.add('active');
@@ -3215,6 +3195,7 @@ window.switchAdminTab = function (tabName) {
     } else if (tabName === 'superadmin') {
         tabAsistencia.style.display = 'none';
         tabSuperAdmin.style.display = 'flex';
+        if (toolsAsistencia) toolsAsistencia.style.display = 'none';
         tabAsistencia.classList.add('hidden');
         tabSuperAdmin.classList.remove('hidden');
         btnSuperAdmin.classList.add('active');
