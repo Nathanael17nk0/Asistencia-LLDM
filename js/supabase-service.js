@@ -250,6 +250,11 @@ const DB = {
         }
     },
 
+    // Wrapper: saveSchedule(data) -> saveConfig('weekly_schedule', data)
+    async saveSchedule(scheduleData) {
+        return this.saveConfig('weekly_schedule', scheduleData);
+    },
+
     async fetchConfig(key) {
         if (!window.sbClient) {
             console.warn("⚠️ sbClient not ready for fetchConfig(" + key + ")");
