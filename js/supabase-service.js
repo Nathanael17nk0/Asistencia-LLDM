@@ -78,7 +78,6 @@ const DB = {
 
         if (error) { console.error(error); return []; }
 
-        // Map back to App format
         return data.map(d => ({
             userId: d.user_phone,
             name: d.user_name,
@@ -86,7 +85,34 @@ const DB = {
             method: d.method,
             serviceSlot: d.service_slot,
             serviceName: d.service_name,
-            id: d.id // CRITICAL: Required for robust delete
+            id: d.id
+        }));
+    },
+
+    async fetchAttendanceByMonth(year, month) {
+        if (!window.sbClient) throw new Error('Sin conexión a la base de datos.');
+        // month is 1-indexed (1=January)
+        const start = `${year}-${String(month).padStart(2, '0')}-01T00:00:00`;
+        const lastDay = new Date(year, month, 0).getDate(); // day 0 of next month = last day of this month
+        const end = `${year}-${String(month).padStart(2, '0')}-${lastDay}T23:59:59`;
+
+        const { data, error } = await window.sbClient
+            .from('attendance_log')
+            .select('*')
+            .gte('timestamp', start)
+            .lte('timestamp', end)
+            .order('timestamp', { ascending: true });
+
+        if (error) throw error;
+
+        return data.map(d => ({
+            userId: d.user_phone,
+            name: d.user_name,
+            timestamp: d.timestamp,
+            method: d.method,
+            serviceSlot: d.service_slot,
+            serviceName: d.service_name,
+            id: d.id
         }));
     },
 

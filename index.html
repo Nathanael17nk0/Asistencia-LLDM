@@ -768,7 +768,28 @@
                             </button>
                         </div>
 
-                        <!-- C. Cartas Apostólicas -->
+                        <!-- C. Historial de Asistencia por Mes -->
+                        <div class="admin-section"
+                            style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
+                            <h5
+                                style="margin-bottom:10px; font-weight:bold; font-size:0.9rem; color:var(--primary-gold);">
+                                <i class="ri-calendar-check-line"></i> Historial de Asistencia
+                            </h5>
+                            <p style="font-size:0.78rem; color:#666; margin-bottom:10px;">Selecciona un mes para
+                                descargar el reporte completo de asistencia de ese período.</p>
+                            <input type="month" id="attendance-month-picker" class="simple-input"
+                                style="width:100%; margin-bottom:8px; padding:8px; border:1px solid #ccc; border-radius:8px;"
+                                max="">
+                            <button onclick="if(window.exportAttendanceByMonth) window.exportAttendanceByMonth()"
+                                class="cyber-btn sm" style="width:100%; background:#2980b9; color:white;">
+                                <i class="ri-download-2-line"></i> DESCARGAR ASISTENCIA DEL MES
+                            </button>
+                            <p id="attendance-export-status"
+                                style="font-size:0.75rem; color:green; text-align:center; margin-top:5px; display:none;">
+                            </p>
+                        </div>
+
+                        <!-- D. Cartas Apostólicas -->
                         <div class="admin-section"
                             style="background:white; padding: 15px; border: 1px solid #eee; border-radius:8px;">
                             <h5

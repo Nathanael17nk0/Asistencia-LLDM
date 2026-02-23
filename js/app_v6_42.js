@@ -3285,7 +3285,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.3 (Exportar Miembros)";
+    v.innerText = "v7.4 (Historial Asistencia)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3546,6 +3546,78 @@ window.openAdminMemberModal = function (uid) {
 
     document.getElementById('admin-member-modal').style.display = 'flex';
     document.getElementById('admin-member-modal').classList.remove('hidden');
+};
+
+// ==========================================
+// EXPORT HISTORICAL ATTENDANCE BY MONTH
+// ==========================================
+window.exportAttendanceByMonth = async function () {
+    const picker = document.getElementById('attendance-month-picker');
+    const statusEl = document.getElementById('attendance-export-status');
+
+    if (!picker || !picker.value) {
+        alert('⚠️ Selecciona un mes primero.');
+        return;
+    }
+
+    if (typeof XLSX === 'undefined') {
+        alert('❌ Librería Excel no disponible. Recarga la app e intenta de nuevo.');
+        return;
+    }
+
+    if (!window.DB) {
+        alert('❌ Sin conexión a la base de datos.');
+        return;
+    }
+
+    const [year, month] = picker.value.split('-').map(Number);
+    const monthNames = ['Enero', 'Febrero', 'Marzo', 'Abril', 'Mayo', 'Junio',
+        'Julio', 'Agosto', 'Septiembre', 'Octubre', 'Noviembre', 'Diciembre'];
+    const label = `${monthNames[month - 1]} ${year}`;
+
+    if (statusEl) { statusEl.style.display = 'block'; statusEl.textContent = `⏳ Descargando ${label}...`; }
+
+    try {
+        const records = await window.DB.fetchAttendanceByMonth(year, month);
+
+        if (!records || records.length === 0) {
+            if (statusEl) statusEl.textContent = `ℹ️ No hay registros para ${label}.`;
+            alert(`No se encontraron registros de asistencia para ${label}.`);
+            return;
+        }
+
+        const rows = records.map(r => {
+            const ts = new Date(r.timestamp);
+            return {
+                'Nombre': r.name || '',
+                'ID Celular': r.userId || '',
+                'Fecha': ts.toLocaleDateString('es-MX'),
+                'Hora': ts.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
+                'Culto': r.serviceName || r.serviceSlot || '',
+                'Método': r.method === 'self' ? 'Escáner (Miembro)' :
+                    r.method === 'manual_admin' ? 'Manual (Admin)' : r.method || ''
+            };
+        });
+
+        const ws = XLSX.utils.json_to_sheet(rows);
+        const wb = XLSX.utils.book_new();
+        XLSX.utils.book_append_sheet(wb, ws, label);
+
+        // Auto-width
+        const colWidths = Object.keys(rows[0]).map(k => ({
+            wch: Math.max(k.length, ...rows.map(r => String(r[k] || '').length)) + 2
+        }));
+        ws['!cols'] = colWidths;
+
+        XLSX.writeFile(wb, `Asistencia_LLDM_${year}-${String(month).padStart(2, '0')}.xlsx`);
+        if (statusEl) statusEl.textContent = `✅ ${records.length} registros de ${label} exportados.`;
+        showToast(`✅ ${records.length} registros de ${label} descargados`, 'success');
+
+    } catch (err) {
+        console.error(err);
+        if (statusEl) statusEl.textContent = `❌ Error: ${err.message}`;
+        alert(`❌ Error al descargar asistencia:\n${err.message}`);
+    }
 };
 
 // ==========================================
