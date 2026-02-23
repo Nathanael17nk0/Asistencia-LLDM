@@ -461,16 +461,26 @@ if (fingerprintBtn) {
         // Simple animation
         setTimeout(() => {
             icon.style.color = 'var(--success)';
-            // Log it
-            log.push({
-                userId: STATE.user.phone,
+
+            // Use the user's ID (not just phone) for correct admin matching
+            const checkInUserId = STATE.user.id || STATE.user.phone;
+            const newEntry = {
+                userId: checkInUserId,
                 name: STATE.user.full_name,
                 timestamp: new Date().toISOString(),
                 method: 'self',
                 serviceSlot: slotId,
                 serviceName: slotName
-            });
+            };
+
+            log.push(newEntry);
             localStorage.setItem('nexus_attendance_log', JSON.stringify(log));
+
+            // CRITICAL: Push to Supabase so Admin Realtime listener fires
+            if (window.DB && typeof window.DB.logAttendance === 'function') {
+                window.DB.logAttendance(newEntry)
+                    .catch(err => console.warn('Cloud log error:', err));
+            }
 
             // Show Success Popup
             const popup = document.getElementById('success-message');
@@ -2407,6 +2417,41 @@ async function initApp() {
                 };
                 startRealtime();
 
+                // PERIODIC POLL FALLBACK: every 20s sync Supabase → localStorage → admin list
+                // This ensures admin sees check-ins even if WebSocket drops
+                setInterval(async () => {
+                    const adminPanel = document.getElementById('admin-panel');
+                    const isAdminVisible = adminPanel && !adminPanel.classList.contains('hidden');
+                    if (!isAdminVisible || !window.DB) return;
+
+                    try {
+                        const cloudLog = await window.DB.fetchTodayAttendance();
+                        if (!cloudLog || cloudLog.length === 0) return;
+
+                        let localLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+                        let updated = false;
+
+                        cloudLog.forEach(cloudEntry => {
+                            const exists = localLog.find(e =>
+                                e.id === cloudEntry.id ||
+                                (e.userId === cloudEntry.userId && e.timestamp === cloudEntry.timestamp)
+                            );
+                            if (!exists) {
+                                localLog.push(cloudEntry);
+                                updated = true;
+                            }
+                        });
+
+                        if (updated) {
+                            localStorage.setItem('nexus_attendance_log', JSON.stringify(localLog));
+                            if (typeof renderAdminUserList === 'function') renderAdminUserList();
+                            console.log('🔄 Admin list refreshed from cloud poll');
+                        }
+                    } catch (e) {
+                        console.warn('Poll sync error:', e);
+                    }
+                }, 20000); // Every 20 seconds
+
             } catch (e) {
                 console.warn("⚠️ Cloud Sync Warning:", e);
             }
@@ -3240,7 +3285,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.99 (Fix Tarjetas Admin)";
+    v.innerText = "v7.0 (Asistencia Tiempo Real)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
