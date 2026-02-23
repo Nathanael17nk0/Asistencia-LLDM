@@ -3517,6 +3517,11 @@ window.openAdminMemberModal = function (uid) {
     document.getElementById('admin-member-dob').innerText = user.dob || 'No especificada';
     document.getElementById('admin-member-age').innerText = user.age_label || user.age || 'N/A';
 
+    // Gender and Marital Status
+    const genderMap = { 'H': 'Hombre', 'M': 'Mujer' };
+    document.getElementById('admin-member-gender').innerText = genderMap[user.gender] || user.gender || 'N/A';
+    document.getElementById('admin-member-marital').innerText = user.marital_status || 'N/A';
+
     // Format dates to be more readable
     const formatDate = (dateString) => dateString ? new Date(dateString + 'T12:00:00Z').toLocaleDateString('es-MX') : 'N/A';
     document.getElementById('admin-member-baptism').innerText = formatDate(user.baptism_date);
