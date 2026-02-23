@@ -875,7 +875,7 @@ window.checkLocationStatus = function () {
                 updateLocationStatus();
             }
         }
-    }, (err) => console.warn("Geo Error:", err), { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
+    }, (err) => console.warn("Geo Error:", err), { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 });
 };
 
 function startLocationWatch() {
@@ -3285,7 +3285,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.1 (GPS Fix + 5s Sync)";
+    v.innerText = "v7.2 (GPS Estable)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
