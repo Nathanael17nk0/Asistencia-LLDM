@@ -3285,7 +3285,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.2 (GPS Estable)";
+    v.innerText = "v7.3 (Exportar Miembros)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3546,6 +3546,56 @@ window.openAdminMemberModal = function (uid) {
 
     document.getElementById('admin-member-modal').style.display = 'flex';
     document.getElementById('admin-member-modal').classList.remove('hidden');
+};
+
+// ==========================================
+// EXPORT MEMBERS DATABASE TO EXCEL
+// ==========================================
+window.exportMembersToExcel = function () {
+    if (typeof XLSX === 'undefined') {
+        alert('❌ Librería Excel no disponible. Recarga la app e intenta de nuevo.');
+        return;
+    }
+
+    const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+    if (users.length === 0) {
+        alert('No hay miembros registrados en este dispositivo.');
+        return;
+    }
+
+    const genderMap = { 'H': 'Hombre', 'M': 'Mujer' };
+
+    // Build rows — one per member
+    const rows = users.map(u => ({
+        'Nombre Completo': u.full_name || '',
+        'Celular': u.phone || '',
+        'Edad': u.age || u.age_label || '',
+        'Fecha Nacimiento': u.dob || '',
+        'Género': genderMap[u.gender] || u.gender || '',
+        'Estado Civil': u.marital_status || '',
+        'Colonia': u.colonia || '',
+        'Dirección': u.direccion || '',
+        'Profesión': u.profesion || '',
+        'Grado de Estudios': u.grado_estudios || '',
+        'Bautismo Agua': u.baptism_date || '',
+        'Espíritu Santo': u.holy_spirit_date || '',
+        'Rol': u.role || 'user',
+        'Fecha Registro': u.created_at || u.createdAt || ''
+    }));
+
+    const ws = XLSX.utils.json_to_sheet(rows);
+    const wb = XLSX.utils.book_new();
+    XLSX.utils.book_append_sheet(wb, ws, 'Miembros');
+
+    // Auto column width
+    const colWidths = Object.keys(rows[0]).map(key => ({
+        wch: Math.max(key.length, ...rows.map(r => String(r[key] || '').length)) + 2
+    }));
+    ws['!cols'] = colWidths;
+
+    const today = new Date().toISOString().split('T')[0];
+    XLSX.writeFile(wb, `Miembros_LLDM_${today}.xlsx`);
+    showToast(`✅ ${users.length} miembros exportados`, 'success');
 };
 
 // ==========================================
