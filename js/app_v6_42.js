@@ -1960,8 +1960,9 @@ function renderAdminUserList() {
                 `<span style="color:green; font-weight:bold; font-size:0.6rem;">✅ ${entry.serviceName || 'Asistió'}</span>` :
                 `<span style="color:#bbb; font-size:0.6rem;">Falta</span>`;
 
+            div.dataset.uid = uid; // Store uid safely as a data attribute
             div.innerHTML = `
-                    <div onclick="if(window.openAdminMemberModal) window.openAdminMemberModal('${uid}')" style="display:flex; align-items:center; flex:1; cursor:pointer;" title="Ver Perfil">
+                    <div style="display:flex; align-items:center; flex:1; cursor:pointer;" class="member-card-clickable" title="Ver Perfil">
                         <img src="${avatarSrc}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; border:1px solid ${isPresent ? 'var(--success)' : '#ddd'}; margin-right:6px; background:#fff;" alt="Avatar">
                         <div style="flex:1;">
                             <h4 style="margin:0; font-size:0.75rem; line-height:1;">${u.full_name || u.name}</h4>
@@ -1972,6 +1973,14 @@ function renderAdminUserList() {
                         ${statusText}
                     </div>
                 `;
+
+            // Bind click via addEventListener to safely pass uid (avoids HTML escaping bugs)
+            const clickTarget = div.querySelector('.member-card-clickable');
+            if (clickTarget) {
+                clickTarget.addEventListener('click', () => {
+                    if (window.openAdminMemberModal) window.openAdminMemberModal(uid);
+                });
+            }
 
             if (isPresent) {
                 const undoBtn = document.createElement('button');
@@ -3231,7 +3240,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.98 (Registro Completo)";
+    v.innerText = "v6.99 (Fix Tarjetas Admin)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
