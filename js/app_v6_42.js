@@ -853,29 +853,37 @@ function seedScheduleData() {
 // GLOBAL LOCATION CHECK (Callable from Realtime)
 window.checkLocationStatus = function () {
     if (!navigator.geolocation) return;
-    console.log("📍 Checking Location Status...");
 
     navigator.geolocation.getCurrentPosition((pos) => {
         const lat = pos.coords.latitude;
         const lng = pos.coords.longitude;
+        const accuracy = pos.coords.accuracy; // meters — lower is better
+
+        // ACCURACY FILTER: reject readings WORSE than our current best.
+        // This prevents a bad satellite reading from overwriting a good Wi-Fi fix.
+        const prevBest = STATE.bestAccuracy || Infinity;
+        if (accuracy > prevBest * 2) {
+            // Significantly worse — ignore it
+            console.log(`📍 GPS ignored (accuracy ${Math.round(accuracy)}m > best ${Math.round(prevBest)}m)`);
+            return;
+        }
+
+        // Accept this reading and update best accuracy
+        STATE.bestAccuracy = Math.min(prevBest, accuracy);
         STATE.currentLocation = { lat, lng };
 
-        // console.log("📍 Location Acquired:", lat, lng);
+        console.log(`📍 GPS accepted: ${Math.round(accuracy)}m accuracy, ${Math.round(getDistanceInMeters(lat, lng, STATE.targetLocation?.lat || 0, STATE.targetLocation?.lng || 0))}m from church`);
 
-        // Validation Logic
         if (STATE.targetLocation && STATE.targetLocation.lat !== 0) {
             const dist = getDistanceInMeters(lat, lng, STATE.targetLocation.lat, STATE.targetLocation.lng);
             STATE.distance = dist;
             STATE.inGeofence = dist <= STATE.targetLocation.radius;
 
-            // Debug Logs (Optional)
-            // console.log(`📏 Dist: ${Math.round(dist)}m, Target: ${STATE.targetLocation.radius}m, In: ${STATE.inGeofence}`);
-
             if (typeof updateLocationStatus === 'function') {
                 updateLocationStatus();
             }
         }
-    }, (err) => console.warn("Geo Error:", err), { enableHighAccuracy: false, timeout: 10000, maximumAge: 30000 });
+    }, (err) => console.warn("Geo Error:", err), { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
 };
 
 function startLocationWatch() {
@@ -3285,7 +3293,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.4 (Historial Asistencia)";
+    v.innerText = "v7.5 (GPS Filtro Precisión)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
