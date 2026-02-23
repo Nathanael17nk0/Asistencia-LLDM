@@ -3490,6 +3490,8 @@ window.openAdminMemberModal = function (uid) {
     }
     document.getElementById('admin-member-joined').innerText = joined;
 
+    const avatarNameFallback = (user.full_name || 'U').replace(/ /g, '+');
+    const defaultAvatar = `https://ui-avatars.com/api/?name=${avatarNameFallback}&background=c5a059&color=fff&bold=true`;
     document.getElementById('admin-member-avatar').src = user.photo_url || defaultAvatar;
 
     document.getElementById('admin-member-modal').style.display = 'flex';
