@@ -149,6 +149,8 @@ if (registerForm) {
 
         const dob = document.getElementById('reg-dob')?.value || '';
         const age = document.getElementById('reg-edad')?.value || '';
+        const gender = document.getElementById('reg-gender')?.value || '';
+        const marital_status = document.getElementById('reg-marital')?.value || '';
         const colonia = document.getElementById('reg-colonia')?.value || '';
         const direccion = document.getElementById('reg-address')?.value || '';
         const profesion = document.getElementById('reg-profession')?.value || '';
@@ -166,6 +168,8 @@ if (registerForm) {
             full_name: fullName,
             dob: dob,
             age_label: age,
+            gender: gender,
+            marital_status: marital_status,
             colonia: colonia,
             direccion: direccion,
             profesion: profesion,
@@ -1575,6 +1579,16 @@ function initAdminFeatures() {
         document.getElementById('admin-reg-edad').value = user.age || user.age_label || '';
         document.getElementById('admin-reg-gender').value = user.gender || '';
         document.getElementById('admin-reg-marital').value = user.marital_status || '';
+        const addrEl = document.getElementById('admin-reg-address');
+        if (addrEl) addrEl.value = user.direccion || '';
+        const profEl = document.getElementById('admin-reg-profession');
+        if (profEl) profEl.value = user.profesion || '';
+        const studEl = document.getElementById('admin-reg-studies');
+        if (studEl) studEl.value = user.grado_estudios || '';
+        const baptEl = document.getElementById('admin-reg-baptism');
+        if (baptEl) baptEl.value = user.baptism_date || '';
+        const hsEl = document.getElementById('admin-reg-holyspirit');
+        if (hsEl) hsEl.value = user.holy_spirit_date || '';
 
         document.getElementById('editing-user-id').value = user.id;
         document.getElementById('manual-register-btn').textContent = "GUARDAR CAMBIOS";
@@ -1610,6 +1624,11 @@ function handleManualRegister() {
     const ageVal = document.getElementById('admin-reg-edad').value;
     const genderVal = document.getElementById('admin-reg-gender').value;
     const maritalVal = document.getElementById('admin-reg-marital').value;
+    const addressVal = document.getElementById('admin-reg-address')?.value.trim() || '';
+    const professionVal = document.getElementById('admin-reg-profession')?.value.trim() || '';
+    const studiesVal = document.getElementById('admin-reg-studies')?.value.trim() || '';
+    const baptismVal = document.getElementById('admin-reg-baptism')?.value || '';
+    const holySpiritVal = document.getElementById('admin-reg-holyspirit')?.value || '';
     let password = document.getElementById('admin-reg-pass').value.trim();
 
     const editingId = document.getElementById('editing-user-id').value;
@@ -1634,6 +1653,11 @@ function handleManualRegister() {
             users[userIndex].age = ageVal;
             users[userIndex].gender = genderVal;
             users[userIndex].marital_status = maritalVal;
+            users[userIndex].direccion = addressVal;
+            users[userIndex].profesion = professionVal;
+            users[userIndex].grado_estudios = studiesVal;
+            users[userIndex].baptism_date = baptismVal;
+            users[userIndex].holy_spirit_date = holySpiritVal;
             if (password !== '1234') users[userIndex].password = password;
 
             alert(`✅ Usuario actualizado: ${fullName}`);
@@ -1658,6 +1682,11 @@ function handleManualRegister() {
             gender: genderVal,
             marital_status: maritalVal,
             dob: dobVal,
+            direccion: addressVal,
+            profesion: professionVal,
+            grado_estudios: studiesVal,
+            baptism_date: baptismVal,
+            holy_spirit_date: holySpiritVal,
             createdAt: new Date().toISOString()
         };
 
@@ -3202,7 +3231,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v6.97 (Lista Compacta + Registro Extendido)";
+    v.innerText = "v6.98 (Registro Completo)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
@@ -3287,6 +3316,12 @@ window.openProfileModal = function () {
         }
     }
     document.getElementById('profile-age').value = displayAge;
+
+    // New Fields
+    const genderMap = { 'H': 'Hombre', 'M': 'Mujer' };
+    document.getElementById('profile-gender').value = genderMap[user.gender] || user.gender || 'No Especificado';
+    document.getElementById('profile-marital').value = user.marital_status || 'No Especificado';
+
     document.getElementById('profile-baptism-date').value = user.baptism_date || '';
     document.getElementById('profile-holy-spirit-date').value = user.holy_spirit_date || '';
     document.getElementById('profile-address').value = user.direccion || '';
