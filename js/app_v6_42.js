@@ -875,7 +875,7 @@ window.checkLocationStatus = function () {
                 updateLocationStatus();
             }
         }
-    }, (err) => console.warn("Geo Error:", err), { enableHighAccuracy: true, timeout: 5000, maximumAge: 10000 });
+    }, (err) => console.warn("Geo Error:", err), { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
 };
 
 function startLocationWatch() {
@@ -896,7 +896,7 @@ function startLocationWatch() {
 
     window.locationInterval = setInterval(() => {
         if (window.checkLocationStatus) window.checkLocationStatus();
-    }, 20000);
+    }, 5000);
 }
 
 // --- ADMIN FEATURES (OCR & MANUAL) ---
@@ -2450,7 +2450,7 @@ async function initApp() {
                     } catch (e) {
                         console.warn('Poll sync error:', e);
                     }
-                }, 20000); // Every 20 seconds
+                }, 5000); // Every 5 seconds
 
             } catch (e) {
                 console.warn("⚠️ Cloud Sync Warning:", e);
@@ -3285,7 +3285,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.0 (Asistencia Tiempo Real)";
+    v.innerText = "v7.1 (GPS Fix + 5s Sync)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
