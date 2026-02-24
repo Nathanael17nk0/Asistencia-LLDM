@@ -849,8 +849,7 @@ function seedScheduleData() {
 }
 
 // --- GEOLOCATION ---
-// --- GEOLOCATION (OPTIMIZED FOR HEAT/BATTERY) ---
-// GLOBAL LOCATION CHECK (Callable from Realtime)
+// GLOBAL LOCATION CHECK — Physics-based sanity filter to block bad GPS satellite readings
 window.checkLocationStatus = function () {
     if (!navigator.geolocation) return;
 
@@ -859,31 +858,41 @@ window.checkLocationStatus = function () {
         const lng = pos.coords.longitude;
         const accuracy = pos.coords.accuracy; // meters — lower is better
 
-        // ACCURACY FILTER: reject readings WORSE than our current best.
-        // This prevents a bad satellite reading from overwriting a good Wi-Fi fix.
-        const prevBest = STATE.bestAccuracy || Infinity;
-        if (accuracy > prevBest * 2) {
-            // Significantly worse — ignore it
-            console.log(`📍 GPS ignored (accuracy ${Math.round(accuracy)}m > best ${Math.round(prevBest)}m)`);
+        if (!STATE.targetLocation || STATE.targetLocation.lat === 0) return;
+
+        const newDist = getDistanceInMeters(lat, lng, STATE.targetLocation.lat, STATE.targetLocation.lng);
+
+        // ── FILTER 1: Accuracy filter ──────────────────────────────────────
+        // Reject readings with accuracy > 300m (too imprecise to be useful)
+        if (accuracy > 300) {
+            console.log(`📍 GPS ignored (accuracy ${Math.round(accuracy)}m is too poor)`);
             return;
         }
 
-        // Accept this reading and update best accuracy
-        STATE.bestAccuracy = Math.min(prevBest, accuracy);
-        STATE.currentLocation = { lat, lng };
-
-        console.log(`📍 GPS accepted: ${Math.round(accuracy)}m accuracy, ${Math.round(getDistanceInMeters(lat, lng, STATE.targetLocation?.lat || 0, STATE.targetLocation?.lng || 0))}m from church`);
-
-        if (STATE.targetLocation && STATE.targetLocation.lat !== 0) {
-            const dist = getDistanceInMeters(lat, lng, STATE.targetLocation.lat, STATE.targetLocation.lng);
-            STATE.distance = dist;
-            STATE.inGeofence = dist <= STATE.targetLocation.radius;
-
-            if (typeof updateLocationStatus === 'function') {
-                updateLocationStatus();
-            }
+        // ── FILTER 2: Physics / jump filter ───────────────────────────────
+        // No human can move >400m in 5 seconds (even in a car at city speeds).
+        // If the reported distance jumps by that much, it's a bad GPS reading.
+        const prevDist = STATE.lastKnownGoodDist;
+        if (prevDist !== undefined && Math.abs(newDist - prevDist) > 400) {
+            console.log(`📍 GPS jump rejected: ${Math.round(prevDist)}m → ${Math.round(newDist)}m (impossible movement)`);
+            return; // Keep the previous known-good state — do NOT update UI
         }
-    }, (err) => console.warn("Geo Error:", err), { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+
+        // ── Accept this reading ────────────────────────────────────────────
+        STATE.bestAccuracy = Math.min(STATE.bestAccuracy || Infinity, accuracy);
+        STATE.currentLocation = { lat, lng };
+        STATE.lastKnownGoodDist = newDist;
+
+        console.log(`📍 GPS OK: ${Math.round(newDist)}m from church (accuracy ±${Math.round(accuracy)}m)`);
+
+        STATE.distance = newDist;
+        STATE.inGeofence = newDist <= STATE.targetLocation.radius;
+
+        if (typeof updateLocationStatus === 'function') {
+            updateLocationStatus();
+        }
+    }, (err) => console.warn('Geo Error:', err),
+        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
 };
 
 function startLocationWatch() {
@@ -3293,7 +3302,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.5 (GPS Filtro Precisión)";
+    v.innerText = "v7.6 (GPS Anti-Salto)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 });
