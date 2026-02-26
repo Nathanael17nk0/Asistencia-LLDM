@@ -3293,8 +3293,7 @@ document.addEventListener('DOMContentLoaded', () => {
     }
 });
 
-// --- VERSION INDICATOR (v6.19) ---
-// --- VERSION INDICATOR (v6.53) ---
+// --- VERSION INDICATOR ---
 setTimeout(() => {
     let v = document.getElementById('app-version');
     if (!v) {
@@ -3305,6 +3304,16 @@ setTimeout(() => {
     v.innerText = "v7.6 (GPS Anti-Salto)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
+
+    // Author credit — bottom center, very subtle
+    let credit = document.getElementById('app-credit');
+    if (!credit) {
+        credit = document.createElement('div');
+        credit.id = 'app-credit';
+        document.body.appendChild(credit);
+    }
+    credit.innerText = "Creada por Tododigital NMR / Nathanael Morales";
+    credit.style.cssText = "position:fixed; bottom:2px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.35); font-size:8px; z-index:9999; pointer-events:none; white-space:nowrap; letter-spacing:0.3px;";
 });
 
 // --- USER PROFILE MODAL LOGIC ---
