@@ -8,12 +8,14 @@ const DB = {
             .from('attendance_users')
             .upsert({
                 id: user.id || 'user-' + Date.now(),
-                phone: user.phone || null, // Allow nulls if DB allows unique violation on nulls (Supabase does)
+                phone: user.phone || null,
                 full_name: user.full_name,
                 password: user.password,
                 role: user.role,
                 dob: user.dob || null,
                 age: user.age_label || null,
+                gender: user.gender || null,
+                marital_status: user.marital_status || null,
                 colony: user.colonia || null,
                 direccion: user.direccion || null,
                 profesion: user.profesion || null,
@@ -22,7 +24,7 @@ const DB = {
                 holy_spirit_date: user.holy_spirit_date || null,
                 photo_url: user.photo_url || null,
                 created_at: new Date().toISOString()
-            }, { onConflict: 'phone' }); // FIX: Key on Phone to prevent duplicate constraint violation
+            }, { onConflict: 'phone' });
 
         if (error) throw error;
     },

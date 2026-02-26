@@ -344,6 +344,8 @@ async function handleLogin(e) {
                         role: u.role,
                         age_label: u.age || '',
                         dob: u.dob || '',
+                        gender: u.gender || '',
+                        marital_status: u.marital_status || '',
                         colonia: u.colony || u.colonia || '',
                         direccion: u.direccion || '',
                         profesion: u.profesion || '',
