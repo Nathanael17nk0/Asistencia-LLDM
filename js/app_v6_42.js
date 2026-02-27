@@ -3303,7 +3303,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.6 (GPS Anti-Salto)";
+    v.innerText = "v7.7 (Fix Export Colonia)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 
@@ -3673,7 +3673,7 @@ window.exportMembersToExcel = function () {
         'Fecha Nacimiento': u.dob || '',
         'Género': genderMap[u.gender] || u.gender || '',
         'Estado Civil': u.marital_status || '',
-        'Colonia': u.colonia || '',
+        'Colonia': u.colony || u.colonia || '',
         'Dirección': u.direccion || '',
         'Profesión': u.profesion || '',
         'Grado de Estudios': u.grado_estudios || '',
