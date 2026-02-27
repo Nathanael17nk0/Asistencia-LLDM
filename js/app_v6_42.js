@@ -3303,7 +3303,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.7 (Fix Export Colonia)";
+    v.innerText = "v7.8 (Estudios Biblicos)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 
@@ -3797,7 +3797,7 @@ setTimeout(() => {
 }, 1500);
 
 // ==========================================
-// APOSTOLIC LETTERS (LIBRARY) SYSTEM
+// BIBLICAL STUDIES (LIBRARY) SYSTEM
 // ==========================================
 window.openLibrary = async function () {
     const dash = document.getElementById('dashboard-section');
@@ -3863,7 +3863,7 @@ window.loadLibrary = async function (isSuperAdmin = false) {
         const letters = await window.DB.getLetters();
 
         if (!letters || letters.length === 0) {
-            container.innerHTML = '<p style="text-align:center; color:#aaa;">No hay cartas disponibles aún.</p>';
+            container.innerHTML = '<p style="text-align:center; color:#aaa;">No hay estudios disponibles aún.</p>';
             return;
         }
 
@@ -3948,7 +3948,7 @@ window.submitLetterUpload = async function () {
     const btn = document.getElementById('upload-letter-submit-btn');
 
     if (!titleInput.value.trim()) {
-        alert("Por favor, ingresa el título de la carta.");
+        alert("Por favor, ingresa el título del estudio.");
         return;
     }
 
@@ -3979,13 +3979,13 @@ window.submitLetterUpload = async function () {
         // 2. Save the metadata to the attendance_letters table
         await window.DB.addLetter(titleInput.value.trim(), descInput.value.trim(), fileUrl);
 
-        alert("¡Carta subida exitosamente!");
+        alert("¡Estudio subido exitosamente!");
         window.closeUploadLetterModal();
         if (typeof window.loadLibrary === 'function') window.loadLibrary();
 
     } catch (e) {
         console.error("Upload Error:", e);
-        alert("Ocurrió un error al subir la carta: " + e.message);
+        alert("Ocurrió un error al subir el estudio: " + e.message);
     } finally {
         btn.innerHTML = oldBtnText;
         btn.disabled = false;
@@ -3993,7 +3993,7 @@ window.submitLetterUpload = async function () {
 };
 
 window.deleteLetter = async function (id) {
-    if (!confirm("¿Borrar esta carta para todos?")) return;
+    if (!confirm("¿Borrar este estudio para todos?")) return;
     if (!window.DB || typeof window.DB.deleteLetter !== 'function') return;
 
     try {
