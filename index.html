@@ -98,50 +98,83 @@
                     </div>
 
                     <!-- 2. PERSONAL INFO -->
-                    <div class="input-group">
+                    <label
+                        style="display:block; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Nombre(s)</label>
+                    <div class="input-group" style="margin-bottom:15px;">
                         <i class="ri-user-line"></i>
                         <input type="text" id="reg-nombre" placeholder="Nombre(s)" required>
                     </div>
-                    <div class="input-row">
-                        <div class="input-group">
-                            <input type="text" id="reg-paterno" placeholder="Apellido Paterno" required>
+
+                    <div class="input-row" style="margin-bottom:15px;">
+                        <div style="flex:1;">
+                            <label
+                                style="display:block; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Apellido
+                                Paterno</label>
+                            <div class="input-group">
+                                <input type="text" id="reg-paterno" placeholder="Apellido Paterno" required
+                                    style="padding-left:1rem;">
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <input type="text" id="reg-materno" placeholder="Apellido Materno" required>
+                        <div style="flex:1;">
+                            <label
+                                style="display:block; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Apellido
+                                Materno</label>
+                            <div class="input-group">
+                                <input type="text" id="reg-materno" placeholder="Apellido Materno" required
+                                    style="padding-left:1rem;">
+                            </div>
                         </div>
                     </div>
 
-                    <div class="input-row">
-                        <div class="input-group">
-                            <i class="ri-calendar-line"></i>
-                            <input type="date" id="reg-dob" required title="Fecha de Nacimiento">
+                    <div class="input-row" style="margin-bottom:15px;">
+                        <div style="flex:1;">
+                            <label
+                                style="display:block; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Fecha
+                                de Nacimiento</label>
+                            <div class="input-group">
+                                <i class="ri-calendar-line"></i>
+                                <input type="date" id="reg-dob" required title="Fecha de Nacimiento">
+                            </div>
                         </div>
-                        <div class="input-group disabled-group">
-                            <i class="ri-hourglass-line"></i>
-                            <input type="text" id="reg-edad" placeholder="Edad" readonly>
+                        <div style="flex:1;">
+                            <label
+                                style="display:block; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Edad</label>
+                            <div class="input-group disabled-group">
+                                <i class="ri-hourglass-line"></i>
+                                <input type="text" id="reg-edad" placeholder="Edad" readonly>
+                            </div>
                         </div>
                     </div>
 
-                    <div class="input-row">
-                        <div class="input-group">
-                            <i class="ri-men-line"></i>
-                            <select id="reg-gender" required
-                                style="width:100%; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:white;">
-                                <option value="" disabled selected>Género...</option>
-                                <option value="H">Hombre</option>
-                                <option value="M">Mujer</option>
-                            </select>
+                    <div class="input-row" style="margin-bottom:15px;">
+                        <div style="flex:1;">
+                            <label
+                                style="display:block; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Género</label>
+                            <div class="input-group">
+                                <i class="ri-men-line"></i>
+                                <select id="reg-gender" required
+                                    style="width:100%; background:transparent; border:none; padding:1rem 1rem 1rem 3rem; color:var(--text-main); font-family:var(--font-body); font-size:1.1rem; outline:none; font-weight:500; appearance:none;">
+                                    <option value="" disabled selected>Seleccione...</option>
+                                    <option value="H" style="color:#000;">Hombre</option>
+                                    <option value="M" style="color:#000;">Mujer</option>
+                                </select>
+                            </div>
                         </div>
-                        <div class="input-group">
-                            <i class="ri-group-line"></i>
-                            <select id="reg-marital" required
-                                style="width:100%; padding:12px; background:rgba(255,255,255,0.05); border:1px solid rgba(255,255,255,0.1); border-radius:12px; color:white;">
-                                <option value="" disabled selected>Estado Civil...</option>
-                                <option value="Soltero">Soltero/a</option>
-                                <option value="Casado">Casado/a</option>
-                                <option value="Viudo">Viudo/a</option>
-                                <option value="Union">Unión Libre</option>
-                            </select>
+                        <div style="flex:1;">
+                            <label
+                                style="display:block; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Estado
+                                Civil</label>
+                            <div class="input-group">
+                                <i class="ri-group-line"></i>
+                                <select id="reg-marital" required
+                                    style="width:100%; background:transparent; border:none; padding:1rem 1rem 1rem 3rem; color:var(--text-main); font-family:var(--font-body); font-size:1.1rem; outline:none; font-weight:500; appearance:none;">
+                                    <option value="" disabled selected>Seleccione...</option>
+                                    <option value="Soltero" style="color:#000;">Soltero/a</option>
+                                    <option value="Casado" style="color:#000;">Casado/a</option>
+                                    <option value="Viudo" style="color:#000;">Viudo/a</option>
+                                    <option value="Union" style="color:#000;">Unión Libre</option>
+                                </select>
+                            </div>
                         </div>
                     </div>
 
