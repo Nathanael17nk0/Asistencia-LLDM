@@ -2618,6 +2618,8 @@ document.addEventListener('DOMContentLoaded', () => {
         setInterval(updateCheckInStatus, 5000);
 
         fingerprintBtn.addEventListener('click', () => {
+            if (fingerprintBtn.classList.contains('success-state')) return; // Strictly block clicks
+
             // 0. Login Check
             if (!STATE.user) return showLogin();
 
@@ -3303,7 +3305,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.9 (Registro UI Mejorado)";
+    v.innerText = "v7.9.1 (Registro UI + GPS Fix)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 

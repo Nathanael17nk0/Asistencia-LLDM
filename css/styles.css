@@ -830,6 +830,26 @@ input[type="date"]::-webkit-calendar-picker-indicator {
     color: var(--primary-gold);
 }
 
+/* Success State - When Attendance is Registered */
+.fingerprint-container.success-state {
+    border-color: var(--success) !important;
+    background: rgba(56, 161, 105, 0.1) !important;
+    cursor: default !important;
+    pointer-events: none !important;
+    box-shadow: none !important;
+    transform: scale(1) !important;
+}
+
+.fingerprint-container.success-state .fingerprint-icon {
+    color: var(--success) !important;
+}
+
+.fingerprint-container.success-state .scan-line,
+.fingerprint-container.success-state .ring {
+    display: none !important;
+    animation: none !important;
+}
+
 /* Scanning Animation Effect */
 .scan-line {
     position: absolute;
