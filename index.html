@@ -178,7 +178,21 @@
                         </div>
                     </div>
 
-                    <!-- 3. CONTACT & ADDRESS -->
+                    <!-- 3. OBRA, CONTACT & ADDRESS -->
+                    <label
+                        style="display:block; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Iglesia
+                        / Obra</label>
+                    <div class="input-group" style="margin-bottom:15px;">
+                        <i class="ri-community-fill"></i>
+                        <select id="reg-obra" required
+                            style="width:100%; background:transparent; border:none; padding:1rem 1rem 1rem 3rem; color:var(--text-main); font-family:var(--font-body); font-size:1.1rem; outline:none; font-weight:500; appearance:none;">
+                            <option value="" disabled selected>Seleccione la Obra a la que asiste...</option>
+                            <option value="Aquiles Serdán" style="color:#000;">Aquiles Serdán</option>
+                            <option value="Burocrática" style="color:#000;">Burocrática</option>
+                            <option value="San Valentín" style="color:#000;">San Valentín</option>
+                        </select>
+                    </div>
+
                     <div class="input-group">
                         <i class="ri-map-pin-line"></i>
                         <input type="text" id="reg-colonia" placeholder="Colonia/Barrio" required>
@@ -517,6 +531,11 @@
                         </div>
                     </div>
                     <div class="input-group">
+                        <i class="ri-community-fill"></i>
+                        <input type="text" id="profile-obra" readonly placeholder="Obra"
+                            style="background:transparent; color:gray; border:none; outline:none; font-size:1.1rem; padding:0 !important; width:100%;">
+                    </div>
+                    <div class="input-group">
                         <i class="ri-map-pin-2-line"></i>
                         <input type="text" id="profile-address" placeholder="Dirección">
                     </div>
@@ -573,6 +592,7 @@
                     <div><strong>Nombre:</strong> <span id="admin-member-name"></span></div>
                     <div><strong>Celular:</strong> <span id="admin-member-phone"></span></div>
                     <div><strong>Edad:</strong> <span id="admin-member-age"></span></div>
+                    <div><strong>Obra:</strong> <span id="admin-member-obra"></span></div>
                     <div><strong>F. Nacimiento:</strong> <span id="admin-member-dob"></span></div>
                     <div><strong>Género:</strong> <span id="admin-member-gender"></span></div>
                     <div><strong>Estado Civil:</strong> <span id="admin-member-marital"></span></div>
@@ -662,6 +682,14 @@
                                     style="flex:1;">
                                 <input type="tel" id="admin-reg-celular" placeholder="Celular (ID)" class="simple-input"
                                     style="flex:1;">
+                            </div>
+                            <div style="display:flex; gap:5px; margin-bottom:5px;">
+                                <select id="admin-reg-obra" class="simple-input" style="flex:1;">
+                                    <option value="">Obra a la que asiste...</option>
+                                    <option value="Aquiles Serdán">Aquiles Serdán</option>
+                                    <option value="Burocrática">Burocrática</option>
+                                    <option value="San Valentín">San Valentín</option>
+                                </select>
                             </div>
                             <div style="display:flex; gap:5px; margin-bottom:5px;">
                                 <input type="text" id="admin-reg-colonia" placeholder="Colonia" class="simple-input"

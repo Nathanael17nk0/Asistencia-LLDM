@@ -16,6 +16,7 @@ const DB = {
                 age: user.age_label || null,
                 gender: user.gender || null,
                 marital_status: user.marital_status || null,
+                obra: user.obra || null,
                 colony: user.colonia || null,
                 direccion: user.direccion || null,
                 profesion: user.profesion || null,

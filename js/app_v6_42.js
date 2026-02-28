@@ -151,6 +151,7 @@ if (registerForm) {
         const age = document.getElementById('reg-edad')?.value || '';
         const gender = document.getElementById('reg-gender')?.value || '';
         const marital_status = document.getElementById('reg-marital')?.value || '';
+        const obra = document.getElementById('reg-obra')?.value || '';
         const colonia = document.getElementById('reg-colonia')?.value || '';
         const direccion = document.getElementById('reg-address')?.value || '';
         const profesion = document.getElementById('reg-profession')?.value || '';
@@ -170,6 +171,7 @@ if (registerForm) {
             age_label: age,
             gender: gender,
             marital_status: marital_status,
+            obra: obra,
             colonia: colonia,
             direccion: direccion,
             profesion: profesion,
@@ -346,6 +348,7 @@ async function handleLogin(e) {
                         dob: u.dob || '',
                         gender: u.gender || '',
                         marital_status: u.marital_status || '',
+                        obra: u.obra || '',
                         colonia: u.colony || u.colonia || '',
                         direccion: u.direccion || '',
                         profesion: u.profesion || '',
@@ -1577,6 +1580,7 @@ function initAdminFeatures() {
             document.getElementById('admin-reg-paterno').value = '';
             document.getElementById('admin-reg-materno').value = '';
             document.getElementById('admin-reg-celular').value = '';
+            document.getElementById('admin-reg-obra').value = '';
             document.getElementById('admin-reg-colonia').value = '';
             document.getElementById('admin-reg-dob').value = '';
             if (adminAgeInput) adminAgeInput.value = '';
@@ -1603,6 +1607,7 @@ function initAdminFeatures() {
         document.getElementById('admin-reg-paterno').value = paterno;
         document.getElementById('admin-reg-materno').value = materno;
         document.getElementById('admin-reg-celular').value = user.phone;
+        document.getElementById('admin-reg-obra').value = user.obra || '';
         document.getElementById('admin-reg-colonia').value = user.colonia || '';
         document.getElementById('admin-reg-dob').value = user.dob || '';
         document.getElementById('admin-reg-edad').value = user.age || user.age_label || '';
@@ -1648,6 +1653,7 @@ function handleManualRegister() {
     const paterno = document.getElementById('admin-reg-paterno').value.trim();
     const materno = document.getElementById('admin-reg-materno').value.trim();
     const celular = document.getElementById('admin-reg-celular').value.trim();
+    const obra = document.getElementById('admin-reg-obra').value.trim();
     const colonia = document.getElementById('admin-reg-colonia').value.trim();
     const dobVal = document.getElementById('admin-reg-dob').value;
     const ageVal = document.getElementById('admin-reg-edad').value;
@@ -1677,6 +1683,7 @@ function handleManualRegister() {
         if (userIndex !== -1) {
             users[userIndex].full_name = fullName;
             users[userIndex].phone = celular;
+            users[userIndex].obra = obra;
             users[userIndex].colonia = colonia;
             users[userIndex].dob = dobVal;
             users[userIndex].age = ageVal;
@@ -3305,7 +3312,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.9.1 (Registro UI + GPS Fix)";
+    v.innerText = "v7.9.2 (Registro Obra)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 
@@ -3409,6 +3416,7 @@ window.openProfileModal = function () {
     document.getElementById('profile-baptism-date').value = user.baptism_date || '';
     document.getElementById('profile-holy-spirit-date').value = user.holy_spirit_date || '';
     document.getElementById('profile-address').value = user.direccion || '';
+    document.getElementById('profile-obra').value = user.obra || '';
     document.getElementById('profile-colony').value = user.colonia || user.colony || '';
     document.getElementById('profile-profession').value = user.profesion || '';
     document.getElementById('profile-education').value = user.grado_estudios || '';
@@ -3545,7 +3553,8 @@ window.openAdminMemberModal = function (uid) {
     document.getElementById('admin-member-name').innerText = user.full_name || user.name || 'N/A';
     document.getElementById('admin-member-phone').innerText = user.phone || 'N/A';
     document.getElementById('admin-member-dob').innerText = user.dob || 'No especificada';
-    document.getElementById('admin-member-age').innerText = user.age_label || user.age || 'N/A';
+    document.getElementById('admin-member-age').innerText = user.age || user.age_label || 'N/A';
+    document.getElementById('admin-member-obra').innerText = user.obra || 'N/A';
 
     // Gender and Marital Status
     const genderMap = { 'H': 'Hombre', 'M': 'Mujer' };
@@ -3675,6 +3684,7 @@ window.exportMembersToExcel = function () {
         'Fecha Nacimiento': u.dob || '',
         'Género': genderMap[u.gender] || u.gender || '',
         'Estado Civil': u.marital_status || '',
+        'Obra': u.obra || '',
         'Colonia': u.colony || u.colonia || '',
         'Dirección': u.direccion || '',
         'Profesión': u.profesion || '',
