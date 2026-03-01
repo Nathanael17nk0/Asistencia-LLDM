@@ -3077,15 +3077,18 @@ window.generateReportPreview = function () {
     // 4. PREPARE EXPORT DATA (Global for export function)
     reportDataExport = filtered.map(entry => {
         // Find user by ID matching phone (primary key in this app)
-        const u = users.find(x => x.phone === entry.userId) || users.find(x => x.id === entry.userId) || {};
+        const u = users.find(x => String(x.phone) === String(entry.userId)) || users.find(x => String(x.id) === String(entry.userId)) || {};
         const serviceName = entry.serviceName || entry.serviceSlot;
 
         return {
             "Nombre Completo": u.full_name || u.name || 'Desconocido', // FIRST COLUMN
+            "ID / Celular": entry.userId,
+            "Obra": u.obra || '',
+            "Grupo": u.marital_status || '',
+            "Estatus": u.admin_status || 'Activo',
             "Culto": serviceName,
             "Hora Check-in": new Date(entry.timestamp).toLocaleTimeString(),
             "Fecha": entry.timestamp.split('T')[0],
-            "ID / Celular": entry.userId,
             "Rol": u.role || 'user'
         };
     });
@@ -3116,10 +3119,13 @@ window.exportReportToExcel = function () {
         // Auto-width columns (simple heuristic)
         const wscols = [
             { wch: 30 }, // Nombre
+            { wch: 15 }, // ID
+            { wch: 20 }, // Obra
+            { wch: 20 }, // Grupo
+            { wch: 15 }, // Estatus
             { wch: 20 }, // Culto
             { wch: 15 }, // Hora
             { wch: 15 }, // Fecha
-            { wch: 15 }, // ID
             { wch: 10 }  // Rol
         ];
         ws['!cols'] = wscols;
