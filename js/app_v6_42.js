@@ -2635,9 +2635,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (instruction) {
                     if (hasAttended.method && hasAttended.method.includes('Admin')) {
-                        instruction.innerHTML = `✅ TU ASISTENCIA YA FUE REGISTRADA POR EL ADMINISTRADOR < br > <small>${slotName || 'Culto'}</small>`;
+                        instruction.innerHTML = `✅ TU ASISTENCIA YA FUE REGISTRADA POR EL ADMINISTRADOR <br> <small>${slotName || 'Culto'}</small>`;
                     } else {
-                        instruction.innerHTML = `✅ ASISTENCIA REGISTRADA < br > <small>${slotName || 'Culto'}</small>`;
+                        instruction.innerHTML = `✅ ASISTENCIA REGISTRADA <br> <small>${slotName || 'Culto'}</small>`;
                     }
                     instruction.classList.remove('hidden');
                     instruction.className = "instruction-text success-text";
@@ -2677,7 +2677,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (messageDiv) {
                     messageDiv.style.display = 'block';
-                    messageDiv.innerHTML = `< i class="ri-map-pin-user-fill" ></i > APRÓXIMATE AL TEMPLO < br > <small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
+                    messageDiv.innerHTML = `<i class="ri-map-pin-user-fill"></i> APRÓXIMATE AL TEMPLO <br> <small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
                 }
                 if (instruction) instruction.classList.add('hidden');
                 if (icon) {
@@ -2809,8 +2809,11 @@ document.addEventListener('DOMContentLoaded', () => {
                     successMsg.classList.remove('hidden');
                     if (timeStamp) timeStamp.textContent = new Date().toLocaleTimeString();
                     setTimeout(() => successMsg.classList.add('hidden'), 3000);
+                } else {
+                    if (typeof showToast === 'function') {
+                        showToast("✅ ASISTENCIA REGISTRADA EXITOSAMENTE");
+                    }
                 }
-                alert("✅ ASISTENCIA REGISTRADA EXITOSAMENTE");
 
                 // Refresh UI immediately
                 updateCheckInStatus();
