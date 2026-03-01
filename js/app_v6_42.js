@@ -3723,11 +3723,24 @@ window.exportAttendanceByMonth = async function () {
             return;
         }
 
+        // Load local users to cross-reference data (Obra, Grupo, Estatus)
+        const localUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+        const userMap = new Map();
+        localUsers.forEach(u => {
+            if (u.phone) userMap.set(String(u.phone), u);
+            if (u.id) userMap.set(String(u.id), u);
+        });
+
         const rows = records.map(r => {
             const ts = new Date(r.timestamp);
+            const userProfile = userMap.get(String(r.userId)) || {};
+
             return {
                 'Nombre': r.name || '',
                 'ID Celular': r.userId || '',
+                'Obra': userProfile.obra || '',
+                'Grupo': userProfile.marital_status || '',
+                'Estatus': userProfile.admin_status || 'Activo',
                 'Fecha': ts.toLocaleDateString('es-MX'),
                 'Hora': ts.toLocaleTimeString('es-MX', { hour: '2-digit', minute: '2-digit' }),
                 'Culto': r.serviceName || r.serviceSlot || '',
