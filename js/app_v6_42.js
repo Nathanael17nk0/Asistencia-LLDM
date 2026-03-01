@@ -1780,11 +1780,13 @@ function handleManualRegister() {
 // 3. Attendance Manager Logic
 const serviceFilterSelect = document.getElementById('admin-service-filter');
 const statusFilterSelect = document.getElementById('admin-status-filter');
+const memberStatusFilterSelect = document.getElementById('admin-member-status-filter');
 const searchInput = document.getElementById('admin-search-user');
 
 if (serviceFilterSelect) {
     serviceFilterSelect.addEventListener('change', renderAdminUserList);
     if (statusFilterSelect) statusFilterSelect.addEventListener('change', renderAdminUserList);
+    if (memberStatusFilterSelect) memberStatusFilterSelect.addEventListener('change', renderAdminUserList);
     searchInput.addEventListener('input', renderAdminUserList);
 
     // AUTO-SELECT CURRENT SLOT
