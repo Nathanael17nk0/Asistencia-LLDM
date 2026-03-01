@@ -3781,7 +3781,7 @@ window.exportMembersToExcel = function () {
         'Edad': u.age || u.age_label || '',
         'Fecha Nacimiento': u.dob || '',
         'Género': genderMap[u.gender] || u.gender || '',
-        'Estado Civil': u.marital_status || '',
+        'Grupo': u.marital_status || '',
         'Obra': u.obra || '',
         'Colonia': u.colony || u.colonia || '',
         'Dirección': u.direccion || '',

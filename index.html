@@ -162,17 +162,33 @@
                         </div>
                         <div style="flex:1;">
                             <label
-                                style="display:block; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Estado
-                                Civil</label>
+                                style="display:block; font-size:0.8rem; font-weight:bold; color:var(--text-muted); margin-bottom:5px;">Grupo
+                                al que Pertenece</label>
                             <div class="input-group">
                                 <i class="ri-group-line"></i>
                                 <select id="reg-marital" required
                                     style="width:100%; background:transparent; border:none; padding:1rem 1rem 1rem 3rem; color:var(--text-main); font-family:var(--font-body); font-size:1.1rem; outline:none; font-weight:500; appearance:none;">
                                     <option value="" disabled selected>Seleccione...</option>
-                                    <option value="Soltero" style="color:#000;">Soltero/a</option>
-                                    <option value="Casado" style="color:#000;">Casado/a</option>
-                                    <option value="Viudo" style="color:#000;">Viudo/a</option>
-                                    <option value="Union" style="color:#000;">Unión Libre</option>
+                                    <optgroup label="Mujeres">
+                                        <option value="Jóvenes Señoritas" style="color:#000;">Jóvenes Señoritas</option>
+                                        <option value="Casadas chicas" style="color:#000;">Casadas chicas (hasta 30
+                                            años)</option>
+                                        <option value="Casadas medianas" style="color:#000;">Casadas medianas (31 a 44
+                                            años)</option>
+                                        <option value="Casadas grandes" style="color:#000;">Casadas grandes (45 en
+                                            adelante)</option>
+                                        <option value="Solas" style="color:#000;">Solas</option>
+                                    </optgroup>
+                                    <optgroup label="Varones">
+                                        <option value="Jóvenes Varones" style="color:#000;">Jóvenes Varones</option>
+                                        <option value="Casados chicos" style="color:#000;">Casados chicos (hasta 30
+                                            años)</option>
+                                        <option value="Casados medianos" style="color:#000;">Casados medianos (31 a 44
+                                            años)</option>
+                                        <option value="Casados grandes" style="color:#000;">Casados grandes (45 en
+                                            adelante)</option>
+                                        <option value="Solos" style="color:#000;">Solos</option>
+                                    </optgroup>
                                 </select>
                             </div>
                         </div>
@@ -524,8 +540,7 @@
                         </div>
                         <div style="flex:1;">
                             <label
-                                style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:2px;">Estado
-                                Civil</label>
+                                style="font-size:0.7rem; color:var(--text-muted); display:block; margin-bottom:2px;">Grupo</label>
                             <input type="text" id="profile-marital" readonly
                                 style="width:100%; background:transparent; color:gray; padding:0 !important; font-size:1.1rem; border:none; outline:none;">
                         </div>
@@ -706,11 +721,21 @@
                                     <option value="M">Mujer</option>
                                 </select>
                                 <select id="admin-reg-marital" class="simple-input" style="flex:1;">
-                                    <option value="">Estado Civil...</option>
-                                    <option value="Soltero">Soltero/a</option>
-                                    <option value="Casado">Casado/a</option>
-                                    <option value="Viudo">Viudo/a</option>
-                                    <option value="Union">Unión Libre</option>
+                                    <option value="">Grupo...</option>
+                                    <optgroup label="Mujeres">
+                                        <option value="Jóvenes Señoritas">Jóvenes Señoritas</option>
+                                        <option value="Casadas chicas">Casadas chicas (hasta 30 años)</option>
+                                        <option value="Casadas medianas">Casadas medianas (31 a 44 años)</option>
+                                        <option value="Casadas grandes">Casadas grandes (45 en adelante)</option>
+                                        <option value="Solas">Solas</option>
+                                    </optgroup>
+                                    <optgroup label="Varones">
+                                        <option value="Jóvenes Varones">Jóvenes Varones</option>
+                                        <option value="Casados chicos">Casados chicos (hasta 30 años)</option>
+                                        <option value="Casados medianos">Casados medianos (31 a 44 años)</option>
+                                        <option value="Casados grandes">Casados grandes (45 en adelante)</option>
+                                        <option value="Solos">Solos</option>
+                                    </optgroup>
                                 </select>
                             </div>
                             <div style="display:flex; gap:5px; margin-bottom:5px;">
