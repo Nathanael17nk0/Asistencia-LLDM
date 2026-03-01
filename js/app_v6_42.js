@@ -2346,9 +2346,24 @@ async function initApp() {
                     }
                 }
 
-                // Update Attendance
+                // Update Attendance (Merge to protect local states)
                 if (attendance && attendance.length > 0) {
-                    localStorage.setItem('nexus_attendance_log', JSON.stringify(attendance));
+                    let localLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+                    let updatedLog = false;
+                    attendance.forEach(cloudEntry => {
+                        const exists = localLog.find(e =>
+                            e.id === cloudEntry.id ||
+                            (e.userId === cloudEntry.userId && e.timestamp === cloudEntry.timestamp)
+                        );
+                        if (!exists) {
+                            localLog.push(cloudEntry);
+                            updatedLog = true;
+                        }
+                    });
+                    if (updatedLog || localLog.length === 0) {
+                        // If local was empty, just take cloud. Otherwise save merged.
+                        localStorage.setItem('nexus_attendance_log', JSON.stringify(localLog.length > 0 ? localLog : attendance));
+                    }
                 }
 
                 // Update Schedule
