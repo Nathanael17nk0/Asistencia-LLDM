@@ -1623,6 +1623,8 @@ function initAdminFeatures() {
         if (baptEl) baptEl.value = user.baptism_date || '';
         const hsEl = document.getElementById('admin-reg-holyspirit');
         if (hsEl) hsEl.value = user.holy_spirit_date || '';
+        const statusEl = document.getElementById('admin-reg-status');
+        if (statusEl) statusEl.value = user.admin_status || 'Activo';
 
         document.getElementById('editing-user-id').value = user.id;
         document.getElementById('manual-register-btn').textContent = "GUARDAR CAMBIOS";
@@ -1664,6 +1666,7 @@ function handleManualRegister() {
     const studiesVal = document.getElementById('admin-reg-studies')?.value.trim() || '';
     const baptismVal = document.getElementById('admin-reg-baptism')?.value || '';
     const holySpiritVal = document.getElementById('admin-reg-holyspirit')?.value || '';
+    const statusVal = document.getElementById('admin-reg-status')?.value || 'Activo';
     let password = document.getElementById('admin-reg-pass').value.trim();
 
     const editingId = document.getElementById('editing-user-id').value;
@@ -1694,7 +1697,14 @@ function handleManualRegister() {
             users[userIndex].grado_estudios = studiesVal;
             users[userIndex].baptism_date = baptismVal;
             users[userIndex].holy_spirit_date = holySpiritVal;
+            users[userIndex].admin_status = statusVal;
             if (password !== '1234') users[userIndex].password = password;
+
+            // Update Local First
+            localStorage.setItem('nexus_users', JSON.stringify(users));
+
+            // Optional: Also sync changes to cloud explicitly here if there's no overall sync step down the line.
+            if (window.DB) window.DB.registerUser(users[userIndex]).catch(e => console.error(e));
 
             alert(`✅ Usuario actualizado: ${fullName}`);
         } else {
@@ -1723,6 +1733,7 @@ function handleManualRegister() {
             grado_estudios: studiesVal,
             baptism_date: baptismVal,
             holy_spirit_date: holySpiritVal,
+            admin_status: statusVal,
             createdAt: new Date().toISOString()
         };
 
@@ -1815,6 +1826,8 @@ function renderAdminUserList() {
         const searchVal = searchInput ? searchInput.value.toLowerCase() : '';
         const filterVal = serviceProps ? serviceProps.value : 'all';
         const currentStatusFilter = statusProps ? statusProps.value : 'all';
+        const memberStatusProps = document.getElementById('admin-member-status-filter');
+        const memberStatusFilter = memberStatusProps ? memberStatusProps.value : 'Activo';
 
         if (!listContainer) return;
 
@@ -1927,6 +1940,11 @@ function renderAdminUserList() {
 
         const filteredUsers = users.filter(u => {
             if (u.role === 'admin') return false;
+
+            // Apply Member Status Filter (Activo / Retirado Temporal / En Archivo / Todos)
+            const uStatus = u.admin_status || 'Activo';
+            if (memberStatusFilter !== 'Todos' && uStatus !== memberStatusFilter) return false;
+
             const name = (u.full_name || u.name || '').toLowerCase();
             const matchesSearch = name.includes(searchVal);
             return matchesSearch;
@@ -1996,16 +2014,22 @@ function renderAdminUserList() {
                 `<span style="color:green; font-weight:bold; font-size:0.6rem;">✅ ${entry.serviceName || 'Asistió'}</span>` :
                 `<span style="color:#bbb; font-size:0.6rem;">Falta</span>`;
 
+            // Custom Estatus Badge
+            const uStatus = u.admin_status || 'Activo';
+            let badgeHtml = '';
+            if (uStatus === 'Retirado Temporal') badgeHtml = `<span style="background:orange; color:white; padding:2px 4px; border-radius:4px; font-size:0.6rem; margin-left:5px;">Retirado Temp.</span>`;
+            if (uStatus === 'En Archivo') badgeHtml = `<span style="background:gray; color:white; padding:2px 4px; border-radius:4px; font-size:0.6rem; margin-left:5px;">Archivado</span>`;
+
             div.dataset.uid = uid; // Store uid safely as a data attribute
             div.innerHTML = `
                     <div style="display:flex; align-items:center; flex:1; cursor:pointer;" class="member-card-clickable" title="Ver Perfil">
                         <img src="${avatarSrc}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; border:1px solid ${isPresent ? 'var(--success)' : '#ddd'}; margin-right:6px; background:#fff;" alt="Avatar">
                         <div style="flex:1;">
-                            <h4 style="margin:0; font-size:0.75rem; line-height:1;">${u.full_name || u.name}</h4>
+                            <h4 style="margin:0; font-size:0.75rem; line-height:1;">${u.full_name || u.name} ${badgeHtml}</h4>
                             <small style="color:#888; font-size:0.65rem;">ID: ${u.phone}</small>
                         </div>
                     </div>
-                    <div style="text-align:right;">
+                    <div style="text-align:right; display:flex; align-items:center; gap:5px;">
                         ${statusText}
                     </div>
                 `;
@@ -2017,6 +2041,46 @@ function renderAdminUserList() {
                     if (window.openAdminMemberModal) window.openAdminMemberModal(uid);
                 });
             }
+
+            // Status Changer Dropdown for Admin
+            const statusSelect = document.createElement('select');
+            statusSelect.innerHTML = `
+                <option value="Activo" ${uStatus === 'Activo' ? 'selected' : ''}>Activo</option>
+                <option value="Retirado Temporal" ${uStatus === 'Retirado Temporal' ? 'selected' : ''}>Retirado</option>
+                <option value="En Archivo" ${uStatus === 'En Archivo' ? 'selected' : ''}>Archivado</option>
+            `;
+            statusSelect.style.cssText = "font-size:0.65rem; border:1px solid #ddd; border-radius:4px; padding:2px; background:#fff;";
+            statusSelect.onchange = async (e) => {
+                const newStatus = e.target.value;
+                if (!confirm(`¿Cambiar estatus de ${u.full_name || u.name} a ${newStatus}?`)) {
+                    e.target.value = uStatus; // Reset if cancelled
+                    return;
+                }
+
+                // Update Local
+                const allU = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+                const idx = allU.findIndex(x => x.id === uid || x.phone === String(uid));
+                if (idx > -1) {
+                    allU[idx].admin_status = newStatus;
+                    localStorage.setItem('nexus_users', JSON.stringify(allU));
+                }
+
+                // Update Cloud
+                if (window.DB) {
+                    try {
+                        const cloudU = { ...u, admin_status: newStatus };
+                        await window.DB.registerUser(cloudU);
+                        showToast("Estatus actualizado exitosamente", "success");
+                    } catch (err) {
+                        console.error("Error setting status", err);
+                        alert("Error al actualizar la nube. Intenta de nuevo.");
+                    }
+                }
+                renderAdminUserList();
+            };
+
+            const rightActionsDiv = div.children[1];
+            rightActionsDiv.appendChild(statusSelect);
 
             if (isPresent) {
                 const undoBtn = document.createElement('button');
@@ -2054,7 +2118,7 @@ function renderAdminUserList() {
                     renderAdminUserList();
                     showToast("Asistencia eliminada (Nube y Local)", "warning");
                 };
-                div.appendChild(undoBtn);
+                rightActionsDiv.appendChild(undoBtn);
             } else {
                 const markBtn = document.createElement('button');
                 markBtn.textContent = 'ASISTIR';
@@ -2110,7 +2174,7 @@ function renderAdminUserList() {
                         }
                         localStorage.setItem('nexus_attendance_log', JSON.stringify(currentLog));
                         renderAdminUserList();
-                        showToast(`✅ Asistencia: ${selectedName}`, "success");
+                        showToast(`✅ Asistencia: ${selectedName} `, "success");
                     });
                 };
                 div.appendChild(markBtn);
@@ -2134,7 +2198,7 @@ function renderAdminUserList() {
             delBtn.title = "Eliminar Usuario (Nube y Local)";
             delBtn.onclick = async (e) => {
                 e.stopPropagation();
-                if (confirm(`⚠️ PELIGRO ⚠️\n\n¿Seguro que quieres ELIMINAR A ${u.full_name || u.name}?\n\n- Se borrará de la lista LOCAL.\n- Se borrará de la NUBE (Supabase).\n- Se borrará su historial.\n\nEsta acción no se puede deshacer.`)) {
+                if (confirm(`⚠️ PELIGRO ⚠️\n\n¿Seguro que quieres ELIMINAR A ${u.full_name || u.name}?\n\n - Se borrará de la lista LOCAL.\n - Se borrará de la NUBE(Supabase).\n - Se borrará su historial.\n\nEsta acción no se puede deshacer.`)) {
                     try {
                         // 1. Delete from Cloud
                         if (window.DB && window.DB.deleteUser) {
@@ -2205,7 +2269,7 @@ function showUserHistory(user) {
     const history = log.filter(e => e.userId === uid || (user.phone && e.userId === user.phone));
 
     if (history.length === 0) {
-        alert(`Historial de ${user.full_name || user.name}:\n\nSin asistencias registradas.`);
+        alert(`Historial de ${user.full_name || user.name}: \n\nSin asistencias registradas.`);
         return;
     }
 
@@ -2220,7 +2284,7 @@ function showUserHistory(user) {
         return `📅 ${dateStr} ${timeStr} - ${h.serviceName || h.serviceSlot || 'Desconocido'} (${h.method === 'manual_admin' ? 'Manual' : 'Escáner'})`;
     }).join('\n');
 
-    alert(`Historial de ${user.full_name || user.name} (${history.length}):\n\n${report}`);
+    alert(`Historial de ${user.full_name || user.name} (${history.length}): \n\n${report} `);
 }
 
 function populateUserSelect() {
@@ -2255,7 +2319,7 @@ async function initApp() {
     const activeSession = localStorage.getItem('nexus_session');
     const accountData = localStorage.getItem('nexus_account');
 
-    console.log(`🔍 Init Check: Session=${activeSession}, Account=${accountData ? 'YES' : 'NO'}`);
+    console.log(`🔍 Init Check: Session = ${activeSession}, Account = ${accountData ? 'YES' : 'NO'} `);
 
     let userLoggedIn = false;
 
@@ -2568,9 +2632,9 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (instruction) {
                     if (hasAttended.method && hasAttended.method.includes('Admin')) {
-                        instruction.innerHTML = `✅ TU ASISTENCIA YA FUE REGISTRADA POR EL ADMINISTRADOR<br><small>${slotName || 'Culto'}</small>`;
+                        instruction.innerHTML = `✅ TU ASISTENCIA YA FUE REGISTRADA POR EL ADMINISTRADOR < br > <small>${slotName || 'Culto'}</small>`;
                     } else {
-                        instruction.innerHTML = `✅ ASISTENCIA REGISTRADA<br><small>${slotName || 'Culto'}</small>`;
+                        instruction.innerHTML = `✅ ASISTENCIA REGISTRADA < br > <small>${slotName || 'Culto'}</small>`;
                     }
                     instruction.classList.remove('hidden');
                     instruction.className = "instruction-text success-text";
@@ -2610,7 +2674,7 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (messageDiv) {
                     messageDiv.style.display = 'block';
-                    messageDiv.innerHTML = `<i class="ri-map-pin-user-fill"></i> APRÓXIMATE AL TEMPLO<br><small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
+                    messageDiv.innerHTML = `< i class="ri-map-pin-user-fill" ></i > APRÓXIMATE AL TEMPLO < br > <small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
                 }
                 if (instruction) instruction.classList.add('hidden');
                 if (icon) {
@@ -2665,7 +2729,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 if (!STATE.inGeofence) {
                     const distInfo = STATE.distance ? ` (Aprox ${Math.round(STATE.distance)}m del templo)` : '';
-                    alert(`📍 NO ESTÁS EN EL TEMPLO${distInfo}\n\nDebes estar dentro de las instalaciones para registrar asistencia. Si estás en el edificio, acércate a una ventana para mejorar tu señal GPS.`);
+                    alert(`📍 NO ESTÁS EN EL TEMPLO${distInfo} \n\nDebes estar dentro de las instalaciones para registrar asistencia.Si estás en el edificio, acércate a una ventana para mejorar tu señal GPS.`);
                     return;
                 }
             }
@@ -2682,7 +2746,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
             if (hasAttendedService) {
                 if (hasAttendedService.method && hasAttendedService.method.includes('Admin')) {
-                    alert(`✅ TU ASISTENCIA YA FUE REGISTRADA POR EL ADMINISTRADOR\n\nNo puedes cancelarla desde aquí. Si fue un error, repórtalo en administración.`);
+                    alert(`✅ TU ASISTENCIA YA FUE REGISTRADA POR EL ADMINISTRADOR\n\nNo puedes cancelarla desde aquí.Si fue un error, repórtalo en administración.`);
                     return;
                 }
 
@@ -2778,8 +2842,8 @@ document.addEventListener('DOMContentLoaded', () => {
         debugBtn.innerText = "⏳ Buscando...";
         try {
             const users = await window.DB.fetchAllUsers();
-            alert(`🔍 DIAGNÓSTICO NUBE:\n\nUsuarios Encontrados: ${users.length}\n\nSi es 0, hay un error de permisos.`);
-            debugBtn.innerText = `✅ Encontrados: ${users.length}`;
+            alert(`🔍 DIAGNÓSTICO NUBE: \n\nUsuarios Encontrados: ${users.length} \n\nSi es 0, hay un error de permisos.`);
+            debugBtn.innerText = `✅ Encontrados: ${users.length} `;
 
             // If users found, force reload to let initApp handle it
             if (users.length > 0) {
@@ -2982,7 +3046,7 @@ window.generateReportPreview = function () {
 
     // 3. RENDER PREVIEW
     let html = `
-        <div style="display:flex; justify-content:space-around; margin-bottom:10px;">
+            < div style = "display:flex; justify-content:space-around; margin-bottom:10px;" >
             <div style="text-align:center;">
                 <h2 style="margin:0; color:var(--primary);">${totalChecks}</h2>
                 <small>Asistencias</small>
@@ -2991,10 +3055,10 @@ window.generateReportPreview = function () {
                 <h2 style="margin:0; color:var(--primary);">${uniqueIds}</h2>
                 <small>Hermanos Únicos</small>
             </div>
-        </div>
-        <hr style="border-color:#444;">
-        <ul style="list-style:none; padding:0; margin-top:10px;">
-    `;
+        </div >
+            <hr style="border-color:#444;">
+                <ul style="list-style:none; padding:0; margin-top:10px;">
+                    `;
 
     for (const [slot, count] of Object.entries(slots)) {
         html += `<li style="display:flex; justify-content:space-between; padding:5px 0;">
@@ -3327,7 +3391,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.9.2 (Registro Obra)";
+    v.innerText = "v7.9.4 (Estatus de Administrador)";
     v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 
@@ -3570,6 +3634,22 @@ window.openAdminMemberModal = function (uid) {
     document.getElementById('admin-member-dob').innerText = user.dob || 'No especificada';
     document.getElementById('admin-member-age').innerText = user.age || user.age_label || 'N/A';
     document.getElementById('admin-member-obra').innerText = user.obra || 'N/A';
+
+    // Status Badge Render
+    const uStatus = user.admin_status || 'Activo';
+    const statusSpan = document.getElementById('admin-member-status');
+    if (statusSpan) {
+        if (uStatus === 'Activo') {
+            statusSpan.style.cssText = "background:green; color:white; padding:2px 6px; border-radius:12px; font-size:0.7rem;";
+            statusSpan.innerText = "Activo";
+        } else if (uStatus === 'Retirado Temporal') {
+            statusSpan.style.cssText = "background:orange; color:white; padding:2px 6px; border-radius:12px; font-size:0.7rem;";
+            statusSpan.innerText = "Retirado Temporal";
+        } else if (uStatus === 'En Archivo') {
+            statusSpan.style.cssText = "background:gray; color:white; padding:2px 6px; border-radius:12px; font-size:0.7rem;";
+            statusSpan.innerText = "En Archivo";
+        }
+    }
 
     // Gender and Marital Status
     const genderMap = { 'H': 'Hombre', 'M': 'Mujer' };
@@ -3923,7 +4003,7 @@ window.loadLibrary = async function (isSuperAdmin = false) {
                     <i class="ri-external-link-line"></i> LEER
                 </button>
                 ${deleteBtn}
-            `;
+                `;
             container.appendChild(card);
         });
 

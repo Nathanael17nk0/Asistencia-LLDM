@@ -591,6 +591,7 @@
                 <div style="display:flex; flex-direction:column; gap:10px; color:white;">
                     <div><strong>Nombre:</strong> <span id="admin-member-name"></span></div>
                     <div><strong>Celular:</strong> <span id="admin-member-phone"></span></div>
+                    <div><strong>Estatus:</strong> <span id="admin-member-status"></span></div>
                     <div><strong>Edad:</strong> <span id="admin-member-age"></span></div>
                     <div><strong>Obra:</strong> <span id="admin-member-obra"></span></div>
                     <div><strong>F. Nacimiento:</strong> <span id="admin-member-dob"></span></div>
@@ -734,6 +735,13 @@
                                 </div>
                             </div>
                             <div style="display:flex; gap:5px; margin-bottom:5px;">
+                                <select id="admin-reg-status" class="simple-input" style="flex:1;">
+                                    <option value="Activo">Estatus: Activo</option>
+                                    <option value="Retirado Temporal">Estatus: Retirado Temp.</option>
+                                    <option value="En Archivo">Estatus: En Archivo</option>
+                                </select>
+                            </div>
+                            <div style="display:flex; gap:5px; margin-bottom:5px;">
                                 <input type="text" id="admin-reg-pass" placeholder="Pass (Opcional)"
                                     class="simple-input" style="flex:1;">
                                 <input type="hidden" id="editing-user-id">
@@ -760,8 +768,17 @@
                                 style="flex:1; padding:5px;">
                         </div>
                         <div style="display:flex; gap:5px;">
+                            <select id="admin-member-status-filter" class="simple-input"
+                                style="flex:1; padding:5px; font-weight:bold; color:var(--primary);">
+                                <option value="Activo">Mostrar: Solo Activos</option>
+                                <option value="Retirado Temporal">Mostrar: Retirados</option>
+                                <option value="En Archivo">Mostrar: Archivados</option>
+                                <option value="Todos">Mostrar: Todos</option>
+                            </select>
+                        </div>
+                        <div style="display:flex; gap:5px; margin-top:5px;">
                             <select id="admin-status-filter" class="simple-input" style="flex:1; padding:5px;">
-                                <option value="all">Todos</option>
+                                <option value="all">Asist. Todos</option>
                                 <option value="present">Asistieron</option>
                                 <option value="absent">Faltan</option>
                             </select>

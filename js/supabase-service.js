@@ -24,6 +24,7 @@ const DB = {
                 baptism_date: user.baptism_date || null,
                 holy_spirit_date: user.holy_spirit_date || null,
                 photo_url: user.photo_url || null,
+                admin_status: user.admin_status || 'Activo',
                 created_at: new Date().toISOString()
             }, { onConflict: 'phone' });
 
@@ -171,6 +172,10 @@ const DB = {
             // Listen for New Users
             .on('postgres_changes', { event: '*', schema: 'public', table: 'attendance_users' }, payload => {
                 console.log('User Change:', payload);
+                if (payload.new) {
+                    // Map snake_case to camelCase strictly where needed, or just pass it depending on how the app uses it
+                    // The app expects 'admin_status' explicitly, so this should map cleanly since the DB column is also called 'admin_status'
+                }
                 if (window.onUserUpdate) window.onUserUpdate(payload.new);
             })
             .subscribe((status) => {
