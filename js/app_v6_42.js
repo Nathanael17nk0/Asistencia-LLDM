@@ -1942,7 +1942,8 @@ function renderAdminUserList() {
             if (u.role === 'admin') return false;
 
             // Apply Member Status Filter (Activo / Retirado Temporal / En Archivo / Todos)
-            const uStatus = u.admin_status || 'Activo';
+            // Trim and default to Activo to prevent hidden trailing space bugs
+            const uStatus = (u.admin_status || 'Activo').trim();
             if (memberStatusFilter !== 'Todos' && uStatus !== memberStatusFilter) return false;
 
             const name = (u.full_name || u.name || '').toLowerCase();
@@ -1952,7 +1953,7 @@ function renderAdminUserList() {
 
         // UPDATE DOM COUNT
         const totalAttendeesForFilter = attendedIds.size;
-        const totalUserCount = users.filter(u => u.role !== 'admin').length;
+        const totalUserCount = filteredUsers.length;
         if (countSpan) countSpan.textContent = `${totalAttendeesForFilter}/${totalUserCount}`;
 
         // Clear the list before rendering
