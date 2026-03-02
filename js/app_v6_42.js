@@ -3420,7 +3420,7 @@ setTimeout(() => {
         document.body.appendChild(credit);
     }
     credit.innerText = "Creada por Tododigital NMR / Nathanael Morales";
-    credit.style.cssText = "position:fixed; bottom:2px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.35); font-size:8px; z-index:9999; pointer-events:none; white-space:nowrap; letter-spacing:0.3px;";
+    credit.style.cssText = "position:fixed; bottom:2px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.65); font-size:9px; z-index:9999; pointer-events:none; white-space:nowrap; letter-spacing:0.3px; text-shadow: 0px 1px 2px rgba(0,0,0,0.5);";
 });
 
 // --- USER PROFILE MODAL LOGIC ---
