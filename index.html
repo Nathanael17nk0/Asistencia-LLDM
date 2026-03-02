@@ -643,13 +643,8 @@
                             <i class="ri-fire-fill logo-icon"
                                 style="font-size: 1.2rem !important; margin:0; animation: pulse-gold 3s infinite ease-in-out;"></i>
                         </div>
-                        <div style="display:flex; gap:5px;">
-                            <button onclick="if(window.toggleReportsModal) window.toggleReportsModal()"
-                                class="cyber-btn sm gold-btn" style="font-size:0.7rem; padding: 2px 8px;"><i
-                                    class="ri-file-chart-line"></i> REPORTES</button>
-                            <button id="close-admin-btn" class="cyber-btn sm danger"
-                                style="font-size:0.7rem; padding: 2px 8px;">CERRAR</button>
-                        </div>
+                        <button id="close-admin-btn" class="cyber-btn sm danger"
+                            style="font-size:0.7rem; padding: 2px 8px;">CERRAR</button>
                     </div>
 
                     <!-- NEW TABS -->
@@ -674,11 +669,20 @@
 
                 <!-- Tools specifically for Asistencia -->
                 <div id="tools-asistencia">
+                    <div class="admin-section" style="padding: 10px; border-bottom: 1px solid #eee;">
+                        <div style="display:flex; gap:5px; width:100%;">
+                            <button onclick="if(window.toggleReportsModal) window.toggleReportsModal()"
+                                class="cyber-btn sm" style="flex:1;">
+                                <i class="ri-file-chart-line"></i> REPORTES DE ASISTENCIA
+                            </button>
+                        </div>
+                    </div>
+
                     <!-- 3. Registration Section (Minimized) -->
                     <div class="admin-section"
-                        style="padding: 5px 15px; border-bottom: 1px solid #eee; background:#f9f9f9;">
+                        style="padding: 10px 15px; border-bottom: 1px solid #eee; background:#f9f9f9;">
                         <button onclick="document.getElementById('admin-manual-form').classList.toggle('hidden')"
-                            class="cyber-btn sm secondary" style="width:100%; font-size:0.7rem; padding: 5px;">
+                            class="cyber-btn sm secondary" style="width:100%; font-size:0.8rem;">
                             <i class="ri-user-add-line"></i> REGISTRO RÁPIDO (DESPLEGAR)
                         </button>
                         <!-- Manual Registration Form (Admin) -->
@@ -775,22 +779,22 @@
                     </div>
                     <!-- 4. Filter Section (Sticky) -->
                     <div class="admin-section"
-                        style="padding: 5px 10px; background:white; border-bottom:1px solid #eee;">
+                        style="padding: 10px 15px; background:white; border-bottom:1px solid #eee;">
                         <div
                             style="display:flex; justify-content:space-between; align-items:center; margin-bottom:5px;">
-                            <h5 style="margin:0; font-weight:bold; font-size:0.85rem;"><i class="ri-list-check"></i>
-                                Asistencia Actual</h5>
+                            <h5 style="margin:0; font-weight:bold;"><i class="ri-list-check"></i> Asistencia
+                                Actual</h5>
                             <div id="attendance-count"
-                                style="background:var(--primary); color:white; padding:1px 6px; border-radius:10px; font-size:0.7rem;">
+                                style="background:var(--primary); color:white; padding:2px 8px; border-radius:10px; font-size:0.8rem;">
                                 0/0</div>
                         </div>
                         <div style="display:flex; gap:5px; margin-bottom:5px;">
                             <input type="text" id="admin-search-user" placeholder="Buscar..." class="simple-input"
-                                style="flex:1; padding:2px 5px; font-size:0.75rem;">
+                                style="flex:1; padding:5px;">
                         </div>
                         <div style="display:flex; gap:5px;">
                             <select id="admin-member-status-filter" class="simple-input"
-                                style="flex:1; padding:2px 5px; font-weight:bold; color:var(--primary); font-size:0.75rem;">
+                                style="flex:1; padding:5px; font-weight:bold; color:var(--primary);">
                                 <option value="Activo">Mostrar: Solo Activos</option>
                                 <option value="Retirado Temporal">Mostrar: Retirados</option>
                                 <option value="En Archivo">Mostrar: Archivados</option>
@@ -798,14 +802,12 @@
                             </select>
                         </div>
                         <div style="display:flex; gap:5px; margin-top:5px;">
-                            <select id="admin-status-filter" class="simple-input"
-                                style="flex:1; padding:2px 5px; font-size:0.75rem;">
+                            <select id="admin-status-filter" class="simple-input" style="flex:1; padding:5px;">
                                 <option value="all">Asist. Todos</option>
                                 <option value="present">Asistieron</option>
                                 <option value="absent">Faltan</option>
                             </select>
-                            <select id="admin-service-filter" class="simple-input"
-                                style="flex:1; padding:2px 5px; font-size:0.75rem;">
+                            <select id="admin-service-filter" class="simple-input" style="flex:1; padding:5px;">
                                 <option value="all">Todos (Horarios)</option>
                                 <option value="5am">5am</option>
                                 <option value="9am">9am</option>

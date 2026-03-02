@@ -2008,7 +2008,7 @@ function renderAdminUserList() {
             div.className = 'user-list-item';
             div.style.display = 'flex';
             div.style.alignItems = 'center';
-            div.style.padding = '1px 3px'; // Ultra Compact
+            div.style.padding = '2px 5px'; // Ultra Compact
             div.style.borderBottom = '1px solid #eee';
             div.style.background = isPresent ? '#f0fff4' : '#fff';
 
@@ -2019,27 +2019,26 @@ function renderAdminUserList() {
 
             // Status Text (Smaller)
             const statusText = isPresent ?
-                `<span style="color:green; font-weight:bold; font-size:0.55rem;">✅ ${entry.serviceName || 'Asistió'}</span>` :
-                `<span style="color:#bbb; font-size:0.55rem;">Falta</span>`;
+                `<span style="color:green; font-weight:bold; font-size:0.6rem;">✅ ${entry.serviceName || 'Asistió'}</span>` :
+                `<span style="color:#bbb; font-size:0.6rem;">Falta</span>`;
 
             // Custom Estatus Badge
             const uStatus = u.admin_status || 'Activo';
             let badgeHtml = '';
-            if (uStatus === 'Retirado Temporal') badgeHtml = `<span style="background:orange; color:white; padding:1px 3px; border-radius:3px; font-size:0.55rem; margin-left:3px;">Retirado</span>`;
-            if (uStatus === 'En Archivo') badgeHtml = `<span style="background:gray; color:white; padding:1px 3px; border-radius:3px; font-size:0.55rem; margin-left:3px;">Archivado</span>`;
+            if (uStatus === 'Retirado Temporal') badgeHtml = `<span style="background:orange; color:white; padding:2px 4px; border-radius:4px; font-size:0.6rem; margin-left:5px;">Retirado Temp.</span>`;
+            if (uStatus === 'En Archivo') badgeHtml = `<span style="background:gray; color:white; padding:2px 4px; border-radius:4px; font-size:0.6rem; margin-left:5px;">Archivado</span>`;
 
             div.dataset.uid = uid; // Store uid safely as a data attribute
             div.innerHTML = `
-                    <div style="display:flex; align-items:center; flex:1; cursor:pointer; padding:2px 0;" class="member-card-clickable" title="Ver Perfil">
-                        <img src="${avatarSrc}" style="width:16px; height:16px; border-radius:50%; object-fit:cover; border:1px solid ${isPresent ? 'var(--success)' : '#ddd'}; margin-right:4px; background:#fff;" alt="Avatar">
+                    <div style="display:flex; align-items:center; flex:1; cursor:pointer;" class="member-card-clickable" title="Ver Perfil">
+                        <img src="${avatarSrc}" style="width:20px; height:20px; border-radius:50%; object-fit:cover; border:1px solid ${isPresent ? 'var(--success)' : '#ddd'}; margin-right:6px; background:#fff;" alt="Avatar">
                         <div style="flex:1;">
-                            <h4 style="margin:0; font-size:0.7rem; line-height:1; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; max-width:140px;">${u.full_name || u.name} ${badgeHtml}</h4>
-                            <small style="color:#888; font-size:0.6rem; display:block; line-height:1; margin-top:1px;">ID: ${u.phone}</small>
+                            <h4 style="margin:0; font-size:0.75rem; line-height:1;">${u.full_name || u.name} ${badgeHtml}</h4>
+                            <small style="color:#888; font-size:0.65rem;">ID: ${u.phone}</small>
                         </div>
                     </div>
-                    <div style="text-align:right; display:flex; align-items:center; gap:3px;">
+                    <div style="text-align:right; display:flex; align-items:center; gap:5px;">
                         ${statusText}
-                        <button onclick="copyToClipboard('${u.phone}')" style="background:none; border:none; cursor:pointer; color:var(--primary); font-size:0.85rem; padding:0; margin-left:3px;"><i class="ri-whatsapp-line"></i></button>
                     </div>
                 `;
 
@@ -2054,11 +2053,11 @@ function renderAdminUserList() {
             // Status Changer Dropdown for Admin
             const statusSelect = document.createElement('select');
             statusSelect.innerHTML = `
-                <option value="Activo" ${uStatus === 'Activo' ? 'selected' : ''}>Act</option>
-                <option value="Retirado Temporal" ${uStatus === 'Retirado Temporal' ? 'selected' : ''}>Ret</option>
-                <option value="En Archivo" ${uStatus === 'En Archivo' ? 'selected' : ''}>Arch</option>
+                <option value="Activo" ${uStatus === 'Activo' ? 'selected' : ''}>Activo</option>
+                <option value="Retirado Temporal" ${uStatus === 'Retirado Temporal' ? 'selected' : ''}>Retirado</option>
+                <option value="En Archivo" ${uStatus === 'En Archivo' ? 'selected' : ''}>Archivado</option>
             `;
-            statusSelect.style.cssText = "font-size:0.55rem; border:1px solid #ddd; border-radius:3px; padding:1px; background:#fff; margin-left:2px;";
+            statusSelect.style.cssText = "font-size:0.65rem; border:1px solid #ddd; border-radius:4px; padding:2px; background:#fff;";
             statusSelect.onchange = async (e) => {
                 const newStatus = e.target.value;
                 if (!confirm(`¿Cambiar estatus de ${u.full_name || u.name} a ${newStatus}?`)) {
@@ -2095,9 +2094,8 @@ function renderAdminUserList() {
                 const undoBtn = document.createElement('button');
                 undoBtn.innerHTML = '<i class="ri-delete-bin-line"></i>';
                 undoBtn.className = 'cyber-btn sm danger';
-                undoBtn.style.padding = '1px 5px';
-                undoBtn.style.fontSize = '0.7rem';
-                undoBtn.style.marginLeft = '3px';
+                undoBtn.style.padding = '2px 8px';
+                undoBtn.style.marginLeft = '5px';
                 undoBtn.title = "Quitar Asistencia";
                 undoBtn.onclick = () => {
                     if (!confirm("¿Quitar asistencia de hoy para este hermano?")) return;
@@ -2133,9 +2131,9 @@ function renderAdminUserList() {
                 const markBtn = document.createElement('button');
                 markBtn.textContent = 'ASISTIR';
                 markBtn.className = 'cyber-btn sm';
-                markBtn.style.padding = '1px 5px';
-                markBtn.style.marginLeft = '3px';
-                markBtn.style.fontSize = '0.65rem';
+                markBtn.style.padding = '2px 8px';
+                markBtn.style.marginLeft = '5px';
+                markBtn.style.fontSize = '0.7rem';
                 markBtn.onclick = () => {
                     openServiceModal((selectedSlot, selectedName) => {
                         const currentLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
