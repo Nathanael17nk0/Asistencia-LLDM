@@ -896,8 +896,13 @@ window.checkLocationStatus = function () {
         if (typeof updateLocationStatus === 'function') {
             updateLocationStatus();
         }
+
+        // Also force a UI evaluation for regular users to turn the fingerprint green/active instantly
+        if (window.updateCheckInStatus) {
+            window.updateCheckInStatus();
+        }
     }, (err) => console.warn('Geo Error:', err),
-        { enableHighAccuracy: false, timeout: 10000, maximumAge: 60000 });
+        { enableHighAccuracy: true, timeout: 10000, maximumAge: 0 });
 };
 
 function startLocationWatch() {
@@ -2614,7 +2619,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const todayISO = now.toISOString().split('T')[0];
 
             const hasAttended = log.find(e =>
-                e.userId === STATE.user.phone &&
+                String(e.userId) === String(STATE.user.phone) &&
                 e.timestamp.startsWith(todayISO) &&
                 e.serviceSlot === slotId
             );
@@ -2742,7 +2747,7 @@ document.addEventListener('DOMContentLoaded', () => {
             const todayISO = now.toISOString().split('T')[0];
 
             const hasAttendedService = log.find(e =>
-                e.userId === STATE.user.phone &&
+                String(e.userId) === String(STATE.user.phone) &&
                 e.timestamp.startsWith(todayISO) &&
                 e.serviceSlot === slotId
             );
