@@ -73,19 +73,23 @@ const DB = {
 
     async fetchTodayAttendance() {
         if (!window.sbClient) return [];
-        const today = new Date().toISOString().split('T')[0];
+
+        // Fetch last 48 hours strictly to avoid UTC/Local timezone overlap boundary bugs
+        const boundary = new Date();
+        boundary.setDate(boundary.getDate() - 2);
+
         const { data, error } = await window.sbClient
             .from('attendance_log')
             .select('*')
-            .gte('timestamp', today + 'T00:00:00')
-            .lte('timestamp', today + 'T23:59:59');
+            .gte('timestamp', boundary.toISOString());
 
         if (error) { console.error(error); return []; }
 
         return data.map(d => ({
             userId: d.user_phone,
             name: d.user_name,
-            timestamp: d.timestamp,
+            // AUTO-FIX: Append Z to ensure 'timestamp without timezone' parses back to UTC!
+            timestamp: (d.timestamp && !d.timestamp.endsWith('Z')) ? d.timestamp + 'Z' : d.timestamp,
             method: d.method,
             serviceSlot: d.service_slot,
             serviceName: d.service_name,
@@ -112,7 +116,8 @@ const DB = {
         return data.map(d => ({
             userId: d.user_phone,
             name: d.user_name,
-            timestamp: d.timestamp,
+            // AUTO-FIX timezone parsing
+            timestamp: (d.timestamp && !d.timestamp.endsWith('Z')) ? d.timestamp + 'Z' : d.timestamp,
             method: d.method,
             serviceSlot: d.service_slot,
             serviceName: d.service_name,
@@ -152,12 +157,14 @@ const DB = {
 
                 // TRANSFORM PAYLOAD (Snake -> Camel)
                 if (payload.new && payload.eventType !== 'DELETE') {
+                    const rawTs = payload.new.timestamp || '';
                     payload.new = {
                         userId: payload.new.user_phone,
                         name: payload.new.user_name,
                         serviceSlot: payload.new.service_slot,
                         serviceName: payload.new.service_name,
-                        timestamp: payload.new.timestamp,
+                        // AUTO-FIX timezone parsing for realtime payloads
+                        timestamp: (!rawTs.endsWith('Z')) ? rawTs + 'Z' : rawTs,
                         method: payload.new.method,
                         id: payload.new.id
                     };
