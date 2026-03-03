@@ -930,7 +930,7 @@ window.checkLocationStatus = function () {
         console.log(`📍 GPS OK: ${Math.round(newDist)}m from church (accuracy ±${Math.round(accuracy)}m)`);
 
         STATE.distance = newDist;
-        STATE.inGeofence = newDist <= STATE.targetLocation.radius;
+        STATE.inGeofence = newDist <= (STATE.targetLocation.radius || 40);
 
         if (typeof updateLocationStatus === 'function') {
             updateLocationStatus();
@@ -2568,6 +2568,18 @@ async function initApp() {
                     // 1. Setup Global User Listener (handled internally by supabase-service)
                     window.onUserUpdate = (newUser) => {
                         console.log("👤 User Update Root:", newUser);
+                        // Save to Local Storage so Admin List sees it immediately
+                        if (newUser && newUser.phone) {
+                            let currentUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+                            const idx = currentUsers.findIndex(u => String(u.phone) === String(newUser.phone) || String(u.id) === String(newUser.id));
+                            if (idx > -1) {
+                                currentUsers[idx] = { ...currentUsers[idx], ...newUser };
+                            } else {
+                                currentUsers.push(newUser);
+                            }
+                            localStorage.setItem('nexus_users', JSON.stringify(currentUsers));
+                        }
+
                         // Refresh Admin User List if needed
                         if (typeof renderAdminUserList === 'function' && document.getElementById('admin-panel') && !document.getElementById('admin-panel').classList.contains('hidden')) {
                             renderAdminUserList();
