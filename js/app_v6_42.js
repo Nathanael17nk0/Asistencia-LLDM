@@ -1091,7 +1091,7 @@ function initAdminFeatures() {
                                 STATE.targetLocation.lat, STATE.targetLocation.lng
                             );
                             STATE.distance = dist;
-                            STATE.inGeofence = dist <= STATE.targetLocation.radius;
+                            STATE.inGeofence = dist <= (STATE.targetLocation.radius || 40);
                         }
 
                         const distDisplay = STATE.distance !== undefined ? Math.round(STATE.distance) + "m" : "--";
