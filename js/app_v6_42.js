@@ -416,6 +416,9 @@ function doLoginSuccess(user) {
     // FORCE CLEAN GPS STATE FOR NEW USER SESSION
     STATE.distance = undefined;
     STATE.lastKnownGoodDist = undefined;
+    STATE.inGeofence = false;
+    STATE.currentLocation = { lat: 0, lng: 0 };
+
     const messageDiv = document.querySelector('.geofence-message');
     if (messageDiv) {
         messageDiv.style.display = 'block';
@@ -1046,7 +1049,7 @@ function initAdminFeatures() {
                             STATE.inGeofence = dist <= STATE.targetLocation.radius;
                         }
 
-                        const distDisplay = STATE.distance ? Math.round(STATE.distance) + "m" : "--";
+                        const distDisplay = STATE.distance !== undefined ? Math.round(STATE.distance) + "m" : "--";
 
                         // UPDATE UI
                         const fingerprintDiv = document.querySelector('.fingerprint-container');
@@ -1063,13 +1066,17 @@ function initAdminFeatures() {
 
                             if (messageDiv) {
                                 messageDiv.style.display = 'block';
-                                messageDiv.innerHTML = `
+                                if (STATE.distance === undefined) {
+                                    messageDiv.innerHTML = `<i class="ri-loader-4-line ri-spin"></i> CALCULANDO DISTANCIA...`;
+                                } else {
+                                    messageDiv.innerHTML = `
                 ACÉRCATE AL TEMPLO PARA REGISTRAR<br>
                 <small>Distancia: ${distDisplay}</small><br>
                 <button onclick="window.checkLocationStatus()" style="background:#333; color:white; border:none; padding:5px 10px; border-radius:10px; margin-top:5px; font-size:0.8rem;">
                     <i class="ri-refresh-line"></i> Actualizar GPS
                 </button>
             `;
+                                }
                             }
                         }
                     }                   // If not, you might need to call loadTheme() or similar for location.
@@ -2746,7 +2753,11 @@ document.addEventListener('DOMContentLoaded', () => {
                 }
                 if (messageDiv) {
                     messageDiv.style.display = 'block';
-                    messageDiv.innerHTML = `<i class="ri-map-pin-user-fill"></i> APRÓXIMATE AL TEMPLO <br> <small>Estás a ${Math.round(STATE.distance || 0)}m</small>`;
+                    if (STATE.distance === undefined) {
+                        messageDiv.innerHTML = `<i class="ri-loader-4-line ri-spin"></i> CALCULANDO DISTANCIA...`;
+                    } else {
+                        messageDiv.innerHTML = `<i class="ri-map-pin-user-fill"></i> APRÓXIMATE AL TEMPLO <br> <small>Estás a ${Math.round(STATE.distance)}m</small>`;
+                    }
                 }
                 if (instruction) instruction.classList.add('hidden');
                 if (icon) {
