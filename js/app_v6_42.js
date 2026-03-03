@@ -874,14 +874,7 @@ window.checkLocationStatus = function () {
             return;
         }
 
-        // ── FILTER 2: Physics / jump filter ───────────────────────────────
-        // No human can move >400m in 5 seconds (even in a car at city speeds).
-        // If the reported distance jumps by that much, it's a bad GPS reading.
-        const prevDist = STATE.lastKnownGoodDist;
-        if (prevDist !== undefined && Math.abs(newDist - prevDist) > 400) {
-            console.log(`📍 GPS jump rejected: ${Math.round(prevDist)}m → ${Math.round(newDist)}m (impossible movement)`);
-            return; // Keep the previous known-good state — do NOT update UI
-        }
+        // ── FILTER 2: Deleted (Physics Jump Filter was causing "Out of bounds" load bugs)
 
         // ── Accept this reading ────────────────────────────────────────────
         STATE.bestAccuracy = Math.min(STATE.bestAccuracy || Infinity, accuracy);
@@ -2535,30 +2528,60 @@ async function initApp() {
                 setInterval(async () => {
                     const adminPanel = document.getElementById('admin-panel');
                     const isAdminVisible = adminPanel && !adminPanel.classList.contains('hidden');
-                    if (!isAdminVisible || !window.DB) return;
+                    if (!window.DB) return; // Allow sync for ALL users to catch deletions
 
                     try {
-                        const cloudLog = await window.DB.fetchTodayAttendance();
-                        if (!cloudLog || cloudLog.length === 0) return;
-
                         let localLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
                         let updated = false;
 
-                        cloudLog.forEach(cloudEntry => {
-                            const exists = localLog.find(e =>
-                                e.id === cloudEntry.id ||
-                                (e.userId === cloudEntry.userId && e.timestamp === cloudEntry.timestamp)
+                        // 1. Fetch Cloud Log (Source of Truth)
+                        const cloudLog = await window.DB.fetchTodayAttendance();
+
+                        // 2. Handle Additions (Cloud -> Local)
+                        if (cloudLog && cloudLog.length > 0) {
+                            cloudLog.forEach(cloudEntry => {
+                                const exists = localLog.find(e =>
+                                    e.id === cloudEntry.id ||
+                                    (e.userId === cloudEntry.userId && e.timestamp === cloudEntry.timestamp)
+                                );
+                                if (!exists) {
+                                    localLog.push(cloudEntry);
+                                    updated = true;
+                                }
+                            });
+                        }
+
+                        // 3. Handle Deletions (Cloud Deletion -> Remove Local)
+                        // If Admin deleted someone's attendance today, it won't be in cloudLog.
+                        // We must remove local records for TODAY that don't exist in the fresh cloud pull.
+                        const todayISO = new Date().toISOString().split('T')[0];
+                        const originalLen = localLog.length;
+
+                        localLog = localLog.filter(localEntry => {
+                            // Only validate entries from today
+                            if (!localEntry.timestamp.startsWith(todayISO)) return true; // Keep past days
+
+                            // Check if this local today entry exists in the fresh cloud log
+                            // Uses loose equality for IDs just in case
+                            const stillInCloud = cloudLog && cloudLog.some(c =>
+                                c.id === localEntry.id ||
+                                (String(c.userId) === String(localEntry.userId) && c.serviceSlot === localEntry.serviceSlot)
                             );
-                            if (!exists) {
-                                localLog.push(cloudEntry);
-                                updated = true;
-                            }
+
+                            return stillInCloud; // If false, the item was deleted by Admin, remove locally!
                         });
 
+                        if (localLog.length !== originalLen) {
+                            updated = true;
+                            console.log('🗑️ Local attendance cleaned up (Deleted by Admin in Cloud)');
+                        }
+
+                        // 4. Save and Render
                         if (updated) {
                             localStorage.setItem('nexus_attendance_log', JSON.stringify(localLog));
                             if (typeof renderAdminUserList === 'function') renderAdminUserList();
-                            console.log('🔄 Admin list refreshed from cloud poll');
+                            if (typeof updateCheckInStatus === 'function') updateCheckInStatus(); // CRITICAL: Updates User Shield UI
+                            console.log('🔄 Admin/User list refreshed from cloud poll reconciliation');
                         }
                     } catch (e) {
                         console.warn('Poll sync error:', e);
@@ -2820,8 +2843,16 @@ document.addEventListener('DOMContentLoaded', () => {
                     }
                 }
 
+                // FORCE INSTANT UI LOCK BEFORE LOOP CATCHES UP
+                const btnContainer = document.querySelector('.fingerprint-container');
+                if (btnContainer) {
+                    btnContainer.className = 'fingerprint-container success-state';
+                    btnContainer.style.pointerEvents = 'none';
+                    btnContainer.style.cursor = 'default';
+                }
+
                 // Refresh UI immediately
-                updateCheckInStatus();
+                if (typeof updateCheckInStatus === 'function') updateCheckInStatus();
             }
         });
     }
