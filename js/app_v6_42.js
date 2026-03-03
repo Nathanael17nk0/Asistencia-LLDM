@@ -1993,6 +1993,8 @@ function renderAdminUserList() {
             if (!entry || !entry.timestamp) return;
 
             const entryDate = new Date(entry.timestamp);
+            if (isNaN(entryDate)) return; // Skip invalid dates from previous bugs
+
             const eYear = entryDate.getFullYear();
             const eMonth = String(entryDate.getMonth() + 1).padStart(2, '0');
             const eDay = String(entryDate.getDate()).padStart(2, '0');
@@ -2364,6 +2366,7 @@ function showUserHistory(user) {
 
     const report = history.map(h => {
         const date = new Date(h.timestamp);
+        if (isNaN(date)) return `📅 Fecha Inválida - ${h.serviceName || h.serviceSlot || 'Desconocido'}`;
         const dateStr = date.toLocaleDateString();
         const timeStr = date.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
         return `📅 ${dateStr} ${timeStr} - ${h.serviceName || h.serviceSlot || 'Desconocido'} (${h.method === 'manual_admin' ? 'Manual' : 'Escáner'})`;
@@ -2577,8 +2580,8 @@ async function initApp() {
                             console.log("🔔 Realtime Attendance:", newLog);
                             // 1. Update Local Log (to match report)
                             const currentLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-                            // Avoid dupes using newLog.userId
-                            if (!currentLog.find(e => e.id === newLog.id || (e.timestamp === newLog.timestamp && e.userId === newLog.userId))) {
+                            // Avoid dupes using newLog.userId and within 2 seconds
+                            if (!currentLog.find(e => e.id === newLog.id || (Math.abs(new Date(e.timestamp) - new Date(newLog.timestamp)) < 2000 && e.userId === newLog.userId))) {
                                 currentLog.push({
                                     userId: newLog.userId,
                                     name: newLog.name,
@@ -2641,7 +2644,7 @@ async function initApp() {
                             cloudLog.forEach(cloudEntry => {
                                 const exists = localLog.find(e =>
                                     e.id === cloudEntry.id ||
-                                    (e.userId === cloudEntry.userId && e.timestamp === cloudEntry.timestamp)
+                                    (e.userId === cloudEntry.userId && Math.abs(new Date(e.timestamp) - new Date(cloudEntry.timestamp)) < 2000)
                                 );
                                 if (!exists) {
                                     localLog.push(cloudEntry);

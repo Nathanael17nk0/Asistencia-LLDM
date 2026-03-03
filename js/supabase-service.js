@@ -1,5 +1,13 @@
 // Supabase Service Layer
 // Handles data sync between Local State and Cloud DB
+// Helper to strictly ensure valid ISO strings without double appending Z if timezone is already present
+const ensureUTC = (ts) => {
+    if (!ts) return new Date().toISOString();
+    if (ts.endsWith('Z')) return ts;
+    // Check if it already has a timezone offset like +00:00 or -06:00
+    if (ts.includes('+') || ts.match(/-\d{2}:\d{2}$/)) return ts;
+    return ts + 'Z';
+};
 
 const DB = {
     async registerUser(user) {
@@ -89,7 +97,7 @@ const DB = {
             userId: d.user_phone,
             name: d.user_name,
             // AUTO-FIX: Append Z to ensure 'timestamp without timezone' parses back to UTC!
-            timestamp: (d.timestamp && !d.timestamp.endsWith('Z')) ? d.timestamp + 'Z' : d.timestamp,
+            timestamp: ensureUTC(d.timestamp),
             method: d.method,
             serviceSlot: d.service_slot,
             serviceName: d.service_name,
@@ -117,7 +125,7 @@ const DB = {
             userId: d.user_phone,
             name: d.user_name,
             // AUTO-FIX timezone parsing
-            timestamp: (d.timestamp && !d.timestamp.endsWith('Z')) ? d.timestamp + 'Z' : d.timestamp,
+            timestamp: ensureUTC(d.timestamp),
             method: d.method,
             serviceSlot: d.service_slot,
             serviceName: d.service_name,
@@ -164,7 +172,7 @@ const DB = {
                         serviceSlot: payload.new.service_slot,
                         serviceName: payload.new.service_name,
                         // AUTO-FIX timezone parsing for realtime payloads
-                        timestamp: (!rawTs.endsWith('Z')) ? rawTs + 'Z' : rawTs,
+                        timestamp: ensureUTC(rawTs),
                         method: payload.new.method,
                         id: payload.new.id
                     };
