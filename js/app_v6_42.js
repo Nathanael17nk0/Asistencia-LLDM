@@ -2055,6 +2055,7 @@ function renderAdminUserList() {
         filteredUsers.forEach(u => {
             // CRITICAL FIX: Use ID if available, fallback to phone (legacy), but ID is safer for manual users without phone.
             // Reg users have ID. 
+            const uid = u.phone || u.id;
             let isPresent = false;
             let entry = null;
 
