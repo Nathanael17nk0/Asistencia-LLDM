@@ -14,7 +14,8 @@ const STATE = {
         radius: 40 // Strict 40m per user request
     },
     inGeofence: false,
-    distance: null
+    distance: null,
+    testModeActivo: localStorage.getItem('nexus_test_mode') === 'true' // NEW: Admin Testing Mode
 };
 
 // --- DOM ELEMENTS ---
@@ -889,8 +890,18 @@ function seedScheduleData() {
 }
 
 // --- GEOLOCATION ---
-// GLOBAL LOCATION CHECK — Physics-based sanity filter to block bad GPS satellite readings
 window.checkLocationStatus = function () {
+    if (STATE.testModeActivo) {
+        console.log("🧪 TEST MODE: Faking Location (Distance 0m)");
+        STATE.distance = 0;
+        STATE.inGeofence = true;
+        STATE.bestAccuracy = 1;
+        STATE.currentLocation = { lat: STATE.targetLocation.lat || 1, lng: STATE.targetLocation.lng || 1 };
+        if (typeof updateLocationStatus === 'function') updateLocationStatus();
+        if (window.updateCheckInStatus) window.updateCheckInStatus();
+        return;
+    }
+
     if (!navigator.geolocation) return;
 
     navigator.geolocation.getCurrentPosition((pos) => {
@@ -982,6 +993,39 @@ function initAdminFeatures() {
 
     // 1. OCR Logic
     console.log("Initializing Admin Features...");
+
+    // BOOT TEST MODE BUTTON
+    const testModeBtn = document.getElementById('test-mode-btn');
+    if (testModeBtn) {
+        const updateTestBtnUi = () => {
+            if (STATE.testModeActivo) {
+                testModeBtn.style.background = 'var(--success)';
+                testModeBtn.innerHTML = '<i class="ri-test-tube-fill"></i> MODO PRUEBA: ACTIVADO';
+            } else {
+                testModeBtn.style.background = '#e74c3c';
+                testModeBtn.innerHTML = '<i class="ri-test-tube-fill"></i> Activar Modo Prueba (Para Usar en Casa)';
+            }
+        };
+        updateTestBtnUi(); // init logic
+
+        testModeBtn.addEventListener('click', () => {
+            STATE.testModeActivo = !STATE.testModeActivo;
+            localStorage.setItem('nexus_test_mode', STATE.testModeActivo);
+            updateTestBtnUi();
+
+            if (STATE.testModeActivo) {
+                alert("🧪 MODO PRUEBA ACTIVADO\n\n- Horario de Culto: SIEMPRE ABIERTO\n- Ubicación: IGNORADA (Forzado a 0m)\n\nYa puedes registrar asistencias desde cualquier lugar.");
+                if (window.checkLocationStatus) window.checkLocationStatus();
+            } else {
+                alert("🛑 MODO PRUEBA APAGADO\n\nReglas normales restauradas.");
+                // Reset GPS
+                STATE.distance = undefined;
+                STATE.inGeofence = false;
+                STATE.currentLocation = { lat: 0, lng: 0 };
+                if (window.checkLocationStatus) window.checkLocationStatus();
+            }
+        });
+    }
 
     // 0. Location Config
     const setLocBtn = document.getElementById('set-location-btn');
@@ -2984,6 +3028,15 @@ document.addEventListener('DOMContentLoaded', () => {
 * Reglas: Check-in permitido 15 min antes y 20 min después.
 */
 function getServiceSlot(date) {
+    if (STATE.testModeActivo) {
+        return {
+            slotId: 'TEST-SLOT',
+            slotName: 'Culto de Prueba (Test Mode)',
+            isOpen: true,
+            isNext: false
+        };
+    }
+
     const day = date.getDay(); // 0=Domingo, 1=Lunes, ... 4=Jueves, 6=Sabado
     const hour = date.getHours();
     const minutes = date.getMinutes();
