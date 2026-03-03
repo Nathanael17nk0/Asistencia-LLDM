@@ -3137,8 +3137,8 @@ function getServiceSlot(date) {
         slot = { id: '7pm', name: 'Culto 7:00 PM' };
     }
 
-    // TEMPORARY LIVE TESTING WINDOW (8:00 PM to 4:45 AM) - Added per user request to test actual GPS
-    else if (timeVal >= 20.00 || timeVal < 4.75) {
+    // TEMPORARY LIVE TESTING WINDOW (11:30 AM to 5:00 PM) - Added per user request to test actual GPS
+    else if (timeVal >= 11.50 && timeVal < 17.00) {
         slot = { id: 'TEST_LIVE', name: 'Prueba GPS en Vivo' };
     }
 
