@@ -2725,14 +2725,11 @@ document.addEventListener('DOMContentLoaded', () => {
     if (showRegisterBtn) showRegisterBtn.addEventListener('click', (e) => { e.preventDefault(); showRegister(); });
 
     if (fingerprintBtn) {
-        // GPS Permission Nudge
+        // GPS Permission Pre-check (Quiet)
         if (navigator.geolocation) {
             navigator.geolocation.getCurrentPosition(
-                () => console.log("GPS Access Granted"),
-                (err) => {
-                    console.warn("GPS Access Denied/Error", err);
-                    alert("⚠️ ATENCIÓN: La app necesita acceso a tu GPS para registrar tu asistencia.\n\nPor favor, permite el acceso a la ubicación cuando el navegador te lo pida.");
-                },
+                () => console.log("GPS Access Pre-granted"),
+                (err) => console.warn("GPS Access not ready or denied yet: ", err),
                 { enableHighAccuracy: true, timeout: 5000 }
             );
         }
