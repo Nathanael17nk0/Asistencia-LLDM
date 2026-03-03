@@ -2919,9 +2919,10 @@ document.addEventListener('DOMContentLoaded', () => {
             // 4. Register
             const confirmMsg = `¿Registrar asistencia para ${slotName}?`;
             if (confirm(confirmMsg)) {
+                const logTimestamp = new Date().toISOString();
                 log.push({
                     userId: STATE.user.phone,
-                    timestamp: new Date().toISOString(),
+                    timestamp: logTimestamp,
                     method: 'fingerprint_scan',
                     serviceSlot: slotId,
                     serviceName: slotName
@@ -2935,7 +2936,7 @@ document.addEventListener('DOMContentLoaded', () => {
                             method: 'fingerprint_scan',
                             serviceSlot: slotId,
                             serviceName: slotName,
-                            timestamp: new Date().toISOString()
+                            timestamp: logTimestamp
                         });
                     } catch (e) {
                         console.error("Supabase Log Error", e);
@@ -3183,41 +3184,43 @@ window.setReportDate = function (range) {
 let reportDataExport = [];
 
 window.generateReportPreview = function () {
-    const startVal = document.getElementById('report-start').value;
-    const endVal = document.getElementById('report-end').value;
-    const previewEl = document.getElementById('report-preview');
-    const exportBtn = document.getElementById('btn-export-excel');
+    try {
+        const startVal = document.getElementById('report-start').value;
+        const endVal = document.getElementById('report-end').value;
+        const previewEl = document.getElementById('report-preview');
+        const exportBtn = document.getElementById('btn-export-excel');
 
-    if (!startVal || !endVal) return alert("Selecciona fechas.");
+        if (!startVal || !endVal) return alert("Selecciona fechas.");
 
-    const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-    const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+        const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+        const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
 
-    // 1. FILTER
-    const filtered = log.filter(entry => {
-        const dateStr = entry.timestamp.split('T')[0];
-        return dateStr >= startVal && dateStr <= endVal;
-    });
+        // 1. FILTER
+        const filtered = log.filter(entry => {
+            const t = entry.timestamp || '';
+            const dateStr = t.includes('T') ? t.split('T')[0] : t.substring(0, 10);
+            return dateStr >= startVal && dateStr <= endVal;
+        });
 
-    if (filtered.length === 0) {
-        previewEl.innerHTML = '<p style="color:orange;">No hay datos en este rango.</p>';
-        exportBtn.style.display = 'none';
-        return;
-    }
+        if (filtered.length === 0) {
+            previewEl.innerHTML = '<p style="color:orange;">No hay datos en este rango.</p>';
+            exportBtn.style.display = 'none';
+            return;
+        }
 
-    // 2. AGGREGATE
-    const totalChecks = filtered.length;
-    const uniqueIds = new Set(filtered.map(e => e.userId)).size;
+        // 2. AGGREGATE
+        const totalChecks = filtered.length;
+        const uniqueIds = new Set(filtered.map(e => e.userId)).size;
 
-    // Breakdown by Slot
-    const slots = {};
-    filtered.forEach(e => {
-        const k = e.serviceSlot || 'Desconocido';
-        slots[k] = (slots[k] || 0) + 1;
-    });
+        // Breakdown by Slot
+        const slots = {};
+        filtered.forEach(e => {
+            const k = e.serviceSlot || 'Desconocido';
+            slots[k] = (slots[k] || 0) + 1;
+        });
 
-    // 3. RENDER PREVIEW
-    let html = `
+        // 3. RENDER PREVIEW
+        let html = `
             < div style = "display:flex; justify-content:space-around; margin-bottom:10px;" >
             <div style="text-align:center;">
                 <h2 style="margin:0; color:var(--primary);">${totalChecks}</h2>
@@ -3232,35 +3235,39 @@ window.generateReportPreview = function () {
                 <ul style="list-style:none; padding:0; margin-top:10px;">
                     `;
 
-    for (const [slot, count] of Object.entries(slots)) {
-        html += `<li style="display:flex; justify-content:space-between; padding:5px 0;">
+        for (const [slot, count] of Object.entries(slots)) {
+            html += `<li style="display:flex; justify-content:space-between; padding:5px 0;">
                     <span>${slot}</span>
                     <span style="font-weight:bold;">${count}</span>
                  </li>`;
+        }
+        html += '</ul>';
+
+        previewEl.innerHTML = html;
+        exportBtn.style.display = 'block';
+
+        // 4. PREPARE EXPORT DATA (Global for export function)
+        reportDataExport = filtered.map(entry => {
+            // Find user by ID matching phone (primary key in this app)
+            const u = users.find(x => String(x.phone) === String(entry.userId)) || users.find(x => String(x.id) === String(entry.userId)) || {};
+            const serviceName = entry.serviceName || entry.serviceSlot;
+
+            return {
+                "Nombre Completo": u.full_name || u.name || 'Desconocido', // FIRST COLUMN
+                "ID / Celular": entry.userId,
+                "Obra": u.obra || '',
+                "Grupo": u.marital_status || '',
+                "Estatus": u.admin_status || 'Activo',
+                "Culto": serviceName,
+                "Hora Check-in": isNaN(new Date(entry.timestamp)) ? 'Inválida' : new Date(entry.timestamp).toLocaleTimeString(),
+                "Fecha": entry.timestamp ? (entry.timestamp.includes('T') ? entry.timestamp.split('T')[0] : entry.timestamp.substring(0, 10)) : 'Desconocida',
+                "Rol": u.role || 'user'
+            };
+        });
+    } catch (e) {
+        alert("Error al generar reporte: " + e.message);
+        console.error("Preview Error:", e);
     }
-    html += '</ul>';
-
-    previewEl.innerHTML = html;
-    exportBtn.style.display = 'block';
-
-    // 4. PREPARE EXPORT DATA (Global for export function)
-    reportDataExport = filtered.map(entry => {
-        // Find user by ID matching phone (primary key in this app)
-        const u = users.find(x => String(x.phone) === String(entry.userId)) || users.find(x => String(x.id) === String(entry.userId)) || {};
-        const serviceName = entry.serviceName || entry.serviceSlot;
-
-        return {
-            "Nombre Completo": u.full_name || u.name || 'Desconocido', // FIRST COLUMN
-            "ID / Celular": entry.userId,
-            "Obra": u.obra || '',
-            "Grupo": u.marital_status || '',
-            "Estatus": u.admin_status || 'Activo',
-            "Culto": serviceName,
-            "Hora Check-in": new Date(entry.timestamp).toLocaleTimeString(),
-            "Fecha": entry.timestamp.split('T')[0],
-            "Rol": u.role || 'user'
-        };
-    });
 };
 
 window.exportReportToExcel = function () {
