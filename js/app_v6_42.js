@@ -1065,7 +1065,8 @@ function initAdminFeatures() {
                     const loc = {
                         lat: pos.coords.latitude,
                         lng: pos.coords.longitude,
-                        timestamp: new Date().toISOString()
+                        timestamp: new Date().toISOString(),
+                        radius: STATE.targetLocation.radius || 40 // Preserve radius!
                     };
 
                     const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
@@ -2396,7 +2397,13 @@ function populateUserSelect() {
 // --- INITIALIZATION ---
 async function initApp() {
     console.log("Initializing App...");
-    // alert("DEBUG: initApp Running"); // CONFIRMED RUNNING
+
+    // LOAD LOCAL SETTINGS IMMEDIATELY
+    const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
+    if (settings.targetLocation && settings.targetLocation.lat) {
+        STATE.targetLocation = settings.targetLocation;
+        console.log("📍 Initialized Target Location from Local Storage:", STATE.targetLocation);
+    }
 
     // 1. IMMEDIATE SESSION RESTORE (Sticky Login)
     // We check this FIRST so user sees Dashboard immediately, without waiting for Cloud.
@@ -2471,12 +2478,21 @@ async function initApp() {
                 // Update Location (FIX v6.24)
                 if (cloudLoc && cloudLoc.lat && cloudLoc.lng) {
                     console.log("📍 Location synced from Cloud:", cloudLoc);
-                    STATE.targetLocation = cloudLoc;
 
-                    // Persist to local settings
+                    // Only trigger if location actually changed
+                    const locChanged = STATE.targetLocation.lat !== cloudLoc.lat || STATE.targetLocation.lng !== cloudLoc.lng;
+                    // MERGE to preserve radius!
+                    STATE.targetLocation = { ...STATE.targetLocation, ...cloudLoc };
+
+                    // Persist to local settings (preserving radius)
                     const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
-                    settings.targetLocation = cloudLoc;
+                    settings.targetLocation = STATE.targetLocation;
                     localStorage.setItem('nexus_settings', JSON.stringify(settings));
+
+                    if (locChanged && userLoggedIn && window.checkLocationStatus) {
+                        console.log("📍 Location changed from cloud, re-calculating distance...");
+                        window.checkLocationStatus();
+                    }
                 }
 
                 // Update Users
