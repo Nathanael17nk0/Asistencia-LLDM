@@ -154,10 +154,11 @@ h4 {
 
 /* LOGIN SCREEN */
 .centered-login {
-    justify-content: center;
+    justify-content: flex-start;
     align-items: center;
     position: relative;
     padding: 2rem;
+    overflow-y: auto;
 }
 
 .main-logo {
