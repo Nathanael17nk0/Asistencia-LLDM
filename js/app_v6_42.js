@@ -416,7 +416,31 @@ function doLoginSuccess(user) {
     // FORCE CLEAN GPS STATE FOR NEW USER SESSION
     STATE.distance = undefined;
     STATE.lastKnownGoodDist = undefined;
-    if (window.checkLocationStatus) window.checkLocationStatus();
+    const messageDiv = document.querySelector('.geofence-message');
+    if (messageDiv) {
+        messageDiv.style.display = 'block';
+        messageDiv.innerHTML = `<i class="ri-loader-4-line ri-spin"></i> BUSCANDO SEÑAL GPS...`;
+    }
+
+    if (navigator.geolocation && STATE.user && STATE.user.role !== 'admin') {
+        navigator.geolocation.getCurrentPosition(
+            (position) => {
+                STATE.currentLocation = {
+                    lat: position.coords.latitude,
+                    lng: position.coords.longitude
+                };
+                console.log("📍 GPS Login Success:", STATE.currentLocation);
+                if (window.checkLocationStatus) window.checkLocationStatus();
+            },
+            (err) => {
+                console.warn("📍 GPS Login Error:", err);
+                if (window.checkLocationStatus) window.checkLocationStatus(); // Let the normal loop handle errors
+            },
+            { enableHighAccuracy: true, maximumAge: 0, timeout: 5000 }
+        );
+    } else {
+        if (window.checkLocationStatus) window.checkLocationStatus();
+    }
 
     // Toast or Alert
     // 3. DIRECT ENTRY (No Reload to prevent state loss)
