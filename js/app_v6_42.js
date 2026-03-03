@@ -2055,28 +2055,24 @@ function renderAdminUserList() {
         filteredUsers.forEach(u => {
             // CRITICAL FIX: Use ID if available, fallback to phone (legacy), but ID is safer for manual users without phone.
             // Reg users have ID. 
-            // IMPORTANT: If u.phone is undefined and entry.userId is undefined, they match! Strict check needed.
-            const uid = u.id || u.phone;
-
             let isPresent = false;
             let entry = null;
 
-            if (uid) {
-                // FORCE STRING COMPARISON
-                const sUid = String(uid);
+            // Check using phone first (new standard), then ID (legacy/manual)
+            const keysToCheck = [];
+            if (u.phone) keysToCheck.push(String(u.phone));
+            if (u.id) keysToCheck.push(String(u.id));
 
-                // Check direct or stringified key
-                if (attendedIds.has(sUid)) {
+            for (const key of keysToCheck) {
+                if (attendedIds.has(key)) {
                     isPresent = true;
-                    entry = attendeesMap.get(sUid);
-                } else if (attendedIds.has(Number(sUid))) {
-                    // Fallback for number keys
+                    entry = attendeesMap.get(key);
+                    break;
+                } else if (attendedIds.has(Number(key))) {
                     isPresent = true;
-                    entry = attendeesMap.get(Number(sUid));
+                    entry = attendeesMap.get(Number(key));
+                    break;
                 }
-            } else {
-                // If user has NO ID and NO PHONE, they cannot be tracked. Skip log matching.
-                // console.warn("User without ID or Phone found in list", u);
             }
 
             // Apply Status Filter
@@ -2589,6 +2585,31 @@ async function initApp() {
                         // Refresh Admin User List if needed
                         if (typeof renderAdminUserList === 'function' && document.getElementById('admin-panel') && !document.getElementById('admin-panel').classList.contains('hidden')) {
                             renderAdminUserList();
+                        }
+                    };
+
+                    window.onUserDelete = (oldUser) => {
+                        console.log("👤 User Delete Event:", oldUser);
+
+                        // Check if I was the one deleted!
+                        if (STATE.user && (String(STATE.user.phone) === String(oldUser.phone) || String(STATE.user.id) === String(oldUser.id))) {
+                            alert("⚠️ SESIÓN TERMINADA\n\nTu perfil ha sido eliminado por un administrador.");
+                            localStorage.removeItem('nexus_session');
+                            localStorage.removeItem('nexus_account');
+                            window.location.replace(window.location.pathname);
+                            return;
+                        }
+
+                        // Remove from Admin Cache
+                        let currentUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+                        const initialLength = currentUsers.length;
+                        currentUsers = currentUsers.filter(u => String(u.phone) !== String(oldUser.phone) && String(u.id) !== String(oldUser.id));
+                        if (currentUsers.length < initialLength) {
+                            localStorage.setItem('nexus_users', JSON.stringify(currentUsers));
+                            // Refresh Admin List
+                            if (typeof renderAdminUserList === 'function' && document.getElementById('admin-panel') && !document.getElementById('admin-panel').classList.contains('hidden')) {
+                                renderAdminUserList();
+                            }
                         }
                     };
 
@@ -3115,10 +3136,6 @@ function getServiceSlot(date) {
         slot = { id: '7pm', name: 'Culto 7:00 PM' };
     }
 
-    // TEMPORARY LIVE TESTING WINDOW (8:00 PM to 11:59 PM) - Added per user request to test actual GPS
-    else if (timeVal >= 20.00 && timeVal < 23.99) {
-        slot = { id: 'TEST_LIVE', name: 'Prueba GPS en Vivo' };
-    }
 
     if (slot) {
         return { slotId: slot.id, slotName: slot.name, isOpen: true };

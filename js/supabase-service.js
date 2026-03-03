@@ -191,7 +191,11 @@ const DB = {
                     // Map snake_case to camelCase strictly where needed, or just pass it depending on how the app uses it
                     // The app expects 'admin_status' explicitly, so this should map cleanly since the DB column is also called 'admin_status'
                 }
-                if (window.onUserUpdate) window.onUserUpdate(payload.new);
+                if (payload.new && Object.keys(payload.new).length > 0) {
+                    if (window.onUserUpdate) window.onUserUpdate(payload.new);
+                } else if (payload.eventType === 'DELETE') {
+                    if (window.onUserDelete) window.onUserDelete(payload.old);
+                }
             })
             .subscribe((status) => {
                 console.log("Realtime Status:", status);
