@@ -786,7 +786,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (adminToggle && adminPanel) {
         adminToggle.addEventListener('click', () => {
-            adminPanel.classList.toggle('hidden');
+            const isClosing = adminPanel.classList.toggle('hidden');
+            if (!isClosing && typeof renderAdminUserList === 'function') {
+                renderAdminUserList(); // Instantly fetch fresh list on open
+            }
         });
     }
     if (closeAdmin && adminPanel) {
@@ -2853,6 +2856,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
                 // Refresh UI immediately
                 if (typeof updateCheckInStatus === 'function') updateCheckInStatus();
+                if (typeof renderAdminUserList === 'function') renderAdminUserList(); // Synchronize Admin Panel natively
             }
         });
     }
