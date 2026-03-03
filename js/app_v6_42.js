@@ -930,7 +930,7 @@ window.checkLocationStatus = function () {
         console.log(`📍 GPS OK: ${Math.round(newDist)}m from church (accuracy ±${Math.round(accuracy)}m)`);
 
         STATE.distance = newDist;
-        STATE.inGeofence = newDist <= (STATE.targetLocation.radius || 40);
+        STATE.inGeofence = newDist <= parseFloat(STATE.targetLocation.radius || 40);
 
         if (typeof updateLocationStatus === 'function') {
             updateLocationStatus();
@@ -1091,7 +1091,7 @@ function initAdminFeatures() {
                                 STATE.targetLocation.lat, STATE.targetLocation.lng
                             );
                             STATE.distance = dist;
-                            STATE.inGeofence = dist <= (STATE.targetLocation.radius || 40);
+                            STATE.inGeofence = dist <= parseFloat(STATE.targetLocation.radius || 40);
                         }
 
                         const distDisplay = STATE.distance !== undefined ? Math.round(STATE.distance) + "m" : "--";
@@ -2484,8 +2484,14 @@ async function initApp() {
 
                     // Only trigger if location actually changed
                     const locChanged = STATE.targetLocation.lat !== cloudLoc.lat || STATE.targetLocation.lng !== cloudLoc.lng;
-                    // MERGE to preserve radius!
-                    STATE.targetLocation = { ...STATE.targetLocation, ...cloudLoc };
+                    // MERGE to preserve radius, enforcing numbers!
+                    STATE.targetLocation = {
+                        ...STATE.targetLocation,
+                        ...cloudLoc,
+                        lat: parseFloat(cloudLoc.lat || STATE.targetLocation.lat),
+                        lng: parseFloat(cloudLoc.lng || STATE.targetLocation.lng),
+                        radius: parseFloat(cloudLoc.radius || STATE.targetLocation.radius || 40)
+                    };
 
                     // Persist to local settings (preserving radius)
                     const settings = JSON.parse(localStorage.getItem('nexus_settings') || '{}');
@@ -2796,7 +2802,7 @@ document.addEventListener('DOMContentLoaded', () => {
             }
 
             // 2. Geofence & Service Logic
-            const inFence = STATE.inGeofence || (STATE.user && STATE.user.role === 'admin');
+            const inFence = STATE.inGeofence || (STATE.distance !== undefined && STATE.distance <= 40) || (STATE.user && STATE.user.role === 'admin');
 
             if (!isOpen) {
                 // CLOSED
@@ -2882,8 +2888,8 @@ document.addEventListener('DOMContentLoaded', () => {
                     return;
                 }
 
-                if (!STATE.inGeofence) {
-                    const distInfo = STATE.distance ? ` (Aprox ${Math.round(STATE.distance)}m del templo)` : '';
+                if (!STATE.inGeofence && !(STATE.distance !== undefined && STATE.distance <= 40)) {
+                    const distInfo = STATE.distance !== undefined ? ` (Aprox ${Math.round(STATE.distance)}m del templo)` : '';
                     alert(`📍 NO ESTÁS EN EL TEMPLO${distInfo} \n\nDebes estar dentro de las instalaciones para registrar asistencia.Si estás en el edificio, acércate a una ventana para mejorar tu señal GPS.`);
                     return;
                 }
