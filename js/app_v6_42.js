@@ -500,8 +500,8 @@ if (fingerprintBtn) {
         setTimeout(() => {
             icon.style.color = 'var(--success)';
 
-            // Use the user's ID (not just phone) for correct admin matching
-            const checkInUserId = STATE.user.id || STATE.user.phone;
+            // Use the user's phone for correct admin matching
+            const checkInUserId = STATE.user.phone;
             const newEntry = {
                 userId: checkInUserId,
                 name: STATE.user.full_name,
