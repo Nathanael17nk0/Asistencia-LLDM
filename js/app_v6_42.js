@@ -413,6 +413,11 @@ function doLoginSuccess(user) {
     localStorage.setItem('nexus_account', JSON.stringify(user));
     localStorage.setItem('nexus_session', 'active');
 
+    // FORCE CLEAN GPS STATE FOR NEW USER SESSION
+    STATE.distance = undefined;
+    STATE.lastKnownGoodDist = undefined;
+    if (window.checkLocationStatus) window.checkLocationStatus();
+
     // Toast or Alert
     // 3. DIRECT ENTRY (No Reload to prevent state loss)
     console.log("🚀 Direct Entry to Dashboard...");
@@ -2571,7 +2576,16 @@ async function initApp() {
                                 (String(c.userId) === String(localEntry.userId) && c.serviceSlot === localEntry.serviceSlot)
                             );
 
-                            return stillInCloud; // If false, the item was deleted by Admin, remove locally!
+                            // ADD PROTECTION: Do not delete if created very recently (e.g., < 5 minutes ago)
+                            // Supabase might be lagging or creating it right now.
+                            const ageInMs = new Date() - new Date(localEntry.timestamp);
+                            const ageInMinutes = ageInMs / 60000;
+                            if (!stillInCloud && ageInMinutes < 5) {
+                                console.log("⏳ Protected fresh local attendance from accidental cloud deletion sync");
+                                return true; // Keep it
+                            }
+
+                            return stillInCloud; // If false, the item was deleted by Admin or truly absent, remove locally!
                         });
 
                         if (localLog.length !== originalLen) {
