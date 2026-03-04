@@ -9,8 +9,8 @@ const STATE = {
     currentLocation: { lat: 0, lng: 0 },
     // HARDCODED GEOFENCE (Templo) - v6.35
     targetLocation: {
-        lat: 26.096836,
-        lng: -98.291939,
+        lat: 25.7533618,
+        lng: -100.2885994,
         radius: 40 // Strict 40m per user request
     },
     inGeofence: false,
@@ -3135,11 +3135,6 @@ function getServiceSlot(date) {
     // Otros dias 7pm (19:00 - 20:30) -> Ventana: 18:45 - 20:50 (18.75 - 20.83)
     else if (day !== 0 && day !== 4 && timeVal >= 18.75 && timeVal < 20.83) {
         slot = { id: '7pm', name: 'Culto 7:00 PM' };
-    }
-
-    // TEMPORARY LIVE TESTING WINDOW (11:30 AM to 5:00 PM) - Added per user request to test actual GPS
-    else if (timeVal >= 11.50 && timeVal < 17.00) {
-        slot = { id: 'TEST_LIVE', name: 'Prueba GPS en Vivo' };
     }
 
     if (slot) {
