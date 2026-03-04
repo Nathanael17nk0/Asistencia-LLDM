@@ -3620,10 +3620,10 @@ setTimeout(() => {
         document.body.appendChild(v);
     }
     v.innerText = "v7.9.4 (Estatus de Administrador)";
-    v.style.cssText = "position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
+    v.style.cssText = "display:none; position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 
-    // Author credit — bottom center, very subtle
+    // Author credit — bottom center, sharper for white screens
     let credit = document.getElementById('app-credit');
     if (!credit) {
         credit = document.createElement('div');
@@ -3631,7 +3631,7 @@ setTimeout(() => {
         document.body.appendChild(credit);
     }
     credit.innerText = "Creada por Tododigital NMR / Nathanael Morales";
-    credit.style.cssText = "position:fixed; bottom:2px; left:50%; transform:translateX(-50%); color:rgba(255,255,255,0.65); font-size:9px; z-index:9999; pointer-events:none; white-space:nowrap; letter-spacing:0.3px; text-shadow: 0px 1px 2px rgba(0,0,0,0.5);";
+    credit.style.cssText = "position:fixed; bottom:5px; left:50%; transform:translateX(-50%); color:#999; font-size:9px; z-index:9999; pointer-events:none; white-space:nowrap; letter-spacing:0.3px;";
 }, 1500);
 
 // --- USER PROFILE MODAL LOGIC ---
