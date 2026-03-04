@@ -9,8 +9,8 @@ const STATE = {
     currentLocation: { lat: 0, lng: 0 },
     // HARDCODED GEOFENCE (Templo) - v6.35
     targetLocation: {
-        lat: 25.7533618,
-        lng: -100.2885994,
+        lat: 26.096828,
+        lng: -98.291940,
         radius: 40 // Strict 40m per user request
     },
     inGeofence: false,
