@@ -41,6 +41,23 @@ const DB = {
 
     async logAttendance(entry) {
         if (!window.sbClient) return;
+
+        // DEDUPLICATION FIX: Guard against double-taps or duplicate inserts
+        const todayStr = entry.timestamp.split('T')[0];
+        const { data: existingData } = await window.sbClient
+            .from('attendance_log')
+            .select('id')
+            .eq('user_phone', String(entry.userId))
+            .eq('service_slot', entry.serviceSlot)
+            .gte('timestamp', `${todayStr}T00:00:00`)
+            .lte('timestamp', `${todayStr}T23:59:59`)
+            .limit(1);
+
+        if (existingData && existingData.length > 0) {
+            console.warn(`⚠️ Asistencia Doble Bloqueada: El usuario ${entry.userId} ya registró asistencia para ${entry.serviceSlot} hoy.`);
+            return; // Exit without inserting
+        }
+
         const { error } = await window.sbClient
             .from('attendance_log')
             .insert({

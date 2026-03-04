@@ -3228,10 +3228,21 @@ window.generateReportPreview = function () {
         const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
 
         // 1. FILTER
-        const filtered = log.filter(entry => {
+        let filtered = log.filter(entry => {
             const t = entry.timestamp || '';
             const dateStr = t.includes('T') ? t.split('T')[0] : t.substring(0, 10);
             return dateStr >= startVal && dateStr <= endVal;
+        });
+
+        // 1.5 DEDUPLICATE (same user, same day, same slot) to clean up old bugs
+        const seen = new Set();
+        filtered = filtered.filter(entry => {
+            const t = entry.timestamp || '';
+            const dateStr = t.includes('T') ? t.split('T')[0] : t.substring(0, 10);
+            const key = `${entry.userId}|${dateStr}|${entry.serviceSlot}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
         });
 
         if (filtered.length === 0) {
@@ -3937,6 +3948,16 @@ window.exportAttendanceByMonth = async function () {
             return;
         }
 
+        // DEDUPLICATE RECORDS (same user, same date, same slot)
+        const seen = new Set();
+        const uniqueRecords = records.filter(r => {
+            const dateStr = r.timestamp.split('T')[0];
+            const key = `${r.userId}|${dateStr}|${r.serviceSlot}`;
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+        });
+
         // Load local users to cross-reference data (Obra, Grupo, Estatus)
         const localUsers = JSON.parse(localStorage.getItem('nexus_users') || '[]');
         const userMap = new Map();
@@ -3945,7 +3966,7 @@ window.exportAttendanceByMonth = async function () {
             if (u.id) userMap.set(String(u.id), u);
         });
 
-        const rows = records.map(r => {
+        const rows = uniqueRecords.map(r => {
             const ts = new Date(r.timestamp);
             const userProfile = userMap.get(String(r.userId)) || {};
 
