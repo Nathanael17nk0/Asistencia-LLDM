@@ -3654,8 +3654,10 @@ window.closeProfileModal = function () {
 window.switchAdminTab = function (tabName) {
     const tabAsistencia = document.getElementById('admin-tab-asistencia');
     const tabSuperAdmin = document.getElementById('admin-tab-superadmin');
+    const tabDashboard = document.getElementById('admin-tab-dashboard');
     const btnAsistencia = document.getElementById('tab-btn-asistencia');
     const btnSuperAdmin = document.getElementById('tab-btn-superadmin');
+    const btnDashboard = document.getElementById('tab-btn-dashboard');
     const toolsAsistencia = document.getElementById('tools-asistencia');
 
     if (!tabAsistencia || !tabSuperAdmin) return;
@@ -3664,28 +3666,214 @@ window.switchAdminTab = function (tabName) {
         const pwd = prompt("🔑 Introduce la contraseña de Super Admin:");
         if (pwd !== 'spadmin') {
             alert("Contraseña incorrecta.");
-            // Force return to Asistencia visually
             tabName = 'asistencia';
             return;
         }
     }
 
+    // Hide all first
+    tabAsistencia.style.display = 'none';
+    tabSuperAdmin.style.display = 'none';
+    if (tabDashboard) tabDashboard.style.display = 'none';
+
+    tabAsistencia.classList.add('hidden');
+    tabSuperAdmin.classList.add('hidden');
+    if (tabDashboard) tabDashboard.classList.add('hidden');
+
+    if (btnAsistencia) {
+        btnAsistencia.classList.remove('active');
+        btnAsistencia.style.background = 'transparent';
+        btnAsistencia.style.color = 'rgba(255,255,255,0.7)';
+    }
+    if (btnSuperAdmin) {
+        btnSuperAdmin.classList.remove('active');
+        btnSuperAdmin.style.background = 'transparent';
+        btnSuperAdmin.style.color = 'rgba(255,255,255,0.7)';
+    }
+    if (btnDashboard) {
+        btnDashboard.classList.remove('active');
+        btnDashboard.style.background = 'transparent';
+        btnDashboard.style.color = 'rgba(255,255,255,0.7)';
+    }
+    if (toolsAsistencia) toolsAsistencia.style.display = 'none';
+
+    // Show Selected
     if (tabName === 'asistencia') {
         tabAsistencia.style.display = 'block';
-        tabSuperAdmin.style.display = 'none';
-        if (toolsAsistencia) toolsAsistencia.style.display = 'block';
         tabAsistencia.classList.remove('hidden');
-        tabSuperAdmin.classList.add('hidden');
-        btnAsistencia.classList.add('active');
-        btnSuperAdmin.classList.remove('active');
+        if (btnAsistencia) {
+            btnAsistencia.classList.add('active');
+            btnAsistencia.style.background = 'rgba(255,255,255,0.2)';
+            btnAsistencia.style.color = 'white';
+        }
+        if (toolsAsistencia) toolsAsistencia.style.display = 'block';
     } else if (tabName === 'superadmin') {
-        tabAsistencia.style.display = 'none';
         tabSuperAdmin.style.display = 'block';
-        if (toolsAsistencia) toolsAsistencia.style.display = 'none';
-        tabAsistencia.classList.add('hidden');
         tabSuperAdmin.classList.remove('hidden');
-        btnSuperAdmin.classList.add('active');
-        btnAsistencia.classList.remove('active');
+        if (btnSuperAdmin) {
+            btnSuperAdmin.classList.add('active');
+            btnSuperAdmin.style.background = 'rgba(255,255,255,0.2)';
+            btnSuperAdmin.style.color = 'white';
+        }
+    } else if (tabName === 'dashboard') {
+        if (tabDashboard) {
+            tabDashboard.style.display = 'block';
+            tabDashboard.classList.remove('hidden');
+        }
+        if (btnDashboard) {
+            btnDashboard.classList.add('active');
+            btnDashboard.style.background = 'rgba(255,255,255,0.2)';
+            btnDashboard.style.color = 'white';
+        }
+        if (window.renderAdminDashboard) {
+            window.renderAdminDashboard();
+        }
+    }
+};
+
+// --- ADMIN DASHBOARD LOGIC (v3.0) ---
+window.renderAdminDashboard = function () {
+    console.log("📊 Rendering Admin Dashboard...");
+
+    // 1. Gather Data
+    const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
+    const rawLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
+
+    // Filter Active Users count
+    const activeUsers = users.filter(u => u.admin_status === 'Activo' || !u.admin_status);
+    const totalHermanos = activeUsers.length;
+
+    // Filter Log for CURRENT MONTH only
+    const now = new Date();
+    const currentMonthPrefix = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+
+    // Deduplicate log just in case (same user, same day, same slot)
+    const seen = new Set();
+    const currentMonthLog = rawLog.filter(e => {
+        const dateStr = window.getLocalYMD(e.timestamp);
+        if (!dateStr.startsWith(currentMonthPrefix)) return false; // Not this month
+
+        const key = `${e.userId}|${dateStr}|${e.serviceSlot}`;
+        if (seen.has(key)) return false;
+        seen.add(key);
+        return true;
+    });
+
+    // Update Top KPIs
+    document.getElementById('dash-total-asistencias').innerText = currentMonthLog.length;
+    document.getElementById('dash-total-hermanos').innerText = totalHermanos;
+
+    // 2. Process Data for Charts
+    const slotCounts = {};
+    const groupCounts = {};
+    const userAttendanceCount = {};
+
+    currentMonthLog.forEach(entry => {
+        // Services Distribution
+        const slot = entry.serviceName || entry.serviceSlot || 'Otro';
+        slotCounts[slot] = (slotCounts[slot] || 0) + 1;
+
+        // Map userId to User Profile
+        const u = users.find(x => String(x.phone) === String(entry.userId) || String(x.id) === String(entry.userId)) || {};
+
+        // Groups Distribution
+        const group = u.marital_status || 'Sin Grupo';
+        groupCounts[group] = (groupCounts[group] || 0) + 1;
+
+        // Leaderboard Count
+        const userName = u.full_name || u.name || entry.name || 'Desconocido';
+        userAttendanceCount[userName] = (userAttendanceCount[userName] || 0) + 1;
+    });
+
+    // 3. Render Services Bar Chart
+    const ctxServices = document.getElementById('chart-services');
+    if (ctxServices && typeof Chart !== 'undefined') {
+        if (window.dashChartServices) window.dashChartServices.destroy();
+
+        // Sort slots by count descending
+        const sortedSlots = Object.entries(slotCounts).sort((a, b) => b[1] - a[1]);
+
+        window.dashChartServices = new Chart(ctxServices, {
+            type: 'bar',
+            data: {
+                labels: sortedSlots.map(s => s[0]),
+                datasets: [{
+                    label: 'Asistencias',
+                    data: sortedSlots.map(s => s[1]),
+                    backgroundColor: 'rgba(65, 105, 225, 0.7)',
+                    borderColor: 'rgba(65, 105, 225, 1)',
+                    borderWidth: 1,
+                    borderRadius: 4
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: { legend: { display: false } },
+                scales: {
+                    y: { beginAtZero: true, ticks: { precision: 0 } },
+                    x: { ticks: { autoSkip: false, maxRotation: 45, minRotation: 45, font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    // 4. Render Groups Doughnut Chart
+    const ctxGroups = document.getElementById('chart-groups');
+    if (ctxGroups && typeof Chart !== 'undefined') {
+        if (window.dashChartGroups) window.dashChartGroups.destroy();
+
+        const sortedGroups = Object.entries(groupCounts).sort((a, b) => b[1] - a[1]);
+        const bgColors = [
+            '#FF6384', '#36A2EB', '#FFCE56', '#4BC0C0', '#9966FF', '#FF9F40', '#E7E9ED', '#8E44AD', '#2ECC71'
+        ];
+
+        window.dashChartGroups = new Chart(ctxGroups, {
+            type: 'doughnut',
+            data: {
+                labels: sortedGroups.map(g => g[0]),
+                datasets: [{
+                    data: sortedGroups.map(g => g[1]),
+                    backgroundColor: bgColors.slice(0, sortedGroups.length),
+                    borderWidth: 1
+                }]
+            },
+            options: {
+                responsive: true,
+                maintainAspectRatio: false,
+                plugins: {
+                    legend: { position: 'right', labels: { boxWidth: 12, font: { size: 10 } } }
+                }
+            }
+        });
+    }
+
+    // 5. Render Top 5 Leaderboard
+    const listEl = document.getElementById('dash-top-list');
+    if (listEl) {
+        const sortedTop = Object.entries(userAttendanceCount)
+            .sort((a, b) => b[1] - a[1])
+            .slice(0, 5);
+
+        if (sortedTop.length === 0) {
+            listEl.innerHTML = '<li style="text-align:center; color:#999;font-size:0.8rem; padding:10px;">Sin asistencias este mes</li>';
+        } else {
+            let html = '';
+            sortedTop.forEach((item, index) => {
+                const medalStr = index === 0 ? '👑' : (index === 1 ? '🥈' : (index === 2 ? '🥉' : ''));
+                html += `
+                    <li style="display:flex; justify-content:space-between; padding:8px 0; border-bottom:1px solid #eee;">
+                        <span style="font-size:0.85rem; color:#333; overflow:hidden; text-overflow:ellipsis; white-space:nowrap; padding-right:10px;">
+                            <strong>${index + 1}.</strong> ${medalStr} ${item[0]}
+                        </span>
+                        <span style="background:var(--primary); color:white; padding:2px 8px; border-radius:10px; font-size:0.75rem; font-weight:bold;">
+                            ${item[1]}
+                        </span>
+                    </li>
+                `;
+            });
+            listEl.innerHTML = html;
+        }
     }
 };
 

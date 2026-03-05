@@ -28,6 +28,8 @@
 
     <!-- SheetJS for Excel Export -->
     <script src="https://cdn.sheetjs.com/xlsx-0.20.0/package/dist/xlsx.full.min.js"></script>
+    <!-- Chart.js for Admin Analytics -->
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     <style>
         /* CRITICAL UI FIX - Force Load */
         .input-row {
@@ -655,6 +657,10 @@
                             id="tab-btn-asistencia"
                             style="flex:1; padding:8px; background:rgba(255,255,255,0.2); border:none; color:white; font-weight:bold; font-size:0.8rem; cursor:pointer;">ASISTENCIA</button>
                         <button class="admin-tab-btn"
+                            onclick="if(window.switchAdminTab) window.switchAdminTab('dashboard')"
+                            id="tab-btn-dashboard"
+                            style="flex:1; padding:8px; background:transparent; border:none; color:rgba(255,255,255,0.7); font-weight:bold; font-size:0.8rem; cursor:pointer;">ANALÍTICAS</button>
+                        <button class="admin-tab-btn"
                             onclick="if(window.switchAdminTab) window.switchAdminTab('superadmin')"
                             id="tab-btn-superadmin"
                             style="flex:1; padding:8px; background:transparent; border:none; color:rgba(255,255,255,0.7); font-weight:bold; font-size:0.8rem; cursor:pointer;">SUPER
@@ -835,7 +841,63 @@
                     <div style="height:150px;"></div> <!-- Extra padding for scroll -->
                 </div>
 
-                <!-- TAB 2: SUPER ADMIN -->
+                <!-- TAB 2: DASHBOARD (ANALÍTICAS) -->
+                <div id="admin-tab-dashboard" class="hidden"
+                    style="background:#fafafa; padding: 15px; padding-bottom:100px;">
+                    <h5 style="color:var(--primary); font-weight:bold; text-align:center; margin-bottom:15px;">
+                        ESTADÍSTICAS DEL MES</h5>
+
+                    <!-- KPI Metrics -->
+                    <div style="display:flex; gap:10px; margin-bottom:20px;">
+                        <div class="glass-card"
+                            style="flex:1; padding:15px; background:white; color:#333; text-align:center; border:1px solid #ddd; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                            <i class="ri-user-follow-line" style="font-size:1.5rem; color:var(--primary-gold);"></i>
+                            <h2 id="dash-total-asistencias"
+                                style="margin:5px 0 0 0; color:var(--primary); font-size:1.8rem;">0</h2>
+                            <p style="margin:0; font-size:0.7rem; color:#666; font-weight:bold;">TOTAL ASISTENCIAS</p>
+                        </div>
+                        <div class="glass-card"
+                            style="flex:1; padding:15px; background:white; color:#333; text-align:center; border:1px solid #ddd; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                            <i class="ri-group-line" style="font-size:1.5rem; color:var(--primary-gold);"></i>
+                            <h2 id="dash-total-hermanos"
+                                style="margin:5px 0 0 0; color:var(--primary); font-size:1.8rem;">0</h2>
+                            <p style="margin:0; font-size:0.7rem; color:#666; font-weight:bold;">HERMANOS ACTIVOS</p>
+                        </div>
+                    </div>
+
+                    <!-- Chart 1: Bar Chart (Cultos) -->
+                    <div class="glass-card"
+                        style="background:white; padding:15px; margin-bottom:20px; border:1px solid #ddd; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                        <h6 style="color:#444; margin-bottom:10px; font-weight:bold; font-size:0.85rem;"><i
+                                class="ri-bar-chart-fill"></i> Asistencia Regular por Culto</h6>
+                        <div style="position: relative; height:200px; width:100%;">
+                            <canvas id="chart-services"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Chart 2: Doughnut Chart (Grupos) -->
+                    <div class="glass-card"
+                        style="background:white; padding:15px; margin-bottom:20px; border:1px solid #ddd; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                        <h6 style="color:#444; margin-bottom:10px; font-weight:bold; font-size:0.85rem;"><i
+                                class="ri-pie-chart-2-fill"></i> Asistencia por Grupo</h6>
+                        <div style="position: relative; height:250px; width:100%;">
+                            <canvas id="chart-groups"></canvas>
+                        </div>
+                    </div>
+
+                    <!-- Top 5 List -->
+                    <div class="glass-card"
+                        style="background:white; padding:15px; border:1px solid #ddd; border-radius:10px; box-shadow:0 2px 5px rgba(0,0,0,0.05);">
+                        <h6 style="color:#444; margin-bottom:10px; font-weight:bold; font-size:0.85rem;"><i
+                                class="ri-medal-fill" style="color:#FFD700;"></i> Top Hermanos Constantes</h6>
+                        <ul id="dash-top-list" style="list-style:none; padding:0; margin:0;">
+                            <li style="text-align:center; color:#999;font-size:0.8rem; padding:10px;">Cargando lista...
+                            </li>
+                        </ul>
+                    </div>
+                </div>
+
+                <!-- TAB 3: SUPER ADMIN -->
                 <div id="admin-tab-superadmin" class="hidden" style="background:#fafafa;">
                     <div style="padding:15px; padding-bottom:100px; display:flex; flex-direction:column; gap:15px;">
 
