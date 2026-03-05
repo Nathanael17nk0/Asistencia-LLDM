@@ -38,6 +38,14 @@ const fingerprintBtn = document.getElementById('check-in-btn');
 
 // --- INITIALIZATION ---
 
+// --- GLOBAL HELPERS ---
+window.getLocalYMD = function (dateObjOrString) {
+    if (!dateObjOrString) return '';
+    const d = new Date(dateObjOrString);
+    if (isNaN(d)) return '';
+    return d.getFullYear() + '-' + String(d.getMonth() + 1).padStart(2, '0') + '-' + String(d.getDate()).padStart(2, '0');
+};
+
 // --- NAVIGATION HELPERS ---
 function hideAllSections() {
     loginSection.classList.add('hidden-section');
@@ -477,11 +485,11 @@ if (fingerprintBtn) {
 
         // 2. Check Previous Attendance (For THIS service)
         const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-        const todayISO = now.toISOString().split('T')[0];
+        const todayLocal = window.getLocalYMD(now);
 
         const hasAttendedService = log.find(e =>
             e.userId === STATE.user.phone &&
-            e.timestamp.startsWith(todayISO) &&
+            window.getLocalYMD(e.timestamp) === todayLocal &&
             e.serviceSlot === slotId
         );
 
@@ -2176,12 +2184,12 @@ function renderAdminUserList() {
                 undoBtn.onclick = () => {
                     if (!confirm("¿Quitar asistencia de hoy para este hermano?")) return;
 
-                    const todayISO = new Date().toISOString().split('T')[0];
+                    const todayLocal = window.getLocalYMD(new Date());
 
                     // 1. Identify entries to remove
                     const entriesToRemove = log.filter(e => {
                         if (e.userId !== uid) return false;
-                        if (!e.timestamp.startsWith(todayISO)) return false;
+                        if (window.getLocalYMD(e.timestamp) !== todayLocal) return false;
                         if (currentFilter !== 'all' && e.serviceSlot !== currentFilter) return false;
                         return true;
                     });
@@ -2194,7 +2202,7 @@ function renderAdminUserList() {
                     if (window.DB) {
                         entriesToRemove.forEach(entry => {
                             const logId = entry.id || null;
-                            window.DB.removeAttendance(uid, entry.serviceSlot, todayISO, logId)
+                            window.DB.removeAttendance(uid, entry.serviceSlot, todayLocal, logId)
                                 .catch(err => console.error("Cloud delete error:", err)); // Passive error to not block UI
                         });
                     }
@@ -2213,7 +2221,8 @@ function renderAdminUserList() {
                 markBtn.onclick = () => {
                     openServiceModal((selectedSlot, selectedName) => {
                         const currentLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-                        const already = currentLog.find(e => e.userId === uid && e.serviceSlot === selectedSlot && e.timestamp.startsWith(new Date().toISOString().split('T')[0]));
+                        const todayLocal = window.getLocalYMD(new Date());
+                        const already = currentLog.find(e => e.userId === uid && e.serviceSlot === selectedSlot && window.getLocalYMD(e.timestamp) === todayLocal);
 
                         if (already) {
                             if (confirm(`¿QUISTAR ASISTENCIA de ${u.full_name || u.name} para ${selectedName}?`)) {
@@ -2226,7 +2235,7 @@ function renderAdminUserList() {
                                 if (window.DB) {
                                     // Pass ID if available for robust delete
                                     const logId = already.id || null;
-                                    window.DB.removeAttendance(uid, selectedSlot, new Date().toISOString().split('T')[0], logId)
+                                    window.DB.removeAttendance(uid, selectedSlot, todayLocal, logId)
                                         .catch(err => alert("Error borrando de nube: " + err.message));
                                 }
 
@@ -2696,12 +2705,12 @@ async function initApp() {
                         // 3. Handle Deletions (Cloud Deletion -> Remove Local)
                         // If Admin deleted someone's attendance today, it won't be in cloudLog.
                         // We must remove local records for TODAY that don't exist in the fresh cloud pull.
-                        const todayISO = new Date().toISOString().split('T')[0];
+                        const todayLocal = window.getLocalYMD(new Date());
                         const originalLen = localLog.length;
 
                         localLog = localLog.filter(localEntry => {
                             // Only validate entries from today
-                            if (!localEntry.timestamp.startsWith(todayISO)) return true; // Keep past days
+                            if (window.getLocalYMD(localEntry.timestamp) !== todayLocal) return true; // Keep past days
 
                             // Check if this local today entry exists in the fresh cloud log
                             // Uses loose equality for IDs just in case
@@ -2787,11 +2796,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 1. Persistence Check
             const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-            const todayISO = now.toISOString().split('T')[0];
+            const todayLocal = window.getLocalYMD(now);
 
             const hasAttended = log.find(e =>
                 String(e.userId) === String(STATE.user.phone) &&
-                e.timestamp.startsWith(todayISO) &&
+                window.getLocalYMD(e.timestamp) === todayLocal &&
                 e.serviceSlot === slotId
             );
 
@@ -2919,11 +2928,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
             // 3. Check Previous Attendance (For THIS service)
             const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
-            const todayISO = now.toISOString().split('T')[0];
+            const todayLocal = window.getLocalYMD(now);
 
             const hasAttendedService = log.find(e =>
                 String(e.userId) === String(STATE.user.phone) &&
-                e.timestamp.startsWith(todayISO) &&
+                window.getLocalYMD(e.timestamp) === todayLocal &&
                 e.serviceSlot === slotId
             );
 
@@ -3229,16 +3238,14 @@ window.generateReportPreview = function () {
 
         // 1. FILTER
         let filtered = log.filter(entry => {
-            const t = entry.timestamp || '';
-            const dateStr = t.includes('T') ? t.split('T')[0] : t.substring(0, 10);
+            const dateStr = window.getLocalYMD(entry.timestamp);
             return dateStr >= startVal && dateStr <= endVal;
         });
 
         // 1.5 DEDUPLICATE (same user, same day, same slot) to clean up old bugs
         const seen = new Set();
         filtered = filtered.filter(entry => {
-            const t = entry.timestamp || '';
-            const dateStr = t.includes('T') ? t.split('T')[0] : t.substring(0, 10);
+            const dateStr = window.getLocalYMD(entry.timestamp);
             const key = `${entry.userId}|${dateStr}|${entry.serviceSlot}`;
             if (seen.has(key)) return false;
             seen.add(key);
@@ -3303,7 +3310,7 @@ window.generateReportPreview = function () {
                 "Estatus": u.admin_status || 'Activo',
                 "Culto": serviceName,
                 "Hora Check-in": isNaN(new Date(entry.timestamp)) ? 'Inválida' : new Date(entry.timestamp).toLocaleTimeString(),
-                "Fecha": entry.timestamp ? (entry.timestamp.includes('T') ? entry.timestamp.split('T')[0] : entry.timestamp.substring(0, 10)) : 'Desconocida',
+                "Fecha": window.getLocalYMD(entry.timestamp) || 'Desconocida',
                 "Rol": u.role || 'user'
             };
         });
@@ -3951,7 +3958,7 @@ window.exportAttendanceByMonth = async function () {
         // DEDUPLICATE RECORDS (same user, same date, same slot)
         const seen = new Set();
         const uniqueRecords = records.filter(r => {
-            const dateStr = r.timestamp.split('T')[0];
+            const dateStr = window.getLocalYMD(r.timestamp);
             const key = `${r.userId}|${dateStr}|${r.serviceSlot}`;
             if (seen.has(key)) return false;
             seen.add(key);
