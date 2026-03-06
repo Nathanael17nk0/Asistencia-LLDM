@@ -112,9 +112,9 @@ function showDashboard(user) {
     }
 
     // NEW (v3.0): Auto-prompt Notification Permissions on App Load
-    if ("Notification" in window && Notification.permission === "default" && user.role !== 'admin') {
+    if ("Notification" in window && Notification.permission === "default") {
         setTimeout(() => {
-            const wantsNotif = confirm("Para el correcto funcionamiento de la App, necesitamos enviarle Recordatorios de Asistencia. ¿Desea otorgar permiso de Notificaciones ahora?");
+            const wantsNotif = confirm("Para el correcto funcionamiento de la app necesita permiso de notificaciones");
             if (wantsNotif) {
                 Notification.requestPermission().then(permission => {
                     if (permission === "granted") {
