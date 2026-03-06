@@ -3945,8 +3945,11 @@ window.renderAdminDashboard = function () {
     const users = JSON.parse(localStorage.getItem('nexus_users') || '[]');
     const rawLog = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
 
-    // Filter Active Users count
-    const activeUsers = users.filter(u => u.admin_status === 'Activo' || !u.admin_status);
+    // Filter Active Users count (excluding admins)
+    const activeUsers = users.filter(u => {
+        if (u.role === 'admin') return false;
+        return u.admin_status === 'Activo' || !u.admin_status;
+    });
     const totalHermanos = activeUsers.length;
 
     // --- MONTH FILTER LOGIC ---
