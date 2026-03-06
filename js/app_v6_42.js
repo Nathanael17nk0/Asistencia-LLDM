@@ -112,17 +112,30 @@ function showDashboard(user) {
     }
 
     // NEW (v3.0): Auto-prompt Notification Permissions on App Load
-    if ("Notification" in window && Notification.permission === "default") {
-        setTimeout(() => {
-            const wantsNotif = confirm("Para el correcto funcionamiento de la app necesita permiso de notificaciones");
-            if (wantsNotif) {
-                Notification.requestPermission().then(permission => {
-                    if (permission === "granted") {
-                        console.log("Notificaciones habilitadas por el usuario.");
-                    }
-                });
+    if ("Notification" in window) {
+        console.log("🔔 Notification Permission State:", Notification.permission);
+
+        if (Notification.permission === "default") {
+            // First time - ask normally
+            setTimeout(() => {
+                const wantsNotif = confirm("Para el correcto funcionamiento de la app necesita permiso de notificaciones");
+                if (wantsNotif) {
+                    Notification.requestPermission().then(permission => {
+                        if (permission === "granted") {
+                            console.log("✅ Notificaciones habilitadas por el usuario.");
+                        }
+                    });
+                }
+            }, 2500);
+        } else if (Notification.permission === "denied") {
+            // User previously blocked - show instructions once per session
+            if (!sessionStorage.getItem('notif_denied_shown')) {
+                sessionStorage.setItem('notif_denied_shown', '1');
+                setTimeout(() => {
+                    alert("🔔 Las notificaciones de recordatorio están bloqueadas.\n\nPara activarlas: abre la configuración de Safari/Chrome > Busca este sitio > Cambia 'Notificaciones' a Permitir.");
+                }, 3000);
             }
-        }, 2500); // Wait 2.5 seconds after login/app open so it doesn't clash immediately with GPS prompt
+        }
     }
 }
 
