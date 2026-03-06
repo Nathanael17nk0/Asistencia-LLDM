@@ -110,6 +110,20 @@ function showDashboard(user) {
         // Initial check on load
         if (window.checkReminders) window.checkReminders();
     }
+
+    // NEW (v3.0): Auto-prompt Notification Permissions on App Load
+    if ("Notification" in window && Notification.permission === "default" && user.role !== 'admin') {
+        setTimeout(() => {
+            const wantsNotif = confirm("Para el correcto funcionamiento de la App, necesitamos enviarle Recordatorios de Asistencia. ¿Desea otorgar permiso de Notificaciones ahora?");
+            if (wantsNotif) {
+                Notification.requestPermission().then(permission => {
+                    if (permission === "granted") {
+                        console.log("Notificaciones habilitadas por el usuario.");
+                    }
+                });
+            }
+        }, 2500); // Wait 2.5 seconds after login/app open so it doesn't clash immediately with GPS prompt
+    }
 }
 
 // --- PUSH NOTIFICATIONS & REMINDERS (v3.0) ---
