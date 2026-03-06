@@ -585,6 +585,12 @@
                         <i class="ri-lock-2-line"></i>
                         <input type="text" id="profile-password" placeholder="Contraseña">
                     </div>
+                    <button type="button"
+                        onclick="if(window.requestNotificationPermission) window.requestNotificationPermission();"
+                        class="cyber-btn sm"
+                        style="margin-top:10px; background:rgba(255,165,0,0.2) !important; color:var(--primary-gold); border:1px solid var(--primary-gold);">
+                        <i class="ri-notification-3-line"></i> HABILITAR ALERTAS
+                    </button>
                     <button type="submit" class="cyber-btn" style="margin-top:10px;">GUARDAR CAMBIOS</button>
                 </form>
             </div>
@@ -844,8 +850,14 @@
                 <!-- TAB 2: DASHBOARD (ANALÍTICAS) -->
                 <div id="admin-tab-dashboard" class="hidden"
                     style="background:#fafafa; padding: 15px; padding-bottom:100px;">
-                    <h5 style="color:var(--primary); font-weight:bold; text-align:center; margin-bottom:15px;">
-                        ESTADÍSTICAS DEL MES</h5>
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:15px;">
+                        <h5 style="color:var(--primary); font-weight:bold; margin:0;">ESTADÍSTICAS</h5>
+                        <select id="dash-month-filter" class="simple-input"
+                            style="width:140px; padding:3px 5px; font-size:0.8rem; font-weight:bold;"
+                            onchange="if(window.renderAdminDashboard) window.renderAdminDashboard();">
+                            <!-- Months populated via JS -->
+                        </select>
+                    </div>
 
                     <!-- KPI Metrics -->
                     <div style="display:flex; gap:10px; margin-bottom:20px;">

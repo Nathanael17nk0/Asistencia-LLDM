@@ -100,7 +100,113 @@ function showDashboard(user) {
     if (typeof window.fetchAndCheckGlobalNotification === 'function') {
         window.fetchAndCheckGlobalNotification();
     }
+
+    // NEW (v3.0): Start Reminders Timer
+    if (!window.reminderInterval && user.role !== 'admin') {
+        // Run check every 60 seconds
+        window.reminderInterval = setInterval(() => {
+            if (window.checkReminders) window.checkReminders();
+        }, 60000);
+        // Initial check on load
+        if (window.checkReminders) window.checkReminders();
+    }
 }
+
+// --- PUSH NOTIFICATIONS & REMINDERS (v3.0) ---
+window.requestNotificationPermission = function () {
+    if (!("Notification" in window)) {
+        alert("Este navegador no soporta notificaciones de escritorio/móvil.");
+    } else if (Notification.permission === "granted") {
+        alert("¡Las alertas ya están activadas! Recibirás avisos 10 min antes del culto.");
+        new Notification("Las alertas están activadas correctamente.");
+    } else if (Notification.permission !== "denied") {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                new Notification("¡Excelente! Estás suscrito a los recordatorios.");
+            }
+        });
+    } else {
+        alert("Los permisos están bloqueados. Debes activarlos desde la configuración de Safari/Chrome.");
+    }
+};
+
+window.checkReminders = function () {
+    if (!STATE.user || STATE.user.role === 'admin') return;
+
+    const now = new Date();
+    const day = now.getDay(); // 0 is Sunday
+    const h = now.getHours();
+    const m = now.getMinutes();
+
+    // Check if user already attended today to prevent spamming
+    // Reusing the same logic from the fingerprint button
+    const todayStr = window.getLocalYMD();
+    const localLogStr = localStorage.getItem('nexus_attendance_log');
+    let hasAttendedToday = false;
+
+    if (localLogStr) {
+        const localLog = JSON.parse(localLogStr);
+        const userLog = localLog.filter(e =>
+            (String(e.userId) === String(STATE.user.id) || String(e.userId) === String(STATE.user.phone)) &&
+            window.getLocalYMD(e.timestamp) === todayStr
+        );
+        if (userLog.length > 0) hasAttendedToday = true;
+    }
+
+    if (hasAttendedToday) return; // All good, don't bother the user
+
+    // Trigger Times: (10 mins before service, and 8:15 PM fixed reminder)
+    let shouldRemind = false;
+
+    if (day === 0) {
+        // Sunday
+        if (h === 9 && m === 50) shouldRemind = true; // For 10:00 AM
+        if (h === 17 && m === 50) shouldRemind = true; // For 6:00 PM
+    } else {
+        // Weekdays
+        if (h === 4 && m === 50) shouldRemind = true; // For 5:00 AM
+        if (h === 8 && m === 50) shouldRemind = true; // For 9:00 AM
+
+        // Afternoon Services vary between 6pm and 7pm, we remind at 5:50 and 6:50 just in case
+        if (h === 17 && m === 50) shouldRemind = true;
+        if (h === 18 && m === 50) shouldRemind = true;
+    }
+
+    // End of day reminder for everyone who forgot
+    if (h === 20 && m === 15) shouldRemind = true;
+
+    // Use a localStorage flag to prevent repeating the same minute's notification multiple times
+    const lastReminderTime = localStorage.getItem('nexus_last_reminder');
+    const currentMinuteKey = `${todayStr}-${h}-${m}`;
+
+    if (shouldRemind && lastReminderTime !== currentMinuteKey) {
+        localStorage.setItem('nexus_last_reminder', currentMinuteKey);
+
+        const msg = "La Paz de Dios sea con usted, Recuerde registrar su asistencia si hoy el Señor le concedió asistir a la Oración. ¡Dios le pague!";
+
+        // 1. Native Push Notification (if allowed)
+        if ("Notification" in window && Notification.permission === "granted") {
+            try {
+                // Check if Service Worker is active for reliable push on iOS PWA
+                if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                    navigator.serviceWorker.ready.then(reg => {
+                        reg.showNotification("Recordatorio de Asistencia", {
+                            body: msg,
+                            icon: "/img/icon-blue-192.png",
+                            vibrate: [200, 100, 200]
+                        });
+                    });
+                } else {
+                    // Fallback
+                    new Notification("Recordatorio de Asistencia", { body: msg });
+                }
+            } catch (e) { console.error("Push Error", e); }
+        }
+
+        // 2. In-App fallback alert if they have the app open right now
+        alert(msg);
+    }
+};
 
 function showRegister() {
     hideAllSections();
@@ -3743,15 +3849,53 @@ window.renderAdminDashboard = function () {
     const activeUsers = users.filter(u => u.admin_status === 'Activo' || !u.admin_status);
     const totalHermanos = activeUsers.length;
 
-    // Filter Log for CURRENT MONTH only
+    // --- MONTH FILTER LOGIC ---
+    const monthSelect = document.getElementById('dash-month-filter');
+    let selectedMonthPrefix = '';
+
+    // Extract all unique months from the log
+    const uniqueMonths = new Set();
+    rawLog.forEach(e => {
+        if (!e.timestamp) return;
+        const dateStr = window.getLocalYMD(e.timestamp);
+        const yyyyMM = dateStr.substring(0, 7); // 'YYYY-MM'
+        uniqueMonths.add(yyyyMM);
+    });
+
+    // Ensure current month is always in the list even if no attendance yet
     const now = new Date();
-    const currentMonthPrefix = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    const currentYYYYMM = now.getFullYear() + '-' + String(now.getMonth() + 1).padStart(2, '0');
+    uniqueMonths.add(currentYYYYMM);
+
+    // Sort months descending (newest first)
+    const sortedMonths = Array.from(uniqueMonths).sort().reverse();
+
+    if (monthSelect) {
+        // Only populate if empty to avoid losing selection on re-render
+        if (monthSelect.options.length === 0) {
+            sortedMonths.forEach(m => {
+                const opt = document.createElement('option');
+                opt.value = m;
+                // Parse '2026-03' to 'Marzo 2026'
+                const [yyyy, mm] = m.split('-');
+                const dateObj = new Date(yyyy, parseInt(mm) - 1, 1);
+                const monthName = dateObj.toLocaleString('es-ES', { month: 'long' });
+                opt.textContent = monthName.charAt(0).toUpperCase() + monthName.slice(1) + ' ' + yyyy;
+                monthSelect.appendChild(opt);
+            });
+            // Default to current month on fast load
+            monthSelect.value = currentYYYYMM;
+        }
+        selectedMonthPrefix = monthSelect.value || currentYYYYMM;
+    } else {
+        selectedMonthPrefix = currentYYYYMM;
+    }
 
     // Deduplicate log just in case (same user, same day, same slot)
     const seen = new Set();
     const currentMonthLog = rawLog.filter(e => {
         const dateStr = window.getLocalYMD(e.timestamp);
-        if (!dateStr.startsWith(currentMonthPrefix)) return false; // Not this month
+        if (!dateStr.startsWith(selectedMonthPrefix)) return false; // Filter by Selected Month
 
         const key = `${e.userId}|${dateStr}|${e.serviceSlot}`;
         if (seen.has(key)) return false;
