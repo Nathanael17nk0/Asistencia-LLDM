@@ -112,50 +112,55 @@ function showDashboard(user) {
     }
 
     // NEW (v3.0): Auto-prompt Notification Permissions on App Load
-    if ("Notification" in window) {
-        console.log("🔔 Notification Permission State:", Notification.permission);
-        const askedBefore = localStorage.getItem('nexus_asked_notif');
+    const hasNotificationSupport = "Notification" in window;
+    const notifPermission = hasNotificationSupport ? Notification.permission : "default";
 
-        if (Notification.permission === "default" && !askedBefore) {
-            // Safari/Chrome Universal Fix: Show Mandatory Modal
-            const modal = document.getElementById('notification-prompt-modal');
-            if (modal) {
-                setTimeout(() => {
-                    modal.classList.remove('hidden');
-                    modal.style.display = 'flex'; // Ensure visibility
-                }, 1500); // Wait 1.5s after showing dashboard
-            }
-        } else if (Notification.permission === "denied") {
-            // User previously blocked - show instructions once per session
-            if (!sessionStorage.getItem('notif_denied_shown')) {
-                sessionStorage.setItem('notif_denied_shown', '1');
-                setTimeout(() => {
-                    alert("🔔 Las notificaciones de recordatorio están bloqueadas.\n\nPara activarlas: abre la configuración de Safari/Chrome > Busca este sitio > Cambia 'Notificaciones' a Permitir.");
-                }, 3000);
-            }
+    console.log("🔔 Notification Support:", hasNotificationSupport, " State:", notifPermission);
+    const askedBefore = localStorage.getItem('nexus_asked_notif');
+
+    if (notifPermission === "default" && !askedBefore) {
+        // Safari/Chrome Universal Fix: Show Mandatory Modal
+        const modal = document.getElementById('notification-prompt-modal');
+        if (modal) {
+            setTimeout(() => {
+                modal.classList.remove('hidden');
+                modal.style.display = 'flex'; // Ensure visibility
+            }, 1500); // Wait 1.5s after showing dashboard
+        }
+    } else if (notifPermission === "denied") {
+        // User previously blocked - show instructions once per session
+        if (!sessionStorage.getItem('notif_denied_shown')) {
+            sessionStorage.setItem('notif_denied_shown', '1');
+            setTimeout(() => {
+                alert("🔔 Las notificaciones de recordatorio están bloqueadas.\n\nPara activarlas: abre la configuración de Safari/Chrome > Busca este sitio > Cambia 'Notificaciones' a Permitir.");
+            }, 3000);
         }
     }
 }
 
 // --- PUSH NOTIFICATIONS & REMINDERS (v3.0) ---
 window.handleMandatoryNotificationAccept = function () {
-    if ("Notification" in window) {
-        Notification.requestPermission().then(permission => {
-            const modal = document.getElementById('notification-prompt-modal');
-            if (modal) {
-                modal.classList.add('hidden');
-                modal.style.display = 'none';
-            }
-
-            if (permission === "granted") {
-                console.log("✅ Notificaciones habilitadas por el usuario.");
-                localStorage.setItem('nexus_asked_notif', 'granted');
-                new Notification("¡Excelente!", { body: "Las alertas están activadas correctamente." });
-            } else {
-                localStorage.setItem('nexus_asked_notif', 'denied');
-            }
-        });
+    const modal = document.getElementById('notification-prompt-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
     }
+
+    if (!("Notification" in window)) {
+        alert("🚨 Tu dispositivo web actual no soporta notificaciones Push directamente.\n\n📱 EN IPHONE/IPAD:\nPara poder recibir las notificaciones, debes instalar la App tocando el botón 'Compartir' de Safari y luego 'Agregar a Inicio'.");
+        localStorage.setItem('nexus_asked_notif', 'unsupported');
+        return;
+    }
+
+    Notification.requestPermission().then(permission => {
+        if (permission === "granted") {
+            console.log("✅ Notificaciones habilitadas por el usuario.");
+            localStorage.setItem('nexus_asked_notif', 'granted');
+            new Notification("¡Excelente!", { body: "Las alertas están activadas correctamente." });
+        } else {
+            localStorage.setItem('nexus_asked_notif', 'denied');
+        }
+    });
 };
 
 window.handleMandatoryNotificationDecline = function () {
