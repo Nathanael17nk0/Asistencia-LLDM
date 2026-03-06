@@ -114,19 +114,16 @@ function showDashboard(user) {
     // NEW (v3.0): Auto-prompt Notification Permissions on App Load
     if ("Notification" in window) {
         console.log("🔔 Notification Permission State:", Notification.permission);
+        const askedBefore = localStorage.getItem('nexus_asked_notif');
 
-        if (Notification.permission === "default") {
-            // First time - ask normally
-            setTimeout(() => {
-                const wantsNotif = confirm("Para el correcto funcionamiento de la app necesita permiso de notificaciones");
-                if (wantsNotif) {
-                    Notification.requestPermission().then(permission => {
-                        if (permission === "granted") {
-                            console.log("✅ Notificaciones habilitadas por el usuario.");
-                        }
-                    });
-                }
-            }, 2500);
+        if (Notification.permission === "default" && !askedBefore) {
+            // Safari/Chrome Universal Fix: Show Mandatory Modal
+            const modal = document.getElementById('notification-prompt-modal');
+            if (modal) {
+                setTimeout(() => {
+                    modal.classList.remove('hidden');
+                }, 1500); // Wait 1.5s after showing dashboard
+            }
         } else if (Notification.permission === "denied") {
             // User previously blocked - show instructions once per session
             if (!sessionStorage.getItem('notif_denied_shown')) {
@@ -140,6 +137,28 @@ function showDashboard(user) {
 }
 
 // --- PUSH NOTIFICATIONS & REMINDERS (v3.0) ---
+window.handleMandatoryNotificationAccept = function () {
+    if ("Notification" in window) {
+        Notification.requestPermission().then(permission => {
+            const modal = document.getElementById('notification-prompt-modal');
+            if (modal) modal.classList.add('hidden');
+
+            if (permission === "granted") {
+                console.log("✅ Notificaciones habilitadas por el usuario.");
+                localStorage.setItem('nexus_asked_notif', 'granted');
+                new Notification("¡Excelente!", { body: "Las alertas están activadas correctamente." });
+            } else {
+                localStorage.setItem('nexus_asked_notif', 'denied');
+            }
+        });
+    }
+};
+
+window.handleMandatoryNotificationDecline = function () {
+    const modal = document.getElementById('notification-prompt-modal');
+    if (modal) modal.classList.add('hidden');
+    localStorage.setItem('nexus_asked_notif', 'declined'); // Save choice to prevent spamming
+};
 window.requestNotificationPermission = function () {
     if (!("Notification" in window)) {
         alert("Este navegador no soporta notificaciones de escritorio/móvil.");

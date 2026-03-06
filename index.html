@@ -635,6 +635,34 @@
             </div>
         </div>
 
+        <!-- NOTIFICATION PROMPT MODAL (MANDATORY FOR iOS/SAFARI) -->
+        <div id="notification-prompt-modal" class="hidden"
+            style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:5000; display:flex; align-items:center; justify-content:center; flex-direction:column; padding:20px; text-align:center;">
+            <div class="glass-card"
+                style="background:#fff; padding:25px; border-radius:15px; max-width:350px; position:relative;">
+                <i class="ri-notification-badge-fill gradient-text"
+                    style="font-size:4rem; margin-bottom:15px; display:inline-block;"></i>
+                <h3 style="color:var(--primary); font-weight:bold; margin-bottom:10px;">¡No Olvides Asistir!</h3>
+                <p style="color:#555; font-size:0.9rem; margin-bottom:20px; line-height:1.4;">
+                    Para avisarte de tus asistencias y enviarte textos diaros, por favor activa las notificaciones de
+                    esta app.
+                </p>
+                <div style="display:flex; flex-direction:column; gap:10px;">
+                    <button
+                        onclick="if(window.handleMandatoryNotificationAccept) window.handleMandatoryNotificationAccept();"
+                        class="cyber-btn" style="background:var(--primary-gold); color:#111; font-weight:bold;">
+                        <i class="ri-check-line"></i> ACTIVAR ALERTAS
+                    </button>
+                    <button
+                        onclick="if(window.handleMandatoryNotificationDecline) window.handleMandatoryNotificationDecline();"
+                        class="cyber-btn sm danger"
+                        style="background:transparent; color:#888; border:none; text-decoration:underline;">
+                        Ahora no
+                    </button>
+                </div>
+            </div>
+        </div>
+
 
         <!-- Admin Panel Overlay (Fixed Layout) -->
         <div id="admin-panel" class="admin-only hidden"
