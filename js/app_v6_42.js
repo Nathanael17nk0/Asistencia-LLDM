@@ -157,6 +157,48 @@ window.requestNotificationPermission = function () {
     }
 };
 
+window.testPushNotification = function () {
+    if (!("Notification" in window)) {
+        alert("Tu navegador no soporta notificaciones push. Usa Chrome o Safari actualizados.");
+        return;
+    }
+
+    const sendTestNotif = () => {
+        const msg = "✅ ¡Esta es una prueba! Así se verán los recordatorios de asistencia.";
+        try {
+            if (navigator.serviceWorker && navigator.serviceWorker.controller) {
+                navigator.serviceWorker.ready.then(reg => {
+                    reg.showNotification("Prueba de Asistencia LLDM", {
+                        body: msg,
+                        icon: "/img/icon-blue-192.png",
+                        vibrate: [200, 100, 200]
+                    });
+                });
+            } else {
+                new Notification("Prueba de Asistencia LLDM", { body: msg });
+            }
+            alert("Notificación enviada al sistema (si no la ves, revisa tu Centro de Notificaciones o si tienes el modo 'No Molestar' activo).");
+        } catch (e) {
+            console.error(e);
+            alert("Error al enviar push nativo: " + e.message);
+        }
+    };
+
+    if (Notification.permission === "granted") {
+        sendTestNotif();
+    } else if (Notification.permission === "denied") {
+        alert("Permiso DENEGADO.\n\nEn iOS/Mac: Ve a Configuración > Safari/Chrome > Notificaciones y cámbialo a 'Permitir'.");
+    } else {
+        Notification.requestPermission().then(permission => {
+            if (permission === "granted") {
+                sendTestNotif();
+            } else {
+                alert("Permiso rechazado por el usuario.");
+            }
+        });
+    }
+};
+
 window.checkReminders = function () {
     if (!STATE.user || STATE.user.role === 'admin') return;
 
