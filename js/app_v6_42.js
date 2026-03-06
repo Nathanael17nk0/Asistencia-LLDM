@@ -122,6 +122,7 @@ function showDashboard(user) {
             if (modal) {
                 setTimeout(() => {
                     modal.classList.remove('hidden');
+                    modal.style.display = 'flex'; // Ensure visibility
                 }, 1500); // Wait 1.5s after showing dashboard
             }
         } else if (Notification.permission === "denied") {
@@ -141,7 +142,10 @@ window.handleMandatoryNotificationAccept = function () {
     if ("Notification" in window) {
         Notification.requestPermission().then(permission => {
             const modal = document.getElementById('notification-prompt-modal');
-            if (modal) modal.classList.add('hidden');
+            if (modal) {
+                modal.classList.add('hidden');
+                modal.style.display = 'none';
+            }
 
             if (permission === "granted") {
                 console.log("✅ Notificaciones habilitadas por el usuario.");
@@ -156,7 +160,10 @@ window.handleMandatoryNotificationAccept = function () {
 
 window.handleMandatoryNotificationDecline = function () {
     const modal = document.getElementById('notification-prompt-modal');
-    if (modal) modal.classList.add('hidden');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
     localStorage.setItem('nexus_asked_notif', 'declined'); // Save choice to prevent spamming
 };
 window.requestNotificationPermission = function () {
