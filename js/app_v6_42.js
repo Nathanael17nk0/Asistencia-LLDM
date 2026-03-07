@@ -4006,8 +4006,13 @@ window.renderAdminDashboard = function () {
         return true;
     });
 
+    // Extract unique active users who attended at least once this month
+    const uniqueUserIdsThisMonth = new Set();
+    currentMonthLog.forEach(entry => uniqueUserIdsThisMonth.add(entry.userId));
+
     // Update Top KPIs
-    document.getElementById('dash-total-asistencias').innerText = currentMonthLog.length;
+    // Total Asistencias now means "Hermanos Únicos que asistieron al menos una vez"
+    document.getElementById('dash-total-asistencias').innerText = uniqueUserIdsThisMonth.size;
     document.getElementById('dash-total-hermanos').innerText = totalHermanos;
 
     // 2. Process Data for Charts
@@ -4015,21 +4020,23 @@ window.renderAdminDashboard = function () {
     const groupCounts = {};
     const userAttendanceCount = {};
 
+    // 2A. Slots and Leaderboard still use raw log entries
     currentMonthLog.forEach(entry => {
         // Services Distribution
         const slot = entry.serviceName || entry.serviceSlot || 'Otro';
         slotCounts[slot] = (slotCounts[slot] || 0) + 1;
 
-        // Map userId to User Profile
-        const u = users.find(x => String(x.phone) === String(entry.userId) || String(x.id) === String(entry.userId)) || {};
-
-        // Groups Distribution
-        const group = u.marital_status || 'Sin Grupo';
-        groupCounts[group] = (groupCounts[group] || 0) + 1;
-
         // Leaderboard Count
+        const u = users.find(x => String(x.phone) === String(entry.userId) || String(x.id) === String(entry.userId)) || {};
         const userName = u.full_name || u.name || entry.name || 'Desconocido';
         userAttendanceCount[userName] = (userAttendanceCount[userName] || 0) + 1;
+    });
+
+    // 2B. Groups Distribution uses UNIQUE users
+    uniqueUserIdsThisMonth.forEach(uid => {
+        const u = users.find(x => String(x.phone) === String(uid) || String(x.id) === String(uid)) || {};
+        const group = u.marital_status || 'Sin Grupo';
+        groupCounts[group] = (groupCounts[group] || 0) + 1;
     });
 
     // 3. Render Services Bar Chart
