@@ -689,7 +689,20 @@ if (fingerprintBtn) {
         const now = new Date();
         const { slotId, slotName } = getServiceSlot(now);
 
-        // 2. Check Previous Attendance (For THIS service)
+        // 2A. Validate: Must be during an active service time
+        if (!slotId) {
+            alert("⏰ FUERA DE HORARIO\n\nNo hay ninguna oración activa en este momento. Solo puedes registrar asistencia durante los horarios de culto.");
+            return;
+        }
+
+        // 2B. Validate: Must be inside the geofence
+        if (!STATE.inGeofence && !(STATE.distance !== undefined && STATE.distance <= 40)) {
+            const distMsg = STATE.distance !== undefined ? `\nDistancia actual: ${Math.round(STATE.distance)}m del templo.` : "\nNo se pudo obtener tu ubicación aún.";
+            alert(`📍 FUERA DEL TEMPLO\n\nDebes estar dentro del templo para registrar asistencia.${distMsg}`);
+            return;
+        }
+
+        // 2C. Check Previous Attendance (For THIS service)
         const log = JSON.parse(localStorage.getItem('nexus_attendance_log') || '[]');
         const todayLocal = window.getLocalYMD(now);
 
