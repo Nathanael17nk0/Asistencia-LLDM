@@ -168,14 +168,26 @@ async function registerServiceWorkerAndSubscribe() {
 }
 
 async function savePushSubscriptionToSupabase(subscription) {
-    if (!STATE.user || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
-    const url = `${window.SUPABASE_URL}/rest/v1/push_subscriptions`;
-    await fetch(url, {
+    // SUPABASE_URL and SUPABASE_ANON_KEY are constants from supabase-config.js
+    const url = typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : window.SUPABASE_URL;
+    const key = typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : window.SUPABASE_ANON_KEY;
+
+    if (!url || !key) {
+        console.warn('⚠️ Supabase URL/Key not found - push subscription NOT saved.');
+        return;
+    }
+    if (!STATE.user) {
+        console.warn('⚠️ No logged-in user - push subscription NOT saved.');
+        return;
+    }
+
+    console.log('💾 Saving push subscription for', STATE.user.phone);
+    const res = await fetch(`${url}/rest/v1/push_subscriptions`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
-            'apikey': window.SUPABASE_ANON_KEY,
-            'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`,
+            'apikey': key,
+            'Authorization': `Bearer ${key}`,
             'Prefer': 'resolution=merge-duplicates'
         },
         body: JSON.stringify({
@@ -183,7 +195,12 @@ async function savePushSubscriptionToSupabase(subscription) {
             subscription: subscription.toJSON()
         })
     });
-    console.log('✅ Push subscription saved to Supabase');
+    if (res.ok) {
+        console.log('✅ Push subscription saved to Supabase');
+    } else {
+        const err = await res.text();
+        console.error('❌ Push subscription save failed:', res.status, err);
+    }
 }
 
 window.handleMandatoryNotificationAccept = function () {
