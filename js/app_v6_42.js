@@ -138,7 +138,54 @@ function showDashboard(user) {
     }
 }
 
-// --- PUSH NOTIFICATIONS & REMINDERS (v3.0) ---
+// --- PUSH NOTIFICATIONS & REMINDERS (v4.0) ---
+// VAPID Public Key (generated for this app - do not change once users are subscribed)
+const VAPID_PUBLIC_KEY = 'JUBGKfUmd4eeGEI1QQf7UNb_ZeVJEYSmV05GpY6jsrHZZlwGDbnB_pMbFABu8QK0gVUAiUgfeDJdSksL4uWIow';
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function registerServiceWorkerAndSubscribe() {
+    if (!('serviceWorker' in navigator)) {
+        console.warn('Service Workers not supported');
+        return null;
+    }
+    const reg = await navigator.serviceWorker.register('/service-worker.js');
+    await navigator.serviceWorker.ready;
+    console.log('[SW] Registered:', reg.scope);
+
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) return existing;
+
+    return reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+}
+
+async function savePushSubscriptionToSupabase(subscription) {
+    if (!STATE.user || !window.SUPABASE_URL || !window.SUPABASE_ANON_KEY) return;
+    const url = `${window.SUPABASE_URL}/rest/v1/push_subscriptions`;
+    await fetch(url, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': window.SUPABASE_ANON_KEY,
+            'Authorization': `Bearer ${window.SUPABASE_ANON_KEY}`,
+            'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
+            user_phone: String(STATE.user.phone),
+            subscription: subscription.toJSON()
+        })
+    });
+    console.log('✅ Push subscription saved to Supabase');
+}
+
 window.handleMandatoryNotificationAccept = function () {
     const modal = document.getElementById('notification-prompt-modal');
     if (modal) {
@@ -152,11 +199,21 @@ window.handleMandatoryNotificationAccept = function () {
         return;
     }
 
-    Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-            console.log("✅ Notificaciones habilitadas por el usuario.");
+    Notification.requestPermission().then(async permission => {
+        if (permission === 'granted') {
             localStorage.setItem('nexus_asked_notif', 'granted');
-            new Notification("¡Excelente!", { body: "Las alertas están activadas correctamente." });
+            console.log('✅ Notification permission granted.');
+            try {
+                const subscription = await registerServiceWorkerAndSubscribe();
+                if (subscription) {
+                    await savePushSubscriptionToSupabase(subscription);
+                    new Notification('¡Alertas Activadas!', {
+                        body: 'Recibirás recordatorios de asistencia a tiempo.'
+                    });
+                }
+            } catch (err) {
+                console.error('Push subscription error:', err);
+            }
         } else {
             localStorage.setItem('nexus_asked_notif', 'denied');
         }
