@@ -138,7 +138,71 @@ function showDashboard(user) {
     }
 }
 
-// --- PUSH NOTIFICATIONS & REMINDERS (v3.0) ---
+// --- PUSH NOTIFICATIONS & REMINDERS (v4.0) ---
+// VAPID Public Key (generated for this app - do not change once users are subscribed)
+const VAPID_PUBLIC_KEY = 'JUBGKfUmd4eeGEI1QQf7UNb_ZeVJEYSmV05GpY6jsrHZZlwGDbnB_pMbFABu8QK0gVUAiUgfeDJdSksL4uWIow';
+
+function urlBase64ToUint8Array(base64String) {
+    const padding = '='.repeat((4 - base64String.length % 4) % 4);
+    const base64 = (base64String + padding).replace(/-/g, '+').replace(/_/g, '/');
+    const rawData = atob(base64);
+    return new Uint8Array([...rawData].map(c => c.charCodeAt(0)));
+}
+
+async function registerServiceWorkerAndSubscribe() {
+    if (!('serviceWorker' in navigator)) {
+        console.warn('Service Workers not supported');
+        return null;
+    }
+    const reg = await navigator.serviceWorker.register('/service-worker.js');
+    await navigator.serviceWorker.ready;
+    console.log('[SW] Registered:', reg.scope);
+
+    const existing = await reg.pushManager.getSubscription();
+    if (existing) return existing;
+
+    return reg.pushManager.subscribe({
+        userVisibleOnly: true,
+        applicationServerKey: urlBase64ToUint8Array(VAPID_PUBLIC_KEY)
+    });
+}
+
+async function savePushSubscriptionToSupabase(subscription) {
+    // SUPABASE_URL and SUPABASE_ANON_KEY are constants from supabase-config.js
+    const url = typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : window.SUPABASE_URL;
+    const key = typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : window.SUPABASE_ANON_KEY;
+
+    if (!url || !key) {
+        console.warn('⚠️ Supabase URL/Key not found - push subscription NOT saved.');
+        return;
+    }
+    if (!STATE.user) {
+        console.warn('⚠️ No logged-in user - push subscription NOT saved.');
+        return;
+    }
+
+    console.log('💾 Saving push subscription for', STATE.user.phone);
+    const res = await fetch(`${url}/rest/v1/push_subscriptions`, {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/json',
+            'apikey': key,
+            'Authorization': `Bearer ${key}`,
+            'Prefer': 'resolution=merge-duplicates'
+        },
+        body: JSON.stringify({
+            user_phone: String(STATE.user.phone),
+            subscription: subscription.toJSON()
+        })
+    });
+    if (res.ok) {
+        console.log('✅ Push subscription saved to Supabase');
+    } else {
+        const err = await res.text();
+        console.error('❌ Push subscription save failed:', res.status, err);
+    }
+}
+
 window.handleMandatoryNotificationAccept = function () {
     const modal = document.getElementById('notification-prompt-modal');
     if (modal) {
@@ -152,11 +216,21 @@ window.handleMandatoryNotificationAccept = function () {
         return;
     }
 
-    Notification.requestPermission().then(permission => {
-        if (permission === "granted") {
-            console.log("✅ Notificaciones habilitadas por el usuario.");
+    Notification.requestPermission().then(async permission => {
+        if (permission === 'granted') {
             localStorage.setItem('nexus_asked_notif', 'granted');
-            new Notification("¡Excelente!", { body: "Las alertas están activadas correctamente." });
+            console.log('✅ Notification permission granted.');
+            try {
+                const subscription = await registerServiceWorkerAndSubscribe();
+                if (subscription) {
+                    await savePushSubscriptionToSupabase(subscription);
+                    new Notification('¡Alertas Activadas!', {
+                        body: 'Recibirás recordatorios de asistencia a tiempo.'
+                    });
+                }
+            } catch (err) {
+                console.error('Push subscription error:', err);
+            }
         } else {
             localStorage.setItem('nexus_asked_notif', 'denied');
         }
@@ -696,8 +770,13 @@ if (fingerprintBtn) {
         }
 
         // 2B. Validate: Must be inside the geofence
-        if (!STATE.inGeofence && !(STATE.distance !== undefined && STATE.distance <= 40)) {
-            const distMsg = STATE.distance !== undefined ? `\nDistancia actual: ${Math.round(STATE.distance)}m del templo.` : "\nNo se pudo obtener tu ubicación aún.";
+        // NOTE: typeof check is CRITICAL — JS coerces null to 0, so (null <= 40) === true!
+        const hasRealDistance = typeof STATE.distance === 'number';
+        const isInsideByDistance = hasRealDistance && STATE.distance <= 40;
+        if (!STATE.inGeofence && !isInsideByDistance) {
+            const distMsg = hasRealDistance
+                ? `\nDistancia actual: ${Math.round(STATE.distance)}m del templo.`
+                : '\nEsperando señal GPS... Intenta en unos segundos.';
             alert(`📍 FUERA DEL TEMPLO\n\nDebes estar dentro del templo para registrar asistencia.${distMsg}`);
             return;
         }

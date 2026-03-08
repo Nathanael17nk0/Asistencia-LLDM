@@ -1325,6 +1325,17 @@
                 }
             }, 2000);
         </script>
+
+        <!-- v4.0: Register Service Worker early to enable background push -->
+        <script>
+            if ('serviceWorker' in navigator) {
+                window.addEventListener('load', () => {
+                    navigator.serviceWorker.register('/service-worker.js')
+                        .then(reg => console.log('[SW] Registered early:', reg.scope))
+                        .catch(err => console.warn('[SW] Registration failed:', err));
+                });
+            }
+        </script>
 </body>
 
 </html>
