@@ -1,3 +1,4 @@
+// @ts-nocheck
 // =====================================================
 // Supabase Edge Function: send-reminders (v2)
 // Sends real background push notifications at reminder times.

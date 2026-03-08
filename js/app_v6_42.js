@@ -770,8 +770,13 @@ if (fingerprintBtn) {
         }
 
         // 2B. Validate: Must be inside the geofence
-        if (!STATE.inGeofence && !(STATE.distance !== undefined && STATE.distance <= 40)) {
-            const distMsg = STATE.distance !== undefined ? `\nDistancia actual: ${Math.round(STATE.distance)}m del templo.` : "\nNo se pudo obtener tu ubicación aún.";
+        // NOTE: typeof check is CRITICAL — JS coerces null to 0, so (null <= 40) === true!
+        const hasRealDistance = typeof STATE.distance === 'number';
+        const isInsideByDistance = hasRealDistance && STATE.distance <= 40;
+        if (!STATE.inGeofence && !isInsideByDistance) {
+            const distMsg = hasRealDistance
+                ? `\nDistancia actual: ${Math.round(STATE.distance)}m del templo.`
+                : '\nEsperando señal GPS... Intenta en unos segundos.';
             alert(`📍 FUERA DEL TEMPLO\n\nDebes estar dentro del templo para registrar asistencia.${distMsg}`);
             return;
         }
