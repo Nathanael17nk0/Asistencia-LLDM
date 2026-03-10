@@ -324,7 +324,7 @@
                     onclick="event.stopPropagation(); if(confirm('¿Cerrar sesión?')) { localStorage.removeItem('nexus_session'); localStorage.removeItem('nexus_account'); window.location.replace(window.location.pathname); }"><i
                         class="ri-shut-down-line"></i></button>
                 <!-- v2.0 NOTIFICATION BELL -->
-                <button id="notices-btn" class="mini-icon-btn" onclick="window.openGlobalNotificationModal()"
+                <button id="notices-btn" class="mini-icon-btn" onclick="event.stopPropagation(); window.openGlobalNotificationModal()"
                     style="margin-right:5px; position:relative;">
                     <i class="ri-notification-3-line"></i>
                     <span id="notice-badge" class="hidden"
