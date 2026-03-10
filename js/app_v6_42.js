@@ -4686,20 +4686,21 @@ window.sendGlobalNotification = async function () {
             
             const url = typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : window.SUPABASE_URL;
             const key = typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : window.SUPABASE_ANON_KEY;
-            
-            // Note: fire-and-forget or await depending on strictness. Awaiting ensures feedback.
-            const pushRes = await fetch(`${url}/functions/v1/send-broadcast`, {
-                method: 'POST',
-                headers: {
-                    'Content-Type': 'application/json',
-                    'Authorization': `Bearer ${key}`
-                },
-                body: JSON.stringify({ message: payload.text })
-            });
+            try {
+                const pushRes = await fetch(`${url}/functions/v1/send-broadcast`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                        'Authorization': `Bearer ${key}`
+                    },
+                    body: JSON.stringify({ message: payload.text })
+                });
 
-            if(!pushRes.ok) {
-                console.error("Push Broadcast Failed:", await pushRes.text());
-                // We don't throw to not fail the overall send, just warn
+                if(!pushRes.ok) {
+                    console.error("Push Broadcast Failed:", await pushRes.text());
+                }
+            } catch(pushErr) {
+                console.error("Push Fetch Network Error:", pushErr);
             }
         }
 
