@@ -197,9 +197,12 @@ async function savePushSubscriptionToSupabase(subscription) {
     });
     if (res.ok) {
         console.log('✅ Push subscription saved to Supabase');
+        return true;
     } else {
         const err = await res.text();
         console.error('❌ Push subscription save failed:', res.status, err);
+        alert('❌ ERROR DB GUARDANDO PUSH: ' + res.status + '\n' + err);
+        return false;
     }
 }
 
@@ -292,8 +295,10 @@ window.forceResetPushSubscription = async function() {
             localStorage.setItem('nexus_asked_notif', 'granted');
             const sub = await registerServiceWorkerAndSubscribe();
             if (sub) {
-                await savePushSubscriptionToSupabase(sub);
-                alert("✅ Sincronización Push forzada con éxito. Ya deberías poder recibir alertas de fondo.");
+                const ok = await savePushSubscriptionToSupabase(sub);
+                if(ok) {
+                    alert("✅ Sincronización Push forzada con éxito. Ya deberías poder recibir alertas de fondo.");
+                }
             } else {
                 alert("⚠️ Se dieron permisos pero falló la generación del token Push.");
             }
