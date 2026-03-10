@@ -4675,8 +4675,37 @@ window.sendGlobalNotification = async function () {
     const oldText = btn.innerHTML;
     try {
         btn.innerHTML = "<i class='ri-loader-4-line ri-spin'></i> ENVIANDO...";
+        
+        // 1. Save standard App Message
         await window.DB.saveConfig('global_message', JSON.stringify(payload));
+
+        // 2. Opt-in: Send Push via Edge Function
+        const pushCheckbox = document.getElementById('admin-global-push-checkbox');
+        if (pushCheckbox && pushCheckbox.checked) {
+            console.log("🔔 Opted-in for Push Broadcast. Triggering Edge Function...");
+            
+            const url = typeof SUPABASE_URL !== 'undefined' ? SUPABASE_URL : window.SUPABASE_URL;
+            const key = typeof SUPABASE_ANON_KEY !== 'undefined' ? SUPABASE_ANON_KEY : window.SUPABASE_ANON_KEY;
+            
+            // Note: fire-and-forget or await depending on strictness. Awaiting ensures feedback.
+            const pushRes = await fetch(`${url}/functions/v1/send-broadcast`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                    'Authorization': `Bearer ${key}`
+                },
+                body: JSON.stringify({ message: payload.text })
+            });
+
+            if(!pushRes.ok) {
+                console.error("Push Broadcast Failed:", await pushRes.text());
+                // We don't throw to not fail the overall send, just warn
+            }
+        }
+
         input.value = '';
+        if(pushCheckbox) pushCheckbox.checked = false; // Reset checkbox
+
         btn.innerHTML = "<i class='ri-check-line'></i> ENVIADO A TODOS";
         setTimeout(() => btn.innerHTML = oldText, 3000);
     } catch (e) {
