@@ -591,6 +591,29 @@
                         style="margin-top:10px; background:rgba(255,165,0,0.2) !important; color:var(--primary-gold); border:1px solid var(--primary-gold);">
                         <i class="ri-refresh-line"></i> FORZAR REINICIO DE ALERTAS
                     </button>
+                    <!-- DEBUG BUTTON START -->
+                    <button type="button"
+                        onclick="
+                        (async function(){
+                            try {
+                                const reg = await navigator.serviceWorker.ready;
+                                const sub = await reg.pushManager.getSubscription();
+                                if(!sub) return alert('No hay token Push. Dale al botón amarillo primero.');
+                                const res = await fetch(SUPABASE_URL + '/rest/v1/push_subscriptions?on_conflict=user_phone', {
+                                    method: 'POST',
+                                    headers: { 'Content-Type':'application/json', apikey: SUPABASE_ANON_KEY, Authorization: 'Bearer ' + SUPABASE_ANON_KEY, Prefer: 'return=minimal,resolution=merge-duplicates' },
+                                    body: JSON.stringify({ user_phone: String(STATE.user.phone), subscription: sub.toJSON() })
+                                });
+                                if(res.ok) alert('✅ EXITOSO. Supabase Status: ' + res.status);
+                                else alert('❌ SUPABASE RECHAZO: Status ' + res.status + '\n\n' + await res.text());
+                            } catch(e) { alert('JS ERROR: ' + e.message); }
+                        })();
+                        "
+                        class="cyber-btn sm"
+                        style="margin-top:10px; background:rgba(255,0,0,0.2) !important; color:#ff5555; border:1px solid #ff5555;">
+                        <i class="ri-bug-line"></i> DEBUG SUPABASE
+                    </button>
+                    <!-- DEBUG BUTTON END -->
                     <button type="submit" class="cyber-btn" style="margin-top:10px;">GUARDAR CAMBIOS</button>
                 </form>
             </div>
