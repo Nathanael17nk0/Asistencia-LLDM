@@ -203,6 +203,21 @@ async function savePushSubscriptionToSupabase(subscription) {
     }
 }
 
+async function syncPushSubscriptionOnLogin() {
+    if (!('serviceWorker' in navigator)) return;
+    try {
+        const reg = await navigator.serviceWorker.ready;
+        if (!reg) return;
+        const sub = await reg.pushManager.getSubscription();
+        if (sub) {
+            console.log('🔄 Syncing existing push subscription on login...');
+            await savePushSubscriptionToSupabase(sub);
+        }
+    } catch (e) {
+        console.warn('Sync push error:', e);
+    }
+}
+
 window.handleMandatoryNotificationAccept = function () {
     const modal = document.getElementById('notification-prompt-modal');
     if (modal) {
@@ -738,6 +753,10 @@ function doLoginSuccess(user) {
     // 3. DIRECT ENTRY (No Reload to prevent state loss)
     console.log("🚀 Direct Entry to Dashboard...");
     hideAllSections();
+
+    // Try to sync push subscriptions silently if already granted
+    syncPushSubscriptionOnLogin();
+
     if (typeof showDashboard === 'function') {
         showDashboard(user);
     } else {
