@@ -1018,9 +1018,12 @@ function loadWeeklyTable() {
 
     // alert(`DEBUG: Fechas encontradas: ${sortedDates.length}`);
 
-    // Filter to show from Today onwards (or show everything? "Ver Roles" implies seeing the plan)
-    // Let's show everything from Today onwards, plus maybe the last few? 
-    // User probably wants to see upcoming.
+    // Filter to limit to current week and future (hide old weeks)
+    const todayForWeek = new Date();
+    todayForWeek.setHours(0,0,0,0);
+    const dayOfWeek = todayForWeek.getDay() || 7; // 1=Mon ... 7=Sun
+    todayForWeek.setDate(todayForWeek.getDate() - dayOfWeek + 1); // Go back to Monday
+    const startOfWeekStr = `${todayForWeek.getFullYear()}-${String(todayForWeek.getMonth() + 1).padStart(2, '0')}-${String(todayForWeek.getDate()).padStart(2, '0')}`;
 
     // Sort keys properly just in case
     sortedDates.sort();
@@ -1030,11 +1033,11 @@ function loadWeeklyTable() {
         const parts = dateKey.split('-');
         if (parts.length !== 3) return; // Invalid key
 
+        // Skip past weeks!
+        if (dateKey < startOfWeekStr) return;
+
         const [y, m, d] = parts.map(Number);
         const dateObj = new Date(y, m - 1, d);
-
-        // Optional: Skip past dates? 
-        // if (dateKey < todayStr) return; 
 
         const dayData = fullSchedule[dateKey];
         const tr = document.createElement('tr');
