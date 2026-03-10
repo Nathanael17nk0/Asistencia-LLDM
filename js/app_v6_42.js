@@ -263,17 +263,45 @@ window.handleMandatoryNotificationDecline = function () {
 window.requestNotificationPermission = function () {
     if (!("Notification" in window)) {
         alert("Este navegador no soporta notificaciones de escritorio/móvil.");
-    } else if (Notification.permission === "granted") {
-        alert("¡Las alertas ya están activadas! Recibirás avisos 10 min antes del culto.");
-        new Notification("Las alertas están activadas correctamente.");
-    } else if (Notification.permission !== "denied") {
-        Notification.requestPermission().then(permission => {
-            if (permission === "granted") {
-                new Notification("¡Excelente! Estás suscrito a los recordatorios.");
+        return;
+    }
+    Notification.requestPermission().then(permission => {
+        if (permission === 'granted') {
+            localStorage.setItem('nexus_asked_notif', 'granted');
+            syncPushSubscriptionOnLogin(); // Force sync
+            alert("✅ ¡Alertas habilitadas exitosamente!");
+        } else {
+            alert("⚠️ Las notificaciones fueron bloqueadas. Cambia esto en la configuración de tu navegador.");
+            localStorage.setItem('nexus_asked_notif', 'denied');
+        }
+    });
+};
+
+window.forceResetPushSubscription = async function() {
+    console.log("🔄 Forcing Push Subscription Reset...");
+    localStorage.removeItem('nexus_asked_notif');
+    
+    if (!("Notification" in window)) {
+        alert("🚨 No soportado en este navegador.");
+        return;
+    }
+
+    try {
+        const p = await Notification.requestPermission();
+        if (p === 'granted') {
+            localStorage.setItem('nexus_asked_notif', 'granted');
+            const sub = await registerServiceWorkerAndSubscribe();
+            if (sub) {
+                await savePushSubscriptionToSupabase(sub);
+                alert("✅ Sincronización Push forzada con éxito. Ya deberías poder recibir alertas de fondo.");
+            } else {
+                alert("⚠️ Se dieron permisos pero falló la generación del token Push.");
             }
-        });
-    } else {
-        alert("Los permisos están bloqueados. Debes activarlos desde la configuración de Safari/Chrome.");
+        } else {
+            alert("⚠️ Debes dar permiso en el navegador.");
+        }
+    } catch(e) {
+        alert("Error: " + e.message);
     }
 };
 
