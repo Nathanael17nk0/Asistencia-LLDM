@@ -182,13 +182,13 @@ async function savePushSubscriptionToSupabase(subscription) {
     }
 
     console.log('💾 Saving push subscription for', STATE.user.phone);
-    const res = await fetch(`${url}/rest/v1/push_subscriptions`, {
+    const res = await fetch(`${url}/rest/v1/push_subscriptions?on_conflict=user_phone`, {
         method: 'POST',
         headers: {
             'Content-Type': 'application/json',
             'apikey': key,
             'Authorization': `Bearer ${key}`,
-            'Prefer': 'resolution=merge-duplicates'
+            'Prefer': 'return=minimal,resolution=merge-duplicates'
         },
         body: JSON.stringify({
             user_phone: String(STATE.user.phone),
