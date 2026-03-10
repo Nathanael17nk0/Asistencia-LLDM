@@ -14,9 +14,9 @@
 // =====================================================
 
 // @ts-ignore
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2';
+import { createClient } from 'npm:@supabase/supabase-js@2';
 // @ts-ignore
-import webpush from 'https://esm.sh/web-push@3.6.7';
+import webpush from 'npm:web-push@3.6.7';
 
 // Time helpers — detect actual local CST/CDT offset dynamically
 function getCST_Hour(): { h: number; m: number; day: number } {
@@ -65,7 +65,10 @@ Deno.serve(async (_req: Request) => {
     // Configure web-push VAPID details
     const vapidPublic = Deno.env.get('VAPID_PUBLIC_KEY')!;
     const vapidPrivate = Deno.env.get('VAPID_PRIVATE_KEY')!;
-    const vapidSubject = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:lldm@app.com';
+    let vapidSubject = Deno.env.get('VAPID_SUBJECT') ?? 'mailto:lldm@app.com';
+    if (!vapidSubject.startsWith('mailto:') && !vapidSubject.startsWith('https:')) {
+        vapidSubject = `mailto:${vapidSubject}`;
+    }
 
     webpush.setVapidDetails(vapidSubject, vapidPublic, vapidPrivate);
 
