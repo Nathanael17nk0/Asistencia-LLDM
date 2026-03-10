@@ -8,8 +8,8 @@
 //   - web-push (via esm.sh)
 //
 // Required Secrets (set in Supabase Dashboard → Edge Functions → Secrets):
-//   VAPID_PUBLIC_KEY   = JUBGKfUmd4eeGEI1QQf7UNb_ZeVJEYSmV05GpY6jsrHZZlwGDbnB_pMbFABu8QK0gVUAiUgfeDJdSksL4uWIow
-//   VAPID_PRIVATE_KEY  = m4m5dd6x6idM8b5OQVZOqE4PEnMbPqWbtHLPv4TfvmA
+//   VAPID_PUBLIC_KEY   = BGQU4DHdRr97qTqTT0hclHRBFNEdCTiVRTYJ3v6gpVdPLIfLdU2ibbPF1XJQ__XDLtPgTmfFj4r2_hmE6M1Qq8c
+//   VAPID_PRIVATE_KEY  = pAPt-LMlSbWY3vl0iAzGcqF76tBfCwhOt-UlpP3kPwk
 //   VAPID_SUBJECT      = mailto:lldm@app.com
 // =====================================================
 

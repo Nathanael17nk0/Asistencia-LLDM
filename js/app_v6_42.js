@@ -140,7 +140,7 @@ function showDashboard(user) {
 
 // --- PUSH NOTIFICATIONS & REMINDERS (v4.0) ---
 // VAPID Public Key (generated for this app - do not change once users are subscribed)
-const VAPID_PUBLIC_KEY = 'JUBGKfUmd4eeGEI1QQf7UNb_ZeVJEYSmV05GpY6jsrHZZlwGDbnB_pMbFABu8QK0gVUAiUgfeDJdSksL4uWIow';
+const VAPID_PUBLIC_KEY = 'BGQU4DHdRr97qTqTT0hclHRBFNEdCTiVRTYJ3v6gpVdPLIfLdU2ibbPF1XJQ__XDLtPgTmfFj4r2_hmE6M1Qq8c';
 
 function urlBase64ToUint8Array(base64String) {
     const padding = '='.repeat((4 - base64String.length % 4) % 4);
