@@ -21,9 +21,9 @@ import webpush from 'npm:web-push@3.6.7';
 // Time helpers — detect actual local CST/CDT offset dynamically
 function getCST_Hour(): { h: number; m: number; day: number } {
     const now = new Date();
-    // Use Intl to get current time in CST timezone (auto handles daylight saving)
+    // Use Intl to get current time in border timezone (auto handles daylight saving for Reynosa)
     const parts = new Intl.DateTimeFormat('en-US', {
-        timeZone: 'America/Monterrey',
+        timeZone: 'America/Matamoros',
         hour: 'numeric',
         minute: 'numeric',
         weekday: 'short',
@@ -44,7 +44,7 @@ Deno.serve(async (_req: Request) => {
 
     console.log(`[send-reminders] CST time: ${h}:${String(m).padStart(2, '0')} day=${day}`);
 
-    // Reminder times (all in CST/CDT – Monterrey timezone)
+    // Reminder times (all in Reynosa/Border timezone)
     const reminderTimes: [number, number][] =
         day === 0
             ? [[9, 50], [17, 50]]                          // Sunday: before 10am & 6pm
