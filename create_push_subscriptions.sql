@@ -20,3 +20,17 @@ FOR ALL
 TO service_role
 USING (true)
 WITH CHECK (true);
+
+-- Allow anonymous app users to insert and update their own subscriptions
+CREATE POLICY "Anon can insert subscriptions"
+ON push_subscriptions
+FOR INSERT
+TO anon
+WITH CHECK (true);
+
+CREATE POLICY "Anon can update subscriptions"
+ON push_subscriptions
+FOR UPDATE
+TO anon
+USING (true)
+WITH CHECK (true);
