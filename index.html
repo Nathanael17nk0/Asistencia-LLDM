@@ -1223,6 +1223,42 @@
             </div>
         </div>
 
+        <!-- LIBRARY PASSWORD PROTECTION MODAL -->
+        <div id="library-password-modal" class="hidden"
+            style="position:fixed; top:0; left:0; width:100vw; height:100vh; background:rgba(10, 25, 47, 0.85); backdrop-filter:blur(8px); -webkit-backdrop-filter:blur(8px); z-index:9500; display:none; align-items:center; justify-content:center; animation: fadeIn 0.4s ease;">
+
+            <div class="cyber-card floating-entry"
+                style="width:90%; max-width:400px; padding:30px 20px; background:linear-gradient(145deg, rgba(23,42,70,0.95) 0%, rgba(10,25,47,0.95) 100%); border:2px solid var(--primary-gold); box-shadow:0 15px 35px rgba(0,0,0,0.5), inset 0 0 20px rgba(197, 160, 89, 0.1); border-radius:20px; position:relative;">
+
+                <button onclick="window.closeLibraryPasswordModal()"
+                    style="position:absolute; top:15px; right:20px; background:none; border:none; color:var(--text-muted); font-size:1.5rem; cursor:pointer;">&times;</button>
+
+                <div style="text-align:center; margin-bottom:15px;">
+                    <i class="ri-lock-password-line" style="font-size:3rem; color:var(--primary-gold);"></i>
+                </div>
+
+                <h2 style="color:var(--primary-gold); margin-top:0; margin-bottom:20px; font-size:1.2rem; font-family:'Orbitron', sans-serif; text-align:center;">
+                    SECCIÓN RESTRINGIDA
+                </h2>
+                
+                <p style="color:var(--text-main); font-size:0.9rem; text-align:center; margin-bottom:20px;">
+                    Por favor, ingresa la contraseña para acceder a los Estudios Bíblicos.
+                </p>
+
+                <input type="password" id="library-password-input" class="simple-input" placeholder="Contraseña"
+                    style="width:100%; border:1px solid rgba(197, 160, 89, 0.3); padding:12px; font-size:1rem; margin-bottom:15px; border-radius:8px; text-align:center; background:rgba(255,255,255,0.05); color:#fff;">
+
+                <div id="library-password-error" style="color:#ff4d4d; font-size:0.85rem; text-align:center; margin-bottom:15px; display:none;">
+                    Contraseña incorrecta. Intente de nuevo.
+                </div>
+
+                <button id="library-password-submit-btn" onclick="window.submitLibraryPassword()" class="cyber-btn"
+                    style="width:100%; border:1px solid var(--primary-gold); background:rgba(197, 160, 89, 0.1); color:var(--primary-gold); cursor:pointer;">
+                    <i class="ri-key-2-line"></i> ACCEDER
+                </button>
+            </div>
+        </div>
+
         <!-- HISTORY MODAL (New) -->
         <div id="history-modal" class="hidden"
             style="position:fixed; top:0; left:0; width:100%; height:100%; background:rgba(0,0,0,0.85); z-index:4000; display:none; align-items:center; justify-content:center;">
@@ -1307,7 +1343,7 @@
         <script src="js/supabase-service.js?v=7.2"></script>
         <!-- Tesseract OCR (for image-based schedule upload) -->
         <script src="https://cdn.jsdelivr.net/npm/tesseract.js@5/dist/tesseract.min.js"></script>
-        <script src="js/app_v6_42.js?v=7.2"></script>
+        <script src="js/app_v6_42.js?v=7.3"></script>
 
         <!-- Version Indicator is handled by JS -->
 
