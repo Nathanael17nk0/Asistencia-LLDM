@@ -3979,7 +3979,7 @@ setTimeout(() => {
         v.id = 'app-version';
         document.body.appendChild(v);
     }
-    v.innerText = "v7.9.4 (Estatus de Administrador)";
+    v.innerText = "v7.9.5 (Estudios Protegidos)";
     v.style.cssText = "display:none; position:fixed; bottom:2px; right:2px; color:white; font-weight:bold; font-size:9px; z-index:9999; pointer-events:none; background:rgba(0,128,0,0.9); padding:2px; border-radius:3px;";
     document.body.appendChild(v);
 
@@ -4783,7 +4783,42 @@ setTimeout(() => {
 // ==========================================
 // BIBLICAL STUDIES (LIBRARY) SYSTEM
 // ==========================================
+const LIBRARY_PASSWORD = 'Biblia2014';
+
 window.openLibrary = async function () {
+    // Check if password has been correctly entered previously (persistent in localStorage)
+    const isUnlocked = localStorage.getItem('biblical_studies_unlocked') === 'true';
+
+    if (!isUnlocked) {
+        // Show the password modal
+        const modal = document.getElementById('library-password-modal');
+        const input = document.getElementById('library-password-input');
+        const errorMsg = document.getElementById('library-password-error');
+        
+        if (modal) {
+            modal.classList.remove('hidden');
+            modal.style.display = 'flex';
+        }
+        if (input) {
+            input.value = '';
+            input.focus();
+            
+            // Add keypress event for Enter key once
+            if (!input.dataset.hasEnterListener) {
+                input.dataset.hasEnterListener = 'true';
+                input.addEventListener('keypress', function (e) {
+                    if (e.key === 'Enter') {
+                        window.submitLibraryPassword();
+                    }
+                });
+            }
+        }
+        if (errorMsg) {
+            errorMsg.style.display = 'none';
+        }
+        return;
+    }
+
     const dash = document.getElementById('dashboard-section');
     const lib = document.getElementById('library-section');
 
@@ -4798,6 +4833,34 @@ window.openLibrary = async function () {
     if (adminControls) adminControls.classList.add('hidden');
 
     if (typeof window.loadLibrary === 'function') await window.loadLibrary(false);
+};
+
+window.closeLibraryPasswordModal = function () {
+    const modal = document.getElementById('library-password-modal');
+    if (modal) {
+        modal.classList.add('hidden');
+        modal.style.display = 'none';
+    }
+};
+
+window.submitLibraryPassword = function () {
+    const input = document.getElementById('library-password-input');
+    const errorMsg = document.getElementById('library-password-error');
+    
+    if (!input) return;
+    
+    const val = input.value.trim();
+    if (val === LIBRARY_PASSWORD) {
+        localStorage.setItem('biblical_studies_unlocked', 'true');
+        window.closeLibraryPasswordModal();
+        window.openLibrary(); // Call again, which will now bypass password check
+    } else {
+        if (errorMsg) {
+            errorMsg.style.display = 'block';
+        }
+        input.value = '';
+        input.focus();
+    }
 };
 
 window.openLibraryAsSuperAdmin = async function () {
